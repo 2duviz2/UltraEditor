@@ -341,7 +341,7 @@ namespace UltraEditor.Classes
 
         void RebuildNavmesh()
         {
-            if (navMeshSurface == null)
+            if (navMeshSurface == null && Input.GetKey(KeyCode.N))
             {
                 navMeshSurface = FindObjectOfType<NavMeshSurface>();
             }
