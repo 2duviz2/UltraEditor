@@ -9,3 +9,4 @@ To-Do 📌:
 
 Notes 🗒️:
 * I'm really bad at making projects public, if you see a lot of references in the project, that's because this mod is a branch from another mod
+* This editor is NOT FINISHED, that means that a lot of things are broken or won't work as intended. If you want to make a level, DO NOT USE THIS in this state
