@@ -27,6 +27,9 @@
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
 		</Reference>
+		<Reference Include="plog">
+			<HintPath>$(ManagedPath)\plog.dll</HintPath>
+		</Reference>
 		
 		<!-- Managed -->
 		<Reference Include="Assembly-CSharp :3">
@@ -38,7 +41,7 @@
 		<Reference Include="Unity.AI.Navigation uwu">
 			<HintPath>$(ManagedPath)\Unity.AI.Navigation.dll</HintPath>
 		</Reference>
-		<Reference Include="Facepunch.Steamworks.Win64 >:3">
+		<Reference Include="Facepunch.Steamworks.Win64 &gt;:3">
 			<HintPath>$(ManagedPath)\Facepunch.Steamworks.Win64.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Addressables [imagine a silly goober textmoji here]">

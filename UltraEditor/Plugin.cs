@@ -5,6 +5,7 @@ using HarmonyLib;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UltraEditor.Classes;
+using UnityEngine.SceneManagement;
 
 namespace UltraEditor
 {
@@ -12,6 +13,7 @@ namespace UltraEditor
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin instance;
+        public plog.Logger Log;
 
         public static KeyCode editorOpenKey = KeyCode.F1;
         public static KeyCode selectCursorKey = KeyCode.F2;
@@ -55,18 +57,18 @@ namespace UltraEditor
             return !Input.GetKey(ctrlKey) && !Input.GetKey(altKey);
         }
 
-        public void Awake()
+        public void Awake() 
         {
+            instance = this;
+
             /*((UnityEngine.Object)((Component)this).gameObject).hideFlags = (HideFlags)61;
             ((UnityEngine.Object)ThreadingHelper.Instance).hideFlags = (HideFlags)61;
             ((ConfigEntry<bool>)AccessTools.Field(typeof(Chainloader), "ConfigHideBepInExGOs").GetValue(null)).Value = true;*/
 
-            Logger.LogInfo("Hello, the Instagram community!");
+            LogInfo("Hello, the Instagram community!");
 
             var harmony = new Harmony("duviz.ultrakill.ultraeditor");
             harmony.PatchAll();
-
-            instance = this;
 
             gameObject.hideFlags = HideFlags.DontSaveInEditor;
         }
@@ -98,7 +100,15 @@ namespace UltraEditor
                 LogError($"Resources.Load failed for '{path}'");
             return obj;
         }
-        public static void LogInfo(object data) { instance.Logger.LogInfo(data); }
-        public static void LogError(object data) { instance.Logger.LogError(data); }
+        public static void LogInfo(object data) 
+        {
+            instance.Logger?.LogInfo(data);
+            (instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString());
+        }
+        public static void LogError(object data) 
+        { 
+            instance.Logger?.LogError(data);
+            (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString());
+        }
     }
 }
