@@ -16,7 +16,7 @@
 
 	<ItemGroup>
 		<!-- Embed the assetbundle into the dll. -->
-		<EmbeddedResource Include="Assets\editorcanvas" />
+		<EmbeddedResource Include="Assets\editorcanvas.bundle" />
 
 		<!-- Packages -->
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />

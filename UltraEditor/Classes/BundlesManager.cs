@@ -15,7 +15,7 @@ namespace UltraEditor.Classes
 
             var assembly = Assembly.GetExecutingAssembly();
 
-            string resourceName = "UltraEditor.Assets.editorcanvas";
+            string resourceName = "UltraEditor.Assets.editorcanvas.bundle";
 
             using (Stream stream = assembly.GetManifestResourceStream(resourceName))
             {

@@ -514,6 +514,23 @@ namespace UltraEditor.Classes
             }
         }
 
+        string GetHierarchyPath(GameObject go)
+        {
+            if (go == null) return "";
+
+            var parts = new System.Collections.Generic.List<string>();
+            Transform t = go.transform;
+            while (t != null)
+            {
+                if (!string.IsNullOrEmpty(t.name))
+                    parts.Add(t.name);
+                t = t.parent;
+            }
+
+            parts.Reverse();
+            return "/" + string.Join("/", parts);
+        }
+
         Component[] lastComponents = new Component[0];
         GameObject[] lastHierarchy = new GameObject[0];
         GameObject lastSelected = null;
