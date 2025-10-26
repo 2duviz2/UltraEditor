@@ -586,7 +586,9 @@ namespace UltraEditor.Classes
 
             if (cameraSelector.selectedObject != null)
             {
-                CreateHierarchyItem(null, $"< {cameraSelector.selectedObject.name}", true, new Color(0.5f, 1, 0.5f, cameraSelector.selectedObject.activeSelf ? 1 : 0.5f));
+                string path = GetHierarchyPath(cameraSelector.selectedObject);
+
+                CreateHierarchyItem(null, $"< {cameraSelector.selectedObject.name}", path, true, new Color(0.5f, 1, 0.5f, cameraSelector.selectedObject.activeSelf ? 1 : 0.5f));
 
                 List<GameObject> objectsToHierarchList = new List<GameObject>();
 
@@ -1269,7 +1271,7 @@ namespace UltraEditor.Classes
             return null;
         }
 
-        void CreateHierarchyItem(GameObject obj, string backupName = "Null object", bool goToParent = false, Color? forceColorMultiplier = null)
+        void CreateHierarchyItem(GameObject obj, string backupName = "Null object", string backupDescription = "Null description", bool goToParent = false, Color? forceColorMultiplier = null)
         {
             GameObject content = editorCanvas.transform.GetChild(0).GetChild(2).GetChild(3).gameObject;
             GameObject templateItem = content.transform.GetChild(0).gameObject;
@@ -1277,7 +1279,8 @@ namespace UltraEditor.Classes
             GameObject newItem = Instantiate(templateItem, content.transform);
             newItem.name = obj != null ? ("Item_" + obj.name) : backupName;
             newItem.SetActive(true);
-            newItem.GetComponentInChildren<TMP_Text>().text = obj != null ? $"{(obj.transform.childCount > 0 ? "> " : "")}{obj.name}" : backupName;
+            newItem.transform.GetChild(0).GetComponent<TMP_Text>().text = obj != null ? $"{(obj.transform.childCount > 0 ? "> " : "")}{obj.name}" : backupName;
+            newItem.transform.GetChild(1).GetComponent<TMP_Text>().text = backupDescription;
             Button button = newItem.GetComponent<Button>();
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() =>
@@ -1323,52 +1326,65 @@ namespace UltraEditor.Classes
             if (forceColorMultiplier != null)
                 newItem.GetComponent<Image>().color = newItem.GetComponent<Image>().color * forceColorMultiplier.Value;
 
+            bool parent = false;
             if (obj == null && cameraSelector.selectedObject != null)
             {
                 obj = (cameraSelector.selectedObject.transform.parent != null) ? cameraSelector.selectedObject.transform.parent.gameObject : null;
+                parent = true;
             }
-            if (true)
+
+            EventTrigger eventTrigger = newItem.GetComponent<EventTrigger>();
+
+            if (!parent)
             {
-                EventTrigger eventTrigger = newItem.GetComponent<EventTrigger>();
                 eventTrigger.triggers.Clear();
                 eventTrigger.triggers.Add(new EventTrigger.Entry
                 {
                     eventID = EventTriggerType.PointerDown,
                     callback = new EventTrigger.TriggerEvent()
                 });
-                eventTrigger.triggers[0].callback.AddListener((data) =>
+                eventTrigger.triggers.Add(new EventTrigger.Entry
                 {
-                    if (obj == null) return;
-                    holdingObject = obj;
-                    Plugin.LogInfo($"Holding object: {holdingObject.name}");
+                    eventID = EventTriggerType.PointerUp,
+                    callback = new EventTrigger.TriggerEvent()
                 });
                 eventTrigger.triggers.Add(new EventTrigger.Entry
                 {
                     eventID = EventTriggerType.PointerEnter,
                     callback = new EventTrigger.TriggerEvent()
                 });
-                eventTrigger.triggers[1].callback.AddListener((data) =>
-                {
-                    if (obj != null)
-                        Plugin.LogInfo($"Entered object: {obj.name}");
-                    if (holdingObject != null && holdingObject != obj)
-                    {
-                        if (obj == null)
-                            holdingTarget = holdingObject;
-                        else
-                            holdingTarget = obj;
-                    }
-                });
                 eventTrigger.triggers.Add(new EventTrigger.Entry
                 {
                     eventID = EventTriggerType.PointerExit,
                     callback = new EventTrigger.TriggerEvent()
                 });
-                eventTrigger.triggers[2].callback.AddListener((data) =>
-                {
-                    holdingTarget = null;
-                });
             }
+
+
+            eventTrigger.triggers[0].callback.AddListener((data) =>
+            {
+                if (obj == null) return;
+                holdingObject = obj;
+                Plugin.LogInfo($"Holding object: {holdingObject.name}");
+            });
+
+            eventTrigger.triggers[2].callback.AddListener((data) =>
+            {
+                if (obj != null)
+                    Plugin.LogInfo($"Entered object: {obj.name}");
+                if (holdingObject != null && holdingObject != obj)
+                {
+                    if (obj == null)
+                        holdingTarget = holdingObject;
+                    else
+                        holdingTarget = obj;
+                }
+            });
+
+            eventTrigger.triggers[3].callback.AddListener((data) =>
+            {
+                holdingTarget = null;
+            });
         }
 
         public static void Log(string str)
