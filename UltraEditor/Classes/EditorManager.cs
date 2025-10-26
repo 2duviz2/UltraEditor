@@ -1360,14 +1360,14 @@ namespace UltraEditor.Classes
                 });
             }
 
-
+            
             eventTrigger.triggers[0].callback.AddListener((data) =>
             {
                 if (obj == null) return;
                 holdingObject = obj;
                 Plugin.LogInfo($"Holding object: {holdingObject.name}");
             });
-
+            
             eventTrigger.triggers[2].callback.AddListener((data) =>
             {
                 if (obj != null)
@@ -1380,7 +1380,7 @@ namespace UltraEditor.Classes
                         holdingTarget = obj;
                 }
             });
-
+            
             eventTrigger.triggers[3].callback.AddListener((data) =>
             {
                 holdingTarget = null;
