@@ -200,6 +200,8 @@ namespace UltraEditor.Classes
                 {
                     Cursor.visible = false;
                     Cursor.lockState = CursorLockMode.Locked;
+
+                    RebuildNavmesh();
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
@@ -282,19 +284,6 @@ namespace UltraEditor.Classes
                 duplicateObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
-            {
-                if (navMeshSurface != null)
-                {
-                    navMeshSurface.BuildNavMesh();
-                    Plugin.LogInfo("NavMesh rebuilt.");
-                }
-                else
-                {
-                    Plugin.LogError("No NavMeshSurface found to rebuild.");
-                }
-            });
-
             // Add
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
@@ -348,6 +337,24 @@ namespace UltraEditor.Classes
             {
                 ChangeLighting(1);
             });
+        }
+
+        void RebuildNavmesh()
+        {
+            if (navMeshSurface == null && Input.GetKey(KeyCode.N))
+            {
+                navMeshSurface = FindObjectOfType<NavMeshSurface>();
+            }
+
+            if (navMeshSurface != null)
+            {
+                navMeshSurface.BuildNavMesh();
+                Plugin.LogInfo("NavMesh rebuilt.");
+            }
+            else
+            {
+                Plugin.LogError("No NavMeshSurface found to rebuild.");
+            }
         }
 
         void SetupVariables()
@@ -441,7 +448,16 @@ namespace UltraEditor.Classes
             {
                 cameraSelector.ClearSelectedMaterial();
                 GameObject newObj = Instantiate(cameraSelector.selectedObject);
-                cameraSelector.SelectObject(newObj);
+
+                if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+                {
+                    newObj.transform.SetParent(cameraSelector.selectedObject.transform);
+                    lastSelected = null;
+                }
+                else
+                    cameraSelector.SelectObject(newObj);
+
+                if (Input.GetKey(Plugin.altKey)) newObj.SetActive(false);
             }
         }
 
