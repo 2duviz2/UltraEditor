@@ -339,6 +339,16 @@ namespace UltraEditor.Classes
                 advancedInspector = false;
                 UpdateInspector();
             });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                ChangeLighting(0);
+            });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                ChangeLighting(1);
+            });
         }
 
         void SetupVariables()
@@ -462,7 +472,16 @@ namespace UltraEditor.Classes
             if (createRigidbody)
                 cube.AddComponent<Rigidbody>().useGravity = useGravity;
             cube.GetComponent<Renderer>().material = new Material(DefaultReferenceManager.Instance.masterShader);
-            cameraSelector.SelectObject(cube);
+
+            if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+            {
+                cube.transform.SetParent(cameraSelector.selectedObject.transform);
+                lastSelected = null;
+            }
+            else
+                cameraSelector.SelectObject(cube);
+
+            if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
         }
 
         void createFloor()
@@ -478,6 +497,22 @@ namespace UltraEditor.Classes
         void ChangeCameraCullingLayers(int layerMask)
         {
             editorCamera.cullingMask = layerMask;
+        }
+
+        void ChangeLighting(int lit)
+        {
+            if (lit == 1)
+            {
+                editorCamera.ResetReplacementShader();
+            }
+            else if (lit == 0)
+            {
+                Shader unlitShader = Shader.Find("Unlit/Texture");
+                if (unlitShader != null)
+                    editorCamera.SetReplacementShader(unlitShader, "");
+                else
+                    Plugin.LogError("Unlit shader not found");
+            }
         }
 
         Component[] lastComponents = new Component[0];
