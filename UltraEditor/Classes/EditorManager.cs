@@ -448,7 +448,16 @@ namespace UltraEditor.Classes
             {
                 cameraSelector.ClearSelectedMaterial();
                 GameObject newObj = Instantiate(cameraSelector.selectedObject);
-                cameraSelector.SelectObject(newObj);
+
+                if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+                {
+                    newObj.transform.SetParent(cameraSelector.selectedObject.transform);
+                    lastSelected = null;
+                }
+                else
+                    cameraSelector.SelectObject(newObj);
+
+                if (Input.GetKey(Plugin.altKey)) newObj.SetActive(false);
             }
         }
 
