@@ -235,15 +235,6 @@ namespace UltraEditor.Classes
             blocker = editorCanvas.transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
             SetupVariables();
 
-            GameObject AssetsContainer = editorCanvas.transform.GetChild(0).GetChild(3).GetChild(0).GetChild(4).gameObject;
-            foreach (var item in AssetsContainer.transform.GetComponentsInChildren<Button>())
-            {
-                item.onClick.AddListener(() =>
-                {
-                    SpawnAsset(item.transform.GetChild(0).name);
-                });
-            }
-
             if (NewMovement.Instance != null)
             {
                 NewMovement.Instance.gameObject.SetActive(mouseLocked);
@@ -426,7 +417,7 @@ namespace UltraEditor.Classes
             });
         }
 
-        void SpawnAsset(string dir)
+        public void SpawnAsset(string dir)
         {
             GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
@@ -449,13 +440,13 @@ namespace UltraEditor.Classes
                 cameraSelector.ClearSelectedMaterial();
                 GameObject newObj = Instantiate(cameraSelector.selectedObject);
 
-                if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
-                {
-                    newObj.transform.SetParent(cameraSelector.selectedObject.transform);
-                    lastSelected = null;
-                }
-                else
-                    cameraSelector.SelectObject(newObj);
+                if (cameraSelector.selectedObject.transform.parent != null)
+                    newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
+
+                newObj.transform.position = cameraSelector.selectedObject.transform.position;
+                newObj.transform.rotation = cameraSelector.selectedObject.transform.rotation;
+
+                cameraSelector.SelectObject(newObj);
 
                 if (Input.GetKey(Plugin.altKey)) newObj.SetActive(false);
             }
