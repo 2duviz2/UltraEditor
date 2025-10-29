@@ -359,6 +359,7 @@ namespace UltraEditor.Classes
                     navMeshSurface.collectObjects = CollectObjects.MarkedWithModifier;
 
                 navMeshSurface.BuildNavMesh();
+                EditorVisualizers.RebuildNavMeshVis(navMeshSurface);
                 Plugin.LogInfo("NavMesh rebuilt.");
             }
             else
