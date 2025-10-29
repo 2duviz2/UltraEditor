@@ -300,7 +300,12 @@ namespace UltraEditor.Classes
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
-                createFloor();
+                createFloor(new Vector3(25, 1, 25));
+            });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                createFloor(new Vector3(25, 10, 1));
             });
 
             // View
@@ -504,14 +509,21 @@ namespace UltraEditor.Classes
             if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
         }
 
-        void createFloor()
+        void createFloor(Vector3 scale)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
-            cube.transform.localScale = new Vector3(25,1,25);
+            cube.transform.localScale = scale;
             cube.layer = LayerMask.NameToLayer("Outdoors");
             cube.tag = "Floor";
-            cameraSelector.SelectObject(cube);
+
+            if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+            {
+                cube.transform.SetParent(cameraSelector.selectedObject.transform);
+                lastSelected = null;
+            }
+            else
+                cameraSelector.SelectObject(cube);
         }
 
         void ChangeCameraCullingLayers(int layerMask)
