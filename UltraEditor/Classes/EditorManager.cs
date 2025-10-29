@@ -44,6 +44,7 @@ namespace UltraEditor.Classes
             RemoveButton,
             Button,
             ArrayItem,
+            Dropdown,
         }
 
         public void Awake()
@@ -201,7 +202,8 @@ namespace UltraEditor.Classes
                     Cursor.visible = false;
                     Cursor.lockState = CursorLockMode.Locked;
 
-                    RebuildNavmesh();
+                    if (SceneHelper.CurrentScene == "Endless")
+                        RebuildNavmesh(Input.GetKey(KeyCode.N));
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
@@ -275,6 +277,11 @@ namespace UltraEditor.Classes
                 duplicateObject();
             });
 
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                RebuildNavmesh(true);
+            });
+
             // Add
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
@@ -330,15 +337,22 @@ namespace UltraEditor.Classes
             });
         }
 
-        void RebuildNavmesh()
+        void RebuildNavmesh(bool forceFindNavmesh)
         {
-            if (navMeshSurface == null && Input.GetKey(KeyCode.N))
+            if (navMeshSurface == null && forceFindNavmesh)
             {
                 navMeshSurface = FindObjectOfType<NavMeshSurface>();
             }
 
             if (navMeshSurface != null)
             {
+                if (Input.GetKey(KeyCode.A))
+                    navMeshSurface.collectObjects = CollectObjects.All;
+                if (Input.GetKey(KeyCode.V))
+                    navMeshSurface.collectObjects = CollectObjects.Volume;
+                if (Input.GetKey(KeyCode.M))
+                    navMeshSurface.collectObjects = CollectObjects.MarkedWithModifier;
+
                 navMeshSurface.BuildNavMesh();
                 Plugin.LogInfo("NavMesh rebuilt.");
             }
@@ -708,6 +722,8 @@ namespace UltraEditor.Classes
         }
 
         string lastFieldText = "";
+        Enum lastEnum = null;
+        Type lastEnumType = null;
         object coppiedValue = null;
         Type lastCoppiedType = null;
         List<(string, Type, float)> searchResults = new List<(string, Type, float)>();
@@ -989,7 +1005,29 @@ namespace UltraEditor.Classes
 
                 UpdateInspector();
             });
-            else if (type.IsArray)
+            else if (type != null && type.IsEnum)
+            {
+                if (value == null)
+                    value = Enum.GetValues(type).GetValue(0);
+
+                if (value != null && type != null)
+                {
+                    CreateInspectorItem(fieldName, inspectorItemType.Dropdown, value != null ? value.ToString() : "null", value).AddListener(() =>
+                    {
+                        Plugin.LogInfo($"Setting field {fieldName} to enum value: {lastEnum}");
+
+                        Plugin.LogInfo($"Component type: {comp.GetType()}, Enum type: {lastEnumType}");
+                        Plugin.LogInfo($"Enum value: {lastEnum} ({lastEnum.GetType()})");
+
+                        SetMemberValue(field, comp, Enum.Parse(lastEnumType, lastEnum.ToString()));
+
+                        Plugin.LogInfo($"After assignment: {((FieldInfo)field).GetValue(comp)}");
+
+                        UpdateInspector();
+                    });
+                }
+            }
+            else if (type.IsArray && type != null)
             {
                 if (value == null)
                     value = Array.CreateInstance(type.GetElementType(), 0);
@@ -1182,12 +1220,14 @@ namespace UltraEditor.Classes
             GameObject button = newItem.transform.GetChild(3).gameObject;
             GameObject copyButton = newItem.transform.GetChild(4).gameObject;
             GameObject pasteButton = newItem.transform.GetChild(5).gameObject;
+            GameObject dropdown = newItem.transform.GetChild(6).gameObject;
 
             field.SetActive(false);
             removeButton.SetActive(false);
             button.SetActive(false);
             copyButton.SetActive(false);
             pasteButton.SetActive(false);
+            dropdown.SetActive(false);
 
             if (itemType == inspectorItemType.InputField)
             {
@@ -1269,6 +1309,40 @@ namespace UltraEditor.Classes
                 pasteButton.GetComponentInChildren<Button>().onClick.AddListener(() =>
                 {
                     lastFieldText = "remove";
+                    e.Invoke();
+                });
+
+                return e;
+            }
+
+            if (itemType == inspectorItemType.Dropdown)
+            {
+                dropdown.SetActive(true);
+
+                dropdown.GetComponentInChildren<TMP_Dropdown>().options = new List<TMP_Dropdown.OptionData>();
+                lastEnumType = value.GetType();
+                UnityEvent e = new UnityEvent();
+
+                int i = 0, selectIndex = 0;
+
+                foreach (var ee in Enum.GetValues(lastEnumType))
+                {
+                    dropdown.GetComponentInChildren<TMP_Dropdown>().options.Add(new TMP_Dropdown.OptionData(ee.ToString()));
+
+                    Plugin.LogInfo(ee.ToString() + value.ToString());
+                    if (ee.ToString() == value.ToString())
+                        selectIndex = i;
+
+                    i++;
+                }
+
+                dropdown.GetComponentInChildren<TMP_Dropdown>().value = selectIndex;
+
+                dropdown.GetComponentInChildren<TMP_Dropdown>().onValueChanged.AddListener((int i) =>
+                {
+                    lastEnumType = value.GetType();
+                    lastEnum = (Enum)Enum.GetValues(lastEnumType).GetValue(i);
+
                     e.Invoke();
                 });
 
