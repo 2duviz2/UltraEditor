@@ -31,6 +31,9 @@ namespace UltraEditor.Classes
                 obj.transform.SetParent(parent);
                 obj.transform.localPosition = new Vector3(0f, 1f, 0f);
                 obj.layer = LayerMask.NameToLayer("Invisible");
+
+                NavMeshModifier navMeshModifier = obj.AddComponent<NavMeshModifier>();
+                navMeshModifier.ignoreFromBuild = true;
             }
             else
             {

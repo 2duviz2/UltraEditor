@@ -3,10 +3,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using TMPro;
+using UltraEditor.Classes.Saving;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
@@ -142,19 +145,21 @@ namespace UltraEditor.Classes
 
         static NavMeshSurface navMeshSurface;
         static string[] doNotDelete = new string[] { "GlobalLights", "Level Info", "FirstRoom", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
-        public static void DeleteScene()
+        public static void DeleteScene(bool force = false)
         {
-            if (SceneHelper.CurrentScene == "Endless" && !StatsManager.Instance.timer)
+            if (force || (SceneHelper.CurrentScene == "Endless" && !StatsManager.Instance.timer))
             {
                 foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
                 {
+                    Plugin.LogInfo($"Trying to detroy {obj.name}");
                     if (!doNotDelete.Contains(obj.name) && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject) : true))
                     {
+                        Plugin.LogInfo($"Destroyed {obj.name}");
                         Destroy(obj);
                     }
                 }
 
-                if (navMeshSurface == null)
+                if (navMeshSurface == null || force)
                 {
                     GameObject navMeshObj = new GameObject("NavMeshSurface");
                     navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
@@ -246,6 +251,8 @@ namespace UltraEditor.Classes
             Time.timeScale = mouseLocked ? 1f : 0f;
 
             SetupButtons();
+            if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
+                EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
         }
 
         void SetupButtons()
@@ -253,12 +260,19 @@ namespace UltraEditor.Classes
             // File
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
-                throw new NotImplementedException();
+                TryToLoadShit();
             });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
-                throw new NotImplementedException();
+                SaveShit();
+            });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                string path = Application.persistentDataPath;
+                path = path.Replace("/", "\\"); // make Windows happy
+                Process.Start("explorer.exe", $"\"{path}\"");
             });
 
             // Edit
@@ -379,11 +393,11 @@ namespace UltraEditor.Classes
             NewInspectorVariable("castShadows", typeof(MeshRenderer));
             NewInspectorVariable("receiveShadows", typeof(MeshRenderer));
 
-            NewInspectorVariable("center", typeof(BoxCollider));
+            //NewInspectorVariable("center", typeof(BoxCollider));
             NewInspectorVariable("size", typeof(BoxCollider));
             NewInspectorVariable("isTrigger", typeof(BoxCollider));
 
-            NewInspectorVariable("center", typeof(CapsuleCollider));
+            //NewInspectorVariable("center", typeof(CapsuleCollider));
             NewInspectorVariable("radius", typeof(CapsuleCollider));
             NewInspectorVariable("height", typeof(CapsuleCollider));
             NewInspectorVariable("isTrigger", typeof(CapsuleCollider));
@@ -412,6 +426,10 @@ namespace UltraEditor.Classes
 
             NewInspectorVariable("speed", typeof(Animator));
 
+            NewInspectorVariable("ignoreFromBuild", typeof(NavMeshModifier));
+
+            NewInspectorVariable("matType", typeof(CubeObject));
+
             // Enemies
             NewInspectorVariable("health", typeof(Zombie));
             NewInspectorVariable("health", typeof(Statue));
@@ -437,10 +455,12 @@ namespace UltraEditor.Classes
             });
         }
 
-        public void SpawnAsset(string dir)
+        public GameObject SpawnAsset(string dir)
         {
             GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
+
+            PrefabObject.Create(obj, dir);
 
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
@@ -451,6 +471,8 @@ namespace UltraEditor.Classes
                 cameraSelector.SelectObject(obj);
 
             if (Input.GetKey(Plugin.altKey)) obj.SetActive(false);
+
+            return obj;
         }
 
         void duplicateObject()
@@ -495,6 +517,8 @@ namespace UltraEditor.Classes
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
             cube.transform.localScale = Vector3.one;
+            CubeObject.Create(cube, MaterialChoser.materialTypes.MasterShader);
+
             if (createRigidbody)
                 cube.AddComponent<Rigidbody>().useGravity = useGravity;
             cube.GetComponent<Renderer>().material = new Material(DefaultReferenceManager.Instance.masterShader);
@@ -517,6 +541,8 @@ namespace UltraEditor.Classes
             cube.transform.localScale = scale;
             cube.layer = LayerMask.NameToLayer("Outdoors");
             cube.tag = "Floor";
+
+            CubeObject.Create(cube, MaterialChoser.materialTypes.Default);
 
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
@@ -639,6 +665,12 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
+                if (cameraSelector.selectedObject == null)
+                {
+                    if (obj.GetComponent<SavableObject>() == null)
+                        continue;
+                }
+
                 if (obj == editorCamera.gameObject || obj == this.gameObject || obj == editorCanvas.gameObject) continue;
 
                 CreateHierarchyItem(obj);
@@ -740,6 +772,7 @@ namespace UltraEditor.Classes
         object coppiedValue = null;
         Type lastCoppiedType = null;
         List<(string, Type, float)> searchResults = new List<(string, Type, float)>();
+        List<(string, float)> sceneResults = new List<(string, float)>();
         Type arrayType = null;
         public void UpdateInspector()
         {
@@ -971,6 +1004,8 @@ namespace UltraEditor.Classes
         Component choosing_comp = null;
         int choosing_index = 0;
         bool choosing = false;
+        string choosing_special = "";
+        string choosing_field_name = "";
         GameObject choosing_object = null;
 
         void CreateInspectorVariable(string fieldName, object value, Type type, object field, Component comp, GameObject obj)
@@ -1054,15 +1089,25 @@ namespace UltraEditor.Classes
                         {
                             arrayType = value.GetType().GetElementType();
 
+                            string selectable = "GameObject";
+
                             if (arrayType == typeof(GameObject))
                             {
                                 choosing_comp = comp;
                                 choosing_field = field;
+                                choosing_field_name = fieldName;
+                                choosing_special = "";
                                 choosing_type = type;
                                 choosing_index = index;
                                 choosing = true;
                                 choosing_object = obj;
-                                SetMessageText("Select a GameObject and press ALT + S");
+                                if (choosing_comp.GetType() == typeof(ActivateArena))
+                                {
+                                    selectable = "Enemy";
+                                    choosing_special = "enemy";
+                                }
+                                cameraSelector.selectionMode = CameraSelector.SelectionMode.Cursor;
+                                SetMessageText($"Select a {selectable} and press ALT + S");
                             }
                         }
                         else if (lastFieldText == "remove")
@@ -1122,10 +1167,26 @@ namespace UltraEditor.Classes
             }
         }
 
-        void SelectObject(GameObject obj)
+        public void SelectObject(GameObject obj)
         {
             if (choosing && choosing_comp != null && choosing_field != null && choosing_type != null && choosing_object != null)
             {
+                if (choosing_special == "enemy")
+                {
+                    GameObject originalObj = obj;
+                    while (obj != null && obj.GetComponent<EnemyIdentifier>() == null)
+                    {
+                        if (obj.transform.parent == null)
+                        {
+                            obj = originalObj;
+                            break;
+                        }
+                        obj = obj.transform.parent.gameObject;
+                    }
+
+                    obj.gameObject.SetActive(false);
+                }
+
                 if (obj != null)
                 {
                     var arr = GetMemberValue(choosing_field, choosing_comp) as Array;
@@ -1479,6 +1540,278 @@ namespace UltraEditor.Classes
             {
                 holdingTarget = null;
             });
+        }
+
+        string GetIdOfObj(GameObject obj)
+        {
+            return obj.name + obj.transform.position.ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
+        }
+
+        public string addShit(SavableObject obj)
+        {
+            string text = "";
+
+            obj.Update();
+            text += GetIdOfObj(obj.gameObject);
+            text += "\n";
+            text += obj.name;
+            text += "\n";
+            text += obj.gameObject.layer;
+            text += "\n";
+            text += obj.gameObject.tag;
+            text += "\n";
+            text += obj.Position.ToString();
+            text += "\n";
+            text += obj.EulerAngles.ToString();
+            text += "\n";
+            text += obj.Scale.ToString();
+            text += "\n";
+            text += obj.gameObject.activeSelf ? 1 : 0;
+            text += "\n";
+            text += obj.transform.parent != null ? GetIdOfObj(obj.transform.parent.gameObject) : "";
+            text += "\n";
+
+            return text;
+        }
+
+        public List<string> GetAllScenes()
+        {
+            string path = Application.persistentDataPath;
+            List<string> fileNames = new List<string>();
+
+            foreach (var item in Directory.GetFiles(path))
+            {
+                if (item.EndsWith(".uterus"))
+                    fileNames.Add(item.Replace(path + "\\", ""));
+            }
+
+            return fileNames;
+        }
+        
+        public void SaveShit()
+        {
+            string text = "";
+
+            foreach (var obj in GameObject.FindObjectsOfType<CubeObject>(true))
+            {
+                if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
+                {
+                    GameObject ob = obj.gameObject;
+                    Destroy(obj.GetComponent<CubeObject>());
+                    ArenaObject o = ArenaObject.Create(ob);
+                    continue;
+                }
+
+                text += "? CubeObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += (int)obj.matType + "\n";
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
+            {
+                text += "? PrefabObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.PrefabAsset + "\n";
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<ArenaObject>(true))
+            {
+                obj.enemyIds.Clear();
+                foreach (var e in obj.GetComponent<ActivateArena>().enemies)
+                {
+                    obj.addId(GetIdOfObj(e));
+                }
+
+                text += "? ArenaObject ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.enemyIds)
+                {
+                    text += e + "\n";
+                }
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            File.WriteAllText(Application.persistentDataPath + "/save.uterus", text);
+        }
+
+        public void TryToLoadShit()
+        {
+            GameObject loadScenePopup = editorCanvas.transform.GetChild(0).GetChild(8).gameObject;
+            TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+            TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
+            Button addButton = loadScenePopup.transform.GetChild(4).GetComponent<Button>();
+
+            loadScenePopup.SetActive(true);
+
+            field.Select();
+
+            field.onValueChanged.RemoveAllListeners();
+            addButton.onClick.RemoveAllListeners();
+            field.onValueChanged.AddListener((string val) =>
+            {
+                sceneResults.Clear();
+
+                List<string> scenes = GetAllScenes();
+
+                foreach (string type in scenes)
+                {
+                    float accuracy = 0f;
+                    string typeName = type.ToLower();
+                    string searchName = val.ToLower();
+                    int minLength = Math.Min(typeName.Length, searchName.Length);
+                    for (int i = 0; i < minLength; i++)
+                    {
+                        if (typeName[i] == searchName[i])
+                            accuracy += 1f / minLength;
+                        else
+                            break;
+                    }
+                    if (typeName.Contains(searchName))
+                        accuracy += 0.5f;
+
+                    if (typeName == searchName)
+                        accuracy += 10000f;
+
+                    if (accuracy > 0f)
+                        sceneResults.Add((type, accuracy));
+                }
+
+                sceneResults = sceneResults.OrderByDescending(t => t.Item2).ToList();
+
+                foundComponents.text = "Found saves:\n";
+                foreach (var result in sceneResults.Take(3))
+                {
+                    foundComponents.text += $"{result.Item1}<color=grey>   ";
+                }
+            });
+
+            addButton.onClick.AddListener(() =>
+            {
+                loadScenePopup.SetActive(false);
+                if (sceneResults.Count > 0)
+                {
+                    string sceneName = sceneResults[0].Item1;
+                    if (sceneName != null)
+                    {
+                        LoadShit(sceneName);
+                    }
+                }
+            });
+        }
+
+        void LoadShit(string sceneName)
+        {
+            string path = Application.persistentDataPath + $"/{sceneName}";
+
+            if (!File.Exists(path))
+            {
+                Plugin.LogError("Save not found!");
+                return;
+            }
+
+            string text = File.ReadAllText(path);
+
+            int lineIndex = 0;
+            bool isInScript = false;
+            string scriptType = "";
+            GameObject workingObject = null;
+
+            foreach (var line in text.Split(["\r\n", "\n"], StringSplitOptions.None))
+            {
+                if (!isInScript && line.StartsWith("? ") && line.EndsWith(" ?"))
+                {
+                    scriptType = line.Replace(" ?", "").Replace("? ", "");
+                    isInScript = true;
+                    lineIndex = 0;
+
+                    workingObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    workingObject.AddComponent<SpawnedObject>();
+                }
+
+                if (isInScript)
+                {
+                    Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
+
+                    if (lineIndex == 1)
+                        workingObject.GetComponent<SpawnedObject>().ID = line;
+                    if (lineIndex == 2)
+                        workingObject.name = line;
+                    if (lineIndex == 3)
+                        workingObject.layer = int.Parse(line);
+                    if (lineIndex == 4)
+                        workingObject.tag = line;
+                    if (lineIndex == 5)
+                        workingObject.transform.position = ParseVector3(line);
+                    if (lineIndex == 6)
+                        workingObject.transform.eulerAngles = ParseVector3(line);
+                    if (lineIndex == 7)
+                        workingObject.transform.localScale = ParseVector3(line);
+                    if (lineIndex == 8)
+                        workingObject.gameObject.SetActive(line == "1");
+                    if (lineIndex == 9)
+                        workingObject.GetComponent<SpawnedObject>().parentID = line;
+
+                    if (lineIndex == 10 && scriptType == "CubeObject")
+                        CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
+                    if (lineIndex == 10 && scriptType == "PrefabObject")
+                    {
+                        GameObject newObj = SpawnAsset(line);
+                        newObj.transform.position = workingObject.transform.position;
+                        newObj.transform.eulerAngles = workingObject.transform.eulerAngles;
+                        newObj.transform.localScale = workingObject.transform.localScale;
+                        newObj.layer = workingObject.layer;
+                        newObj.tag = workingObject.tag;
+                        newObj.SetActive(workingObject.activeSelf);
+                        newObj.AddComponent<SpawnedObject>();
+                        newObj.GetComponent<SpawnedObject>().ID = workingObject.GetComponent<SpawnedObject>().ID;
+                        newObj.GetComponent<SpawnedObject>().parentID = workingObject.GetComponent<SpawnedObject>().parentID;
+                        Destroy(workingObject);
+                    }
+                    if (lineIndex == 10 && scriptType == "ArenaObject")
+                        ArenaObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "ArenaObject")
+                        workingObject.GetComponent<ArenaObject>().addId(line);
+
+                    if (line == "? END ?")
+                    {
+                        isInScript = false;
+                    }
+                }
+
+                lineIndex++;
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+            {
+                if (obj.parentID != "")
+                {
+                    foreach (var findingObj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+                    {
+                        if (obj.parentID == findingObj.ID)
+                        {
+                            obj.transform.SetParent(findingObj.transform, true);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+            {
+                if (obj.GetComponent<ArenaObject>() != null)
+                    obj.GetComponent<ArenaObject>().createArena();
+            }
         }
 
         public static void Log(string str)

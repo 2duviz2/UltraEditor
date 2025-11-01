@@ -86,7 +86,10 @@ namespace UltraEditor.Classes
                     }
 
                     if (Input.GetMouseButtonDown(0))
-                        SelectObject(hitObj);
+                        if (Input.GetKey(Plugin.altKey))
+                            EditorManager.Instance.SelectObject(hitObj);
+                        else
+                            SelectObject(hitObj);
                 }
             }
         }
