@@ -34,9 +34,9 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in enemyIds)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
                 {
-                    if (e == obj.ID)
+                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> enemies = (activateArena.enemies ?? []).ToList();
                         enemies.Add(obj.gameObject);

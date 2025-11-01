@@ -44,9 +44,9 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in enemyIds)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
                 {
-                    if (e == obj.ID)
+                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> enemies = (activateNextWave.nextEnemies ?? new GameObject[0]).ToList();
                         enemies.Add(obj.gameObject);
@@ -58,13 +58,13 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in toActivateIds)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
                 {
-                    if (e == obj.ID)
+                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> toActivate = (activateNextWave.toActivate ?? []).ToList();
                         toActivate.Add(obj.gameObject);
-                        activateNextWave.nextEnemies = toActivate.ToArray();
+                        activateNextWave.toActivate = toActivate.ToArray();
                         break;
                     }
                 }

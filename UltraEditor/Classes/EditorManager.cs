@@ -1550,7 +1550,7 @@ namespace UltraEditor.Classes
             });
         }
 
-        string GetIdOfObj(GameObject obj)
+        public static string GetIdOfObj(GameObject obj)
         {
             return obj.name + obj.transform.position.ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
         }
@@ -1667,6 +1667,7 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<NextArenaObject>(true))
             {
                 obj.enemyIds.Clear();
+                obj.toActivateIds.Clear();
                 foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
                 {
                     obj.addEnemyId(GetIdOfObj(e));
@@ -1817,6 +1818,19 @@ namespace UltraEditor.Classes
                 {
                     Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
 
+                    if (line == "? END ?")
+                    {
+                        isInScript = false;
+                        continue;
+                    }
+                    if (line == "? PASS ?")
+                    {
+                        phase++;
+                        continue;
+                    }
+                    if (line == "")
+                        continue;
+
                     if (lineIndex == 1)
                         workingObject.GetComponent<SpawnedObject>().ID = line;
                     if (lineIndex == 2)
@@ -1881,13 +1895,6 @@ namespace UltraEditor.Classes
                         ActivateObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "ActivateObject")
                         workingObject.GetComponent<ActivateObject>().addToActivateId(line);
-
-
-
-                    if (line == "? END ?")
-                        isInScript = false;
-                    if (line == "? PASS ?")
-                        phase++;
                 }
 
                 lineIndex++;
