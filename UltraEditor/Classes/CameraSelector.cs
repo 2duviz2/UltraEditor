@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Unity.AI.Navigation;
 using UnityEngine;
 
 namespace UltraEditor.Classes
@@ -246,6 +247,7 @@ namespace UltraEditor.Classes
                 arrow.GetComponent<Renderer>().material = new Material(DefaultReferenceManager.Instance.masterShader);
                 arrow.transform.localScale = new Vector3(0.5f, 1f, 0.5f);
                 arrow.GetComponent<Collider>().isTrigger = true;
+                arrow.GetOrAddComponent<NavMeshModifier>().ignoreFromBuild = true;
                 arrow.name = "MoveArrow_" + i;
                 var mat = new Material(Shader.Find("Hidden/Internal-Colored"));
                 mat.SetInt("_ZTest", (int)UnityEngine.Rendering.CompareFunction.Always);

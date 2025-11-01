@@ -10,6 +10,7 @@ namespace UltraEditor.Classes.Saving
     internal class ArenaObject : SavableObject
     {
         public List<string> enemyIds = new List<string>();
+        public bool onlyWave = true;
 
         public static ArenaObject Create(GameObject target)
         {
@@ -29,6 +30,7 @@ namespace UltraEditor.Classes.Saving
             mod.ignoreFromBuild = true;
             activateArena.doors = [];
             gameObject.GetComponent<Collider>().isTrigger = true;
+            activateArena.onlyWave = onlyWave;
 
             foreach (var e in enemyIds)
             {
@@ -36,7 +38,7 @@ namespace UltraEditor.Classes.Saving
                 {
                     if (e == obj.ID)
                     {
-                        List<GameObject> enemies = (activateArena.enemies ?? new GameObject[0]).ToList();
+                        List<GameObject> enemies = (activateArena.enemies ?? []).ToList();
                         enemies.Add(obj.gameObject);
                         activateArena.enemies = enemies.ToArray();
                         break;

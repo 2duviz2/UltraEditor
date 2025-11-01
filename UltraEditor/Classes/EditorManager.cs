@@ -444,6 +444,14 @@ namespace UltraEditor.Classes
             NewInspectorVariable("notInstaKill", typeof(DeathZone));
 
             NewInspectorVariable("enemies", typeof(ActivateArena));
+            NewInspectorVariable("onlyWave", typeof(ActivateArena));
+
+            NewInspectorVariable("nextEnemies", typeof(ActivateNextWave));
+            NewInspectorVariable("toActivate", typeof(ActivateNextWave));
+            NewInspectorVariable("enemyCount", typeof(ActivateNextWave));
+            NewInspectorVariable("lastWave", typeof(ActivateNextWave));
+
+            NewInspectorVariable("toActivate", typeof(ActivateObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -1602,6 +1610,19 @@ namespace UltraEditor.Classes
                     continue;
                 }
 
+                if (obj.GetComponent<ActivateNextWave>() != null)
+                {
+                    GameObject ob = obj.gameObject;
+                    Destroy(obj.GetComponent<CubeObject>());
+                    NextArenaObject o = NextArenaObject.Create(ob);
+                    continue;
+                }
+
+                if (obj.GetComponent<ActivateObject>() != null)
+                {
+                    continue;
+                }
+
                 text += "? CubeObject ?";
                 text += "\n";
                 text += addShit(obj);
@@ -1633,7 +1654,58 @@ namespace UltraEditor.Classes
                 text += "? ArenaObject ?";
                 text += "\n";
                 text += addShit(obj);
+                text += obj.GetComponent<ActivateArena>().onlyWave + "\n";
                 foreach (var e in obj.enemyIds)
+                {
+                    text += e + "\n";
+                }
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<NextArenaObject>(true))
+            {
+                obj.enemyIds.Clear();
+                foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
+                {
+                    obj.addEnemyId(GetIdOfObj(e));
+                }
+                foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
+                {
+                    obj.addToActivateId(GetIdOfObj(e));
+                }
+
+                text += "? NextArenaObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.GetComponent<NextArenaObject>().lastWave + "\n";
+                foreach (var e in obj.enemyIds)
+                {
+                    text += e + "\n";
+                }
+                text += "? PASS ?\n";
+                foreach (var e in obj.toActivateIds)
+                {
+                    text += e + "\n";
+                }
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<ActivateObject>(true))
+            {
+                obj.toActivateIds.Clear();
+                foreach (var e in obj.toActivate)
+                {
+                    obj.addToActivateId(GetIdOfObj(e));
+                }
+
+                text += "? ActivateObject ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.toActivateIds)
                 {
                     text += e + "\n";
                 }
@@ -1723,6 +1795,7 @@ namespace UltraEditor.Classes
             string text = File.ReadAllText(path);
 
             int lineIndex = 0;
+            int phase = 0;
             bool isInScript = false;
             string scriptType = "";
             GameObject workingObject = null;
@@ -1764,6 +1837,7 @@ namespace UltraEditor.Classes
 
                     if (lineIndex == 10 && scriptType == "CubeObject")
                         CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
+                    
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {
                         GameObject newObj = SpawnAsset(line);
@@ -1778,15 +1852,39 @@ namespace UltraEditor.Classes
                         newObj.GetComponent<SpawnedObject>().parentID = workingObject.GetComponent<SpawnedObject>().parentID;
                         Destroy(workingObject);
                     }
+
                     if (lineIndex == 10 && scriptType == "ArenaObject")
+                    {
                         ArenaObject.Create(workingObject);
-                    if (lineIndex >= 10 && scriptType == "ArenaObject")
+                        workingObject.GetComponent<ArenaObject>().onlyWave = line.ToLower() == "true";
+                    }
+                    if (lineIndex >= 11 && scriptType == "ArenaObject")
                         workingObject.GetComponent<ArenaObject>().addId(line);
 
-                    if (line == "? END ?")
+                    if (lineIndex == 10 && scriptType == "NextArenaObject")
                     {
-                        isInScript = false;
+                        NextArenaObject.Create(workingObject);
+                        workingObject.GetComponent<NextArenaObject>().lastWave = line.ToLower() == "true";
                     }
+                    if (lineIndex >= 11 && scriptType == "NextArenaObject")
+                    {
+                        if (phase == 0)
+                            workingObject.GetComponent<NextArenaObject>().addEnemyId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<NextArenaObject>().addToActivateId(line);
+                    }
+
+                    if (lineIndex == 10 && scriptType == "ActivateObject")
+                        ActivateObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "ActivateObject")
+                        workingObject.GetComponent<ActivateObject>().addToActivateId(line);
+
+
+
+                    if (line == "? END ?")
+                        isInScript = false;
+                    if (line == "? PASS ?")
+                        phase++;
                 }
 
                 lineIndex++;
@@ -1811,6 +1909,10 @@ namespace UltraEditor.Classes
             {
                 if (obj.GetComponent<ArenaObject>() != null)
                     obj.GetComponent<ArenaObject>().createArena();
+                if (obj.GetComponent<NextArenaObject>() != null)
+                    obj.GetComponent<NextArenaObject>().createArena();
+                if (obj.GetComponent<ActivateObject>() != null)
+                    obj.GetComponent<ActivateObject>().createActivator();
             }
         }
 
