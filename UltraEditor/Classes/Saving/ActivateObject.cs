@@ -12,9 +12,9 @@ namespace UltraEditor.Classes.Saving
         public GameObject[] toActivate = [];
         public List<string> toActivateIds = [];
 
-        public static NextArenaObject Create(GameObject target)
+        public static ActivateObject Create(GameObject target)
         {
-            NextArenaObject obj = target.AddComponent<NextArenaObject>();
+            ActivateObject obj = target.AddComponent<ActivateObject>();
             return obj;
         }
 

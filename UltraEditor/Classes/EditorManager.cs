@@ -1679,7 +1679,8 @@ namespace UltraEditor.Classes
                 text += "? NextArenaObject ?";
                 text += "\n";
                 text += addShit(obj);
-                text += obj.GetComponent<NextArenaObject>().lastWave + "\n";
+                text += obj.GetComponent<ActivateNextWave>().lastWave + "\n";
+                text += obj.GetComponent<ActivateNextWave>().enemyCount + "\n";
                 foreach (var e in obj.enemyIds)
                 {
                     text += e + "\n";
@@ -1866,7 +1867,9 @@ namespace UltraEditor.Classes
                         NextArenaObject.Create(workingObject);
                         workingObject.GetComponent<NextArenaObject>().lastWave = line.ToLower() == "true";
                     }
-                    if (lineIndex >= 11 && scriptType == "NextArenaObject")
+                    if (lineIndex == 11 && scriptType == "NextArenaObject")
+                        workingObject.GetComponent<NextArenaObject>().enemyCount = int.Parse(line);
+                    if (lineIndex >= 12 && scriptType == "NextArenaObject")
                     {
                         if (phase == 0)
                             workingObject.GetComponent<NextArenaObject>().addEnemyId(line);
