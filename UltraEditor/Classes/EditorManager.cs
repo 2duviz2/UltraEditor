@@ -1829,7 +1829,10 @@ namespace UltraEditor.Classes
                         continue;
                     }
                     if (line == "")
+                    {
+                        lineIndex++;
                         continue;
+                    }
 
                     if (lineIndex == 1)
                         workingObject.GetComponent<SpawnedObject>().ID = line;
