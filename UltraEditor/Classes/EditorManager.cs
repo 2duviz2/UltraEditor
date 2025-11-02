@@ -390,29 +390,29 @@ namespace UltraEditor.Classes
             NewInspectorVariable("localEulerAngles", typeof(Transform));
             NewInspectorVariable("localScale", typeof(Transform));
 
-            NewInspectorVariable("castShadows", typeof(MeshRenderer));
-            NewInspectorVariable("receiveShadows", typeof(MeshRenderer));
+            /*NewInspectorVariable("castShadows", typeof(MeshRenderer));
+            NewInspectorVariable("receiveShadows", typeof(MeshRenderer));*/
 
             //NewInspectorVariable("center", typeof(BoxCollider));
-            NewInspectorVariable("size", typeof(BoxCollider));
-            NewInspectorVariable("isTrigger", typeof(BoxCollider));
+            /*NewInspectorVariable("size", typeof(BoxCollider));
+            NewInspectorVariable("isTrigger", typeof(BoxCollider));*/
 
             //NewInspectorVariable("center", typeof(CapsuleCollider));
-            NewInspectorVariable("radius", typeof(CapsuleCollider));
+            /*NewInspectorVariable("radius", typeof(CapsuleCollider));
             NewInspectorVariable("height", typeof(CapsuleCollider));
-            NewInspectorVariable("isTrigger", typeof(CapsuleCollider));
+            NewInspectorVariable("isTrigger", typeof(CapsuleCollider));*/
 
-            NewInspectorVariable("drag", typeof(Rigidbody));
+            /*NewInspectorVariable("drag", typeof(Rigidbody));
             NewInspectorVariable("angularDrag", typeof(Rigidbody));
             NewInspectorVariable("mass", typeof(Rigidbody));
             NewInspectorVariable("useGravity", typeof(Rigidbody));
-            NewInspectorVariable("isKinematic", typeof(Rigidbody));
+            NewInspectorVariable("isKinematic", typeof(Rigidbody));*/
 
-            NewInspectorVariable("speed", typeof(NavMeshAgent));
+            /*NewInspectorVariable("speed", typeof(NavMeshAgent));
             NewInspectorVariable("angularSpeed", typeof(NavMeshAgent));
-            NewInspectorVariable("acceleration", typeof(NavMeshAgent));
+            NewInspectorVariable("acceleration", typeof(NavMeshAgent));*/
 
-            NewInspectorVariable("volume", typeof(AudioSource));
+            /*NewInspectorVariable("volume", typeof(AudioSource));
             NewInspectorVariable("pitch", typeof(AudioSource));
             NewInspectorVariable("loop", typeof(AudioSource));
             NewInspectorVariable("spatialize", typeof(AudioSource));
@@ -422,26 +422,26 @@ namespace UltraEditor.Classes
             NewInspectorVariable("dopplerLevel", typeof(AudioSource));
             NewInspectorVariable("priority", typeof(AudioSource));
             NewInspectorVariable("minDistance", typeof(AudioSource));
-            NewInspectorVariable("maxDistance", typeof(AudioSource));
+            NewInspectorVariable("maxDistance", typeof(AudioSource));*/
 
-            NewInspectorVariable("speed", typeof(Animator));
+            /*NewInspectorVariable("speed", typeof(Animator));*/
 
-            NewInspectorVariable("ignoreFromBuild", typeof(NavMeshModifier));
+            /*NewInspectorVariable("ignoreFromBuild", typeof(NavMeshModifier));*/
 
             NewInspectorVariable("matType", typeof(CubeObject));
 
             // Enemies
-            NewInspectorVariable("health", typeof(Zombie));
+            /*NewInspectorVariable("health", typeof(Zombie));
             NewInspectorVariable("health", typeof(Statue));
-            NewInspectorVariable("originalHealth", typeof(Statue));
+            NewInspectorVariable("originalHealth", typeof(Statue));*/
 
             // Triggers
-            NewInspectorVariable("timed", typeof(HudMessage));
+            /*NewInspectorVariable("timed", typeof(HudMessage));
             NewInspectorVariable("message", typeof(HudMessage));
-            NewInspectorVariable("timerTime", typeof(HudMessage));
+            NewInspectorVariable("timerTime", typeof(HudMessage));*/
 
-            NewInspectorVariable("damage", typeof(DeathZone));
-            NewInspectorVariable("notInstaKill", typeof(DeathZone));
+            /*NewInspectorVariable("damage", typeof(DeathZone));
+            NewInspectorVariable("notInstaKill", typeof(DeathZone));*/
 
             NewInspectorVariable("enemies", typeof(ActivateArena));
             NewInspectorVariable("onlyWave", typeof(ActivateArena));
@@ -452,6 +452,7 @@ namespace UltraEditor.Classes
             NewInspectorVariable("lastWave", typeof(ActivateNextWave));
 
             NewInspectorVariable("toActivate", typeof(ActivateObject));
+            NewInspectorVariable("toDeactivate", typeof(ActivateObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -810,7 +811,6 @@ namespace UltraEditor.Classes
 
             if (cameraSelector.selectedObject != null)
             {
-
                 CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                 {
                     GameObject addComponentPopup = editorCanvas.transform.GetChild(0).GetChild(6).gameObject;
@@ -1686,10 +1686,12 @@ namespace UltraEditor.Classes
             {
                 obj.enemyIds.Clear();
                 obj.toActivateIds.Clear();
+                if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
                 foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
                 {
                     obj.addEnemyId(GetIdOfObj(e));
                 }
+                if (obj.GetComponent<ActivateNextWave>().toActivate != null)
                 foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
                 {
                     obj.addToActivateId(GetIdOfObj(e));
@@ -1717,15 +1719,25 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<ActivateObject>(true))
             {
                 obj.toActivateIds.Clear();
+                obj.toDeactivateIds.Clear();
                 foreach (var e in obj.toActivate)
                 {
                     obj.addToActivateId(GetIdOfObj(e));
+                }
+                foreach (var e in obj.toDeactivate)
+                {
+                    obj.addtoDeactivateId(GetIdOfObj(e));
                 }
 
                 text += "? ActivateObject ?";
                 text += "\n";
                 text += addShit(obj);
                 foreach (var e in obj.toActivateIds)
+                {
+                    text += e + "\n";
+                }
+                text += "? PASS ?\n";
+                foreach (var e in obj.toDeactivateIds)
                 {
                     text += e + "\n";
                 }
@@ -1827,11 +1839,10 @@ namespace UltraEditor.Classes
                     scriptType = line.Replace(" ?", "").Replace("? ", "");
                     isInScript = true;
                     lineIndex = 0;
+                    phase = 0;
 
                     workingObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     workingObject.AddComponent<SpawnedObject>();
-
-                    phase = 0;
                 }
                 else if (isInScript)
                 {
@@ -1915,10 +1926,13 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<NextArenaObject>().addToActivateId(line);
                     }
 
-                    if (lineIndex == 10 && scriptType == "ActivateObject")
+                    if (scriptType == "ActivateObject" && workingObject.GetComponent<ActivateObject>() == null)
                         ActivateObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "ActivateObject")
-                        workingObject.GetComponent<ActivateObject>().addToActivateId(line);
+                        if (phase == 0)
+                            workingObject.GetComponent<ActivateObject>().addToActivateId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
                 }
 
                 lineIndex++;

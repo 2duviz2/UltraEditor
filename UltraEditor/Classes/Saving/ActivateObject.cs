@@ -10,7 +10,9 @@ namespace UltraEditor.Classes.Saving
     internal class ActivateObject : SavableObject
     {
         public GameObject[] toActivate = [];
+        public GameObject[] toDeactivate = [];
         public List<string> toActivateIds = [];
+        public List<string> toDeactivateIds = [];
 
         public static ActivateObject Create(GameObject target)
         {
@@ -21,6 +23,11 @@ namespace UltraEditor.Classes.Saving
         public void addToActivateId(string id)
         {
             toActivateIds.Add(id);
+        }
+
+        public void addtoDeactivateId(string id)
+        {
+            toDeactivateIds.Add(id);
         }
 
         public void createActivator()
@@ -42,6 +49,20 @@ namespace UltraEditor.Classes.Saving
                     }
                 }
             }
+
+            foreach (var e in toDeactivateIds)
+            {
+                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                {
+                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                    {
+                        List<GameObject> deactivate = (toDeactivate ?? []).ToList();
+                        deactivate.Add(obj.gameObject);
+                        toDeactivate = deactivate.ToArray();
+                        break;
+                    }
+                }
+            }
         }
 
         public void OnTriggerEnter(Collider other)
@@ -51,6 +72,11 @@ namespace UltraEditor.Classes.Saving
                 foreach (var item in toActivate)
                 {
                     item.SetActive(true);
+                }
+
+                foreach (var item in toDeactivate)
+                {
+                    item.SetActive(false);
                 }
 
                 Destroy(this);
