@@ -453,6 +453,7 @@ namespace UltraEditor.Classes
 
             NewInspectorVariable("toActivate", typeof(ActivateObject));
             NewInspectorVariable("toDeactivate", typeof(ActivateObject));
+            NewInspectorVariable("canBeReactivated", typeof(ActivateObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -816,6 +817,7 @@ namespace UltraEditor.Classes
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
+                if (advancedInspector || (cameraSelector.GetComponent<ActivateArena>() == null && cameraSelector.GetComponent<ActivateNextWave>() == null && cameraSelector.GetComponent<ActivateObject>() == null))
                 CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                 {
                     GameObject addComponentPopup = editorCanvas.transform.GetChild(0).GetChild(6).gameObject;
@@ -1783,6 +1785,8 @@ namespace UltraEditor.Classes
                 {
                     text += e + "\n";
                 }
+                text += "? PASS ?\n";
+                text += obj.canBeReactivated.ToString();
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -1975,6 +1979,8 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<ActivateObject>().addToActivateId(line);
                         else if (phase == 1)
                             workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<ActivateObject>().canBeReactivated = line.ToLower() == "true";
                 }
 
                 lineIndex++;

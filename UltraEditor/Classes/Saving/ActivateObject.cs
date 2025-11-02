@@ -13,6 +13,7 @@ namespace UltraEditor.Classes.Saving
         public GameObject[] toDeactivate = [];
         public List<string> toActivateIds = [];
         public List<string> toDeactivateIds = [];
+        public bool canBeReactivated = false;
 
         public static ActivateObject Create(GameObject target)
         {
@@ -79,7 +80,8 @@ namespace UltraEditor.Classes.Saving
                     item.SetActive(false);
                 }
 
-                Destroy(this);
+                if (!canBeReactivated)
+                    Destroy(this);
             }
         }
     }
