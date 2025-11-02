@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UltraEditor.Classes.Saving;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -104,6 +105,12 @@ namespace UltraEditor.Classes
 
         void RestoreMaterial(GameObject obj)
         {
+            if (obj.GetComponent<CubeObject>() != null && obj.GetComponent<MaterialChoser>() != null)
+            {
+                obj.GetComponent<MaterialChoser>().ProcessMaterial(obj.GetComponent<CubeObject>().matType);
+                return;
+            }
+
             if (obj && originalMaterials.TryGetValue(obj, out Material original))
             {
                 var r = obj.GetComponent<Renderer>();

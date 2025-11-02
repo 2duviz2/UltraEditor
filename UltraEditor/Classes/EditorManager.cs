@@ -265,7 +265,7 @@ namespace UltraEditor.Classes
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
-                SaveShit();
+                TryToSaveShit();
             });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
@@ -879,6 +879,8 @@ namespace UltraEditor.Classes
                                     ActivateArena cc = (ActivateArena)c;
                                     cc.doors = new Door[0];
                                     cc.onlyWave = true;
+                                    if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                        cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
                                 }
                                 if (c is HudMessage)
                                 {
@@ -1613,8 +1615,37 @@ namespace UltraEditor.Classes
 
             return fileNames;
         }
-        
-        public void SaveShit()
+
+        public void TryToSaveShit()
+        {
+            GameObject saveScenePopup = editorCanvas.transform.GetChild(0).GetChild(9).gameObject;
+            TMP_InputField field = saveScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+            TMP_Text foundComponents = saveScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
+            Button addButton = saveScenePopup.transform.GetChild(4).GetComponent<Button>();
+
+            saveScenePopup.SetActive(true);
+
+            field.Select();
+
+            field.onValueChanged.RemoveAllListeners();
+            addButton.onClick.RemoveAllListeners();
+            field.onValueChanged.AddListener((string val) =>
+            {
+                foundComponents.text = "Save scene:\n";
+                foundComponents.text += $"{field.text}<color=grey>.uterus";
+            });
+
+            addButton.onClick.AddListener(() =>
+            {
+                saveScenePopup.SetActive(false);
+                if (sceneResults.Count > 0)
+                {
+                    SaveShit(field.text);
+                }
+            });
+        }
+
+        public void SaveShit(string path)
         {
             string text = "";
 
@@ -1746,7 +1777,7 @@ namespace UltraEditor.Classes
                 text += "\n";
             }
 
-            File.WriteAllText(Application.persistentDataPath + "/save.uterus", text);
+            File.WriteAllText(Application.persistentDataPath + $"/{path}.uterus", text);
         }
 
         public void TryToLoadShit()

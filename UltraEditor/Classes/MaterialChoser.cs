@@ -10,11 +10,18 @@ namespace UltraEditor.Classes
     {
         public Vector2 tile = Vector2.one;
         public Vector2 offset = Vector2.one;
+        private Vector3 lastScale = Vector3.one;
+        private Mesh mesh;
 
         public enum materialTypes
         {
             Default,
-            MasterShader
+            Armor,
+            Glass,
+            Grass,
+            Metal,
+            Wood,
+            MasterShader,
         }
 
         public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -28,36 +35,74 @@ namespace UltraEditor.Classes
         {
             Renderer renderer = GetComponent<Renderer>();
 
+            Material newMat = null;
+
             if (type == materialTypes.Default)
-                //renderer.material = Material.GetDefaultMaterial();
-                renderer.material = GetDefaultMaterial();
-            if (type == materialTypes.MasterShader)
-                renderer.material = new Material(DefaultReferenceManager.Instance.masterShader);
+                newMat = GetSandboxMaterial("Procedural Cube");
+            else if (type == materialTypes.Armor)
+                newMat = GetSandboxMaterial("Procedural Armor");
+            else if (type == materialTypes.Glass)
+                newMat = GetSandboxMaterial("Procedural Glass Variant");
+            else if (type == materialTypes.Grass)
+                newMat = GetSandboxMaterial("Procedural Grass Variant");
+            else if (type == materialTypes.Metal)
+                newMat = GetSandboxMaterial("Procedural Metal Cube Variant");
+            else if (type == materialTypes.Wood)
+                newMat = GetSandboxMaterial("Procedural Wood Cube Variant");
+            else if (type == materialTypes.MasterShader)
+                newMat = new Material(DefaultReferenceManager.Instance.masterShader);
+
+            renderer.material = newMat;
 
             tile = renderer.material.GetTextureScale("_MainTex") * 0.1f;
             offset = renderer.material.GetTextureOffset("_MainTex");
+            mesh = null;
         }
 
         public void Update()
         {
-            Renderer renderer = GetComponent<Renderer>();
-            Vector3 scale = transform.lossyScale;
-
-            if (scale.x == 0 || scale.y == 0 || scale.z == 0)
+            if (mesh == null)
+            {
+                mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
+                GetComponent<MeshFilter>().mesh = mesh;
                 return;
-
-            float smallest = Mathf.Min(scale.x, Mathf.Min(scale.y, scale.z));
-            Vector3 normalized = new Vector3(scale.x / smallest, scale.y / smallest, scale.z / smallest);
-
-            Vector2 tiling = new Vector2(tile.x * normalized.x, tile.y * normalized.y);
-
-            renderer.material.SetTextureScale("_MainTex", tiling);
+            }
+            
+            if (transform.lossyScale != lastScale)
+            {
+                UpdateUVs();
+                lastScale = transform.lossyScale;
+            }
         }
 
-        Material GetDefaultMaterial()
+        void UpdateUVs()
         {
-            GameObject temporalCube = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Sandbox/Procedural Cube.prefab"));
-            Material mat = temporalCube.GetComponent<Renderer>().material;
+            var uvs = new Vector2[mesh.vertices.Length];
+            var vertices = mesh.vertices;
+
+            for (int i = 0; i < vertices.Length; i++)
+            {
+                Vector3 v = vertices[i];
+                Vector3 n = mesh.normals[i];
+
+                if (Mathf.Abs(n.y) > 0.9f)
+                    uvs[i] = new Vector2(v.x * tile.x * transform.lossyScale.x,
+                                         v.z * tile.y * transform.lossyScale.z);
+                else if (Mathf.Abs(n.x) > 0.9f)
+                    uvs[i] = new Vector2(v.z * tile.x * transform.lossyScale.z,
+                                         v.y * tile.y * transform.lossyScale.y);
+                else
+                    uvs[i] = new Vector2(v.x * tile.x * transform.lossyScale.x,
+                                         v.y * tile.y * transform.lossyScale.y);
+            }
+
+            mesh.uv = uvs;
+        }
+
+        Material GetSandboxMaterial(string path)
+        {
+            GameObject temporalCube = Instantiate(Plugin.Ass<GameObject>($"Assets/Prefabs/Sandbox/{path}.prefab"));
+            Material mat = new Material(temporalCube.GetComponent<Renderer>().material);
 
             Destroy(temporalCube);
 
