@@ -7,19 +7,8 @@ namespace UltraEditor.Classes.Saving
 {
     public class CubeObject : SavableObject
     {
-        private MaterialChoser.materialTypes _matType;
-
-        public MaterialChoser.materialTypes matType
-        {
-            get => _matType;
-            set
-            {
-                _matType = value;
-                var chooser = GetComponent<MaterialChoser>();
-                if (chooser != null)
-                    chooser.ProcessMaterial(_matType);
-            }
-        }
+        public MaterialChoser.materialTypes matType;
+        MaterialChoser.materialTypes _matType;
 
         public static CubeObject Create(GameObject target, MaterialChoser.materialTypes materialType)
         {
@@ -27,6 +16,15 @@ namespace UltraEditor.Classes.Saving
             obj.matType = materialType;
             MaterialChoser.Create(target, materialType);
             return obj;
+        }
+
+        public void Tick()
+        {
+            if (matType != _matType)
+            {
+                _matType = matType;
+                GetComponent<MaterialChoser>()?.ProcessMaterial(matType);
+            }
         }
     }
 }
