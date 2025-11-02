@@ -811,6 +811,11 @@ namespace UltraEditor.Classes
 
             if (cameraSelector.selectedObject != null)
             {
+                if (!advancedInspector && cameraSelector.selectedObject.GetComponent<SavableObject>() == null)
+                {
+                    lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
+                    return;
+                }
                 CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                 {
                     GameObject addComponentPopup = editorCanvas.transform.GetChild(0).GetChild(6).gameObject;
@@ -882,6 +887,12 @@ namespace UltraEditor.Classes
                                     if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
                                 }
+                                if (c is ActivateObject)
+                                {
+                                    if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                        cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
+                                }
+
                                 if (c is HudMessage)
                                 {
                                     HudMessage cc = (HudMessage)c;

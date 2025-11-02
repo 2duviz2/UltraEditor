@@ -22,6 +22,7 @@ namespace UltraEditor.Classes
             Metal,
             Wood,
             MasterShader,
+            NoCollision,
         }
 
         public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -37,6 +38,8 @@ namespace UltraEditor.Classes
 
             Material newMat = null;
 
+            GetComponent<Collider>().enabled = true;
+
             if (type == materialTypes.Default)
                 newMat = GetSandboxMaterial("Procedural Cube");
             else if (type == materialTypes.Armor)
@@ -51,6 +54,11 @@ namespace UltraEditor.Classes
                 newMat = GetSandboxMaterial("Procedural Wood Cube Variant");
             else if (type == materialTypes.MasterShader)
                 newMat = new Material(DefaultReferenceManager.Instance.masterShader);
+            else if (type == materialTypes.NoCollision)
+            {
+                newMat = new Material(DefaultReferenceManager.Instance.masterShader);
+                GetComponent<Collider>().enabled = false;
+            }
 
             renderer.material = newMat;
 
