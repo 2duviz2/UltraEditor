@@ -689,6 +689,17 @@ namespace UltraEditor.Classes
 
         public static List<Type> GetAllMonoBehaviourTypes()
         {
+            if (Instance != null && !Instance.advancedInspector)
+            {
+                List<Type> list = new List<Type>();
+
+                list.Add(typeof(ActivateArena));
+                list.Add(typeof(ActivateNextWave));
+                list.Add(typeof(ActivateObject));
+
+                return list;
+            }
+
             var assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
 
             var engineAssemblyNames = new[]
@@ -914,12 +925,19 @@ namespace UltraEditor.Classes
                 {
                     string compName = component.GetType().Name;
 
-                    CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
+                    if (advancedInspector)
                     {
-                        Destroy(component);
-                    });
+                        CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
+                        {
+                            Destroy(component);
+                        });
+                    }
+                    else
+                    {
+                        CreateInspectorItem(compName, inspectorItemType.None);
+                    }
 
-                    var type = component.GetType();
+                        var type = component.GetType();
                     var fields = type.GetFields(
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                     var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -947,7 +965,7 @@ namespace UltraEditor.Classes
                         {
                             if (!advancedInspector)
                             {
-                                if (!inspectorVariables.Any(iv => iv.varName == prop.Name && iv.parentComponent == type) && prop.Name != "enabled")
+                                if (!inspectorVariables.Any(iv => iv.varName == prop.Name && iv.parentComponent == type))
                                     continue;
                             }
 
@@ -1812,20 +1830,23 @@ namespace UltraEditor.Classes
 
                     workingObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     workingObject.AddComponent<SpawnedObject>();
-                }
 
-                if (isInScript)
+                    phase = 0;
+                }
+                else if (isInScript)
                 {
                     Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
 
                     if (line == "? END ?")
                     {
                         isInScript = false;
+                        lineIndex++;
                         continue;
                     }
                     if (line == "? PASS ?")
                     {
                         phase++;
+                        lineIndex++;
                         continue;
                     }
                     if (line == "")

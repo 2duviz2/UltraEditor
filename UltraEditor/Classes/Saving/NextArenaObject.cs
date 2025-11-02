@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -56,12 +57,17 @@ namespace UltraEditor.Classes.Saving
                 }
             }
 
+            foreach (var item in toActivateIds)
+            {
+                Plugin.LogInfo(item);
+            }
             foreach (var e in toActivateIds)
             {
                 foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
+                        Plugin.LogInfo($"FOUND OBEJCT {obj.name}");
                         List<GameObject> toActivate = (activateNextWave.toActivate ?? []).ToList();
                         toActivate.Add(obj.gameObject);
                         activateNextWave.toActivate = toActivate.ToArray();
