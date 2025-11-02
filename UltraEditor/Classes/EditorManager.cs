@@ -817,99 +817,101 @@ namespace UltraEditor.Classes
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.GetComponent<ActivateArena>() == null && cameraSelector.GetComponent<ActivateNextWave>() == null && cameraSelector.GetComponent<ActivateObject>() == null))
-                CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null))
                 {
-                    GameObject addComponentPopup = editorCanvas.transform.GetChild(0).GetChild(6).gameObject;
-                    TMP_InputField field = addComponentPopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
-                    TMP_Text foundComponents = addComponentPopup.transform.GetChild(2).GetComponent<TMP_Text>();
-                    Button addButton = addComponentPopup.transform.GetChild(4).GetComponent<Button>();
-
-                    addComponentPopup.SetActive(true);
-
-                    field.Select();
-
-                    field.onValueChanged.RemoveAllListeners();
-                    addButton.onClick.RemoveAllListeners();
-                    field.onValueChanged.AddListener((string val) =>
+                    CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
-                        searchResults.Clear();
+                        GameObject addComponentPopup = editorCanvas.transform.GetChild(0).GetChild(6).gameObject;
+                        TMP_InputField field = addComponentPopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+                        TMP_Text foundComponents = addComponentPopup.transform.GetChild(2).GetComponent<TMP_Text>();
+                        Button addButton = addComponentPopup.transform.GetChild(4).GetComponent<Button>();
 
-                        var monoTypes = GetAllMonoBehaviourTypes();
+                        addComponentPopup.SetActive(true);
 
-                        foreach (var type in monoTypes)
+                        field.Select();
+
+                        field.onValueChanged.RemoveAllListeners();
+                        addButton.onClick.RemoveAllListeners();
+                        field.onValueChanged.AddListener((string val) =>
                         {
-                            float accuracy = 0f;
-                            string typeName = type.Name.ToLower();
-                            string searchName = val.ToLower();
-                            int minLength = Math.Min(typeName.Length, searchName.Length);
-                            for (int i = 0; i < minLength; i++)
+                            searchResults.Clear();
+
+                            var monoTypes = GetAllMonoBehaviourTypes();
+
+                            foreach (var type in monoTypes)
                             {
-                                if (typeName[i] == searchName[i])
-                                    accuracy += 1f / minLength;
+                                float accuracy = 0f;
+                                string typeName = type.Name.ToLower();
+                                string searchName = val.ToLower();
+                                int minLength = Math.Min(typeName.Length, searchName.Length);
+                                for (int i = 0; i < minLength; i++)
+                                {
+                                    if (typeName[i] == searchName[i])
+                                        accuracy += 1f / minLength;
+                                    else
+                                        break;
+                                }
+                                if (typeName.Contains(searchName))
+                                    accuracy += 0.5f;
+
+                                if (typeName == searchName)
+                                    accuracy += 10000f;
+
+                                if (accuracy > 0f)
+                                    searchResults.Add((type.Name, type, accuracy));
+                            }
+
+                            searchResults = searchResults.OrderByDescending(t => t.Item3).ToList();
+
+                            foundComponents.text = "Found component:\n";
+                            foreach (var result in searchResults.Take(3))
+                            {
+                                foundComponents.text += $"{result.Item1}<color=grey>   ";
+                            }
+                        });
+
+                        addButton.onClick.AddListener(() =>
+                        {
+                            addComponentPopup.SetActive(false);
+                            if (cameraSelector.selectedObject == null) return;
+                            if (searchResults.Count > 0)
+                            {
+                                string componentName = searchResults[0].Item1;
+                                Type componentType = searchResults[0].Item2;
+                                if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
+                                {
+                                    Component c = cameraSelector.selectedObject.AddComponent(componentType);
+                                    InitializeDefaultFields(c);
+                                    if (c is ActivateArena)
+                                    {
+                                        ActivateArena cc = (ActivateArena)c;
+                                        cc.doors = new Door[0];
+                                        cc.onlyWave = true;
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
+                                    }
+                                    if (c is ActivateObject)
+                                    {
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
+                                    }
+
+                                    if (c is HudMessage)
+                                    {
+                                        HudMessage cc = (HudMessage)c;
+                                        cc.timed = true;
+                                    }
+
+                                    UpdateInspector();
+                                }
                                 else
-                                    break;
+                                {
+                                    Plugin.LogError($"Component type '{componentName}' not found.");
+                                }
                             }
-                            if (typeName.Contains(searchName))
-                                accuracy += 0.5f;
-
-                            if (typeName == searchName)
-                                accuracy += 10000f;
-
-                            if (accuracy > 0f)
-                                searchResults.Add((type.Name, type, accuracy));
-                        }
-
-                        searchResults = searchResults.OrderByDescending(t => t.Item3).ToList();
-
-                        foundComponents.text = "Found component:\n";
-                        foreach (var result in searchResults.Take(3))
-                        {
-                            foundComponents.text += $"{result.Item1}<color=grey>   ";
-                        }
+                        });
                     });
-
-                    addButton.onClick.AddListener(() =>
-                    {
-                        addComponentPopup.SetActive(false);
-                        if (cameraSelector.selectedObject == null) return;
-                        if (searchResults.Count > 0)
-                        {
-                            string componentName = searchResults[0].Item1;
-                            Type componentType = searchResults[0].Item2;
-                            if (componentType != null && typeof(Component).IsAssignableFrom(componentType))
-                            {
-                                Component c = cameraSelector.selectedObject.AddComponent(componentType);
-                                InitializeDefaultFields(c);
-                                if (c is ActivateArena)
-                                {
-                                    ActivateArena cc = (ActivateArena)c;
-                                    cc.doors = new Door[0];
-                                    cc.onlyWave = true;
-                                    if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
-                                        cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                }
-                                if (c is ActivateObject)
-                                {
-                                    if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
-                                        cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                }
-
-                                if (c is HudMessage)
-                                {
-                                    HudMessage cc = (HudMessage)c;
-                                    cc.timed = true;
-                                }
-
-                                UpdateInspector();
-                            }
-                            else
-                            {
-                                Plugin.LogError($"Component type '{componentName}' not found.");
-                            }
-                        }
-                    });
-                });
+                }
 
                 CreateInspectorItem("Name", inspectorItemType.InputField, cameraSelector.selectedObject.name).AddListener(() =>
                 {
