@@ -144,10 +144,11 @@ namespace UltraEditor.Classes
         }
 
         static NavMeshSurface navMeshSurface;
-        static string[] doNotDelete = new string[] { "Level Info", "FirstRoom", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
+        static string deleteLevel = "Endless";
+        static string[] doNotDelete = new string[] { "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
-            if (force || (SceneHelper.CurrentScene == "Endless" && !StatsManager.Instance.timer))
+            if (force || (SceneHelper.CurrentScene == deleteLevel && !StatsManager.Instance.timer))
             {
                 foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
                 {
@@ -166,6 +167,9 @@ namespace UltraEditor.Classes
                     navMeshSurface.collectObjects = CollectObjects.All;
                     navMeshSurface.BuildNavMesh();
                     Plugin.LogInfo("NavMeshSurface created.");
+
+                    StatsManager.Instance.levelNumber = 0;
+                    StatsManager.Instance.endlessMode = false;
                 }
             }
         }
@@ -207,7 +211,7 @@ namespace UltraEditor.Classes
                     Cursor.visible = false;
                     Cursor.lockState = CursorLockMode.Locked;
 
-                    if (SceneHelper.CurrentScene == "Endless")
+                    if (SceneHelper.CurrentScene == deleteLevel)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
                 }
 
@@ -247,6 +251,7 @@ namespace UltraEditor.Classes
                 NewMovement.Instance.gameObject.SetActive(mouseLocked);
                 defaultCullingMask = CameraController.Instance.cam.cullingMask;
                 ChangeCameraCullingLayers(defaultCullingMask);
+                NewMovement.Instance.endlessMode = false;
             }
             Time.timeScale = mouseLocked ? 1f : 0f;
 
@@ -454,6 +459,10 @@ namespace UltraEditor.Classes
             NewInspectorVariable("toActivate", typeof(ActivateObject));
             NewInspectorVariable("toDeactivate", typeof(ActivateObject));
             NewInspectorVariable("canBeReactivated", typeof(ActivateObject));
+
+            //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
+            NewInspectorVariable("rooms", typeof(CheckPoint));
+            NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -675,7 +684,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == "Endless" && navMeshSurface != null)
+                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == deleteLevel && navMeshSurface != null)
                 {
                     if (obj.GetComponent<SavableObject>() == null)
                         continue;
@@ -1217,6 +1226,75 @@ namespace UltraEditor.Classes
                     UpdateInspector();
                 });
             }
+            else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                if (value == null)
+                    value = Activator.CreateInstance(type);
+
+                var list = (IList)value;
+                var elemType = type.GetGenericArguments()[0];
+                arrayType = elemType;
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    int index = i;
+                    var element = list[i];
+
+                    string displayName;
+                    if (element is UnityEngine.Object uobj && uobj)
+                        displayName = uobj.name;
+                    else
+                        displayName = element?.ToString() ?? "null";
+
+                    CreateInspectorItem("<size=10>" + fieldName + $"[{i}] </size>{displayName}", inspectorItemType.ArrayItem, element?.ToString() ?? "null", element).AddListener(() =>
+                    {
+                        if (lastFieldText == "change")
+                        {
+                            string selectable = "GameObject";
+
+                            if (arrayType == typeof(GameObject))
+                            {
+                                if (Input.GetKey(Plugin.altKey) && element != null && element is GameObject go && go)
+                                {
+                                    cameraSelector.SelectObject(go);
+                                    return;
+                                }
+
+                                choosing_comp = comp;
+                                choosing_field = field;
+                                choosing_field_name = fieldName;
+                                choosing_special = "";
+                                choosing_type = type;
+                                choosing_index = index;
+                                choosing = true;
+                                choosing_object = obj;
+                                if (choosing_comp.GetType() == typeof(ActivateArena))
+                                {
+                                    selectable = "Enemy";
+                                    choosing_special = "enemy";
+                                }
+                                cameraSelector.selectionMode = CameraSelector.SelectionMode.Cursor;
+                                SetMessageText($"Select a {selectable} and press ALT + S");
+                            }
+                        }
+                        else if (lastFieldText == "remove")
+                        {
+                            Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
+
+                            for (int j = 0; j < list.Count; j++)
+                                Plugin.LogInfo($"list[{j}] = {(list[j] == null ? "null" : list[j].ToString())}");
+
+                            if (list == null) return;
+                            if (index < 0 || index >= list.Count) return;
+
+                            list.RemoveAt(index);
+
+                            SetMemberValue(field, comp, list);
+                            UpdateInspector();
+                        }
+                    });
+                }
+            }
             else
             {
                 CreateInspectorItem($"<color=red>{fieldName}", inspectorItemType.None, "", null);
@@ -1711,6 +1789,7 @@ namespace UltraEditor.Classes
 
             foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
             {
+                if (obj.GetComponent<CheckPoint>() != null) continue;
                 text += "? PrefabObject ?";
                 text += "\n";
                 text += addShit(obj);
@@ -1802,6 +1881,60 @@ namespace UltraEditor.Classes
                 }
                 text += "? PASS ?\n";
                 text += obj.canBeReactivated.ToString();
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<CheckPoint>(true))
+            {
+                while (obj.GetComponent<CheckpointObject>() != null)
+                    Destroy(obj.GetComponent<CheckpointObject>());
+                CheckpointObject co = CheckpointObject.Create(obj.gameObject);
+                
+                foreach (var e in obj.rooms)
+                {
+                    co.addRoomId(GetIdOfObj(e));
+                }
+                foreach (var e in obj.roomsToInherit)
+                {
+                    co.addRoomToInheritId(GetIdOfObj(e));
+                }
+
+                text += "? CheckpointObject ?";
+                text += "\n";
+                text += addShit(co);
+                foreach (var e in co.rooms)
+                {
+                    text += e + "\n";
+                }
+                text += "? PASS ?\n";
+                foreach (var e in co.roomsToInherit)
+                {
+                    text += e + "\n";
+                }
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
+            {
+                CheckpointObject co = CheckpointObject.Create(obj.gameObject);
+                if (co.transform.childCount != 0) continue;
+
+                text += "? CheckpointObject ?";
+                text += "\n";
+                text += addShit(co);
+                foreach (var e in co.rooms)
+                {
+                    text += e + "\n";
+                }
+                text += "? PASS ?\n";
+                foreach (var e in co.roomsToInherit)
+                {
+                    text += e + "\n";
+                }
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -1907,7 +2040,7 @@ namespace UltraEditor.Classes
                 }
                 else if (isInScript)
                 {
-                    Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
+                    //Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
 
                     if (line == "? END ?")
                     {
@@ -1996,6 +2129,14 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
                         else if (phase == 2)
                             workingObject.GetComponent<ActivateObject>().canBeReactivated = line.ToLower() == "true";
+
+                    if (scriptType == "CheckpointObject" && workingObject.GetComponent<CheckpointObject>() == null)
+                        CheckpointObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "CheckpointObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<CheckpointObject>().addRoomId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<CheckpointObject>().addRoomToInheritId(line);
                 }
 
                 lineIndex++;
@@ -2024,6 +2165,8 @@ namespace UltraEditor.Classes
                     obj.GetComponent<NextArenaObject>().createArena();
                 if (obj.GetComponent<ActivateObject>() != null)
                     obj.GetComponent<ActivateObject>().createActivator();
+                if (obj.GetComponent<CheckpointObject>() != null)
+                    obj.GetComponent<CheckpointObject>().createCheckpoint();
             }
         }
 
