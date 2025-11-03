@@ -144,7 +144,7 @@ namespace UltraEditor.Classes
         }
 
         static NavMeshSurface navMeshSurface;
-        static string[] doNotDelete = new string[] { "GlobalLights", "Level Info", "FirstRoom", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
+        static string[] doNotDelete = new string[] { "Level Info", "FirstRoom", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
             if (force || (SceneHelper.CurrentScene == "Endless" && !StatsManager.Instance.timer))
@@ -675,7 +675,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null)
+                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == "Endless" && navMeshSurface != null)
                 {
                     if (obj.GetComponent<SavableObject>() == null)
                         continue;
