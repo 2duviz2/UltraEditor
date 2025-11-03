@@ -1126,16 +1126,29 @@ namespace UltraEditor.Classes
                 for (int i = 0; i < ((Array)value).Length; i++)
                 {
                     int index = i;
-                    CreateInspectorItem(fieldName + $"[{i}]", inspectorItemType.ArrayItem, ((Array)value).GetValue(i)?.ToString() ?? "null", ((Array)value).GetValue(i)).AddListener(() =>
+                    var element = ((Array)value).GetValue(i);
+                    arrayType = value.GetType().GetElementType();
+
+                    string displayName;
+                    if (element is UnityEngine.Object uobj && uobj)
+                        displayName = uobj.name;
+                    else
+                        displayName = element?.ToString() ?? "null";
+
+                    CreateInspectorItem("<size=10>" + fieldName + $"[{i}] </size>{displayName}", inspectorItemType.ArrayItem, ((Array)value).GetValue(i)?.ToString() ?? "null", ((Array)value).GetValue(i)).AddListener(() =>
                     {
                         if (lastFieldText == "change")
                         {
-                            arrayType = value.GetType().GetElementType();
-
                             string selectable = "GameObject";
 
                             if (arrayType == typeof(GameObject))
                             {
+                                if (Input.GetKey(Plugin.altKey) && element != null && element is GameObject go && go)
+                                {
+                                    cameraSelector.SelectObject(go);
+                                    return;
+                                }
+
                                 choosing_comp = comp;
                                 choosing_field = field;
                                 choosing_field_name = fieldName;
