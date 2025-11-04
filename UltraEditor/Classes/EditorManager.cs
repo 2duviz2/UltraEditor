@@ -216,6 +216,7 @@ namespace UltraEditor.Classes
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
+                DisableAlert();
 
                 return;
             }
@@ -474,7 +475,7 @@ namespace UltraEditor.Classes
             });
         }
 
-        public GameObject SpawnAsset(string dir)
+        public GameObject SpawnAsset(string dir, bool isLoading = false)
         {
             GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
@@ -490,6 +491,18 @@ namespace UltraEditor.Classes
                 cameraSelector.SelectObject(obj);
 
             if (Input.GetKey(Plugin.altKey)) obj.SetActive(false);
+            else
+            {
+                if (dir.StartsWith("Assets/Prefabs/Enemies/") && !isLoading)
+                {
+                    SetAlert("If you plan on making enemy waves, avoid spawning them active! Hold alt when spawning the enemy to disable it in order to avoid automatic gorezones in editor.", title: "Warning!");
+                }
+            }
+
+            if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab")
+                SetAlert("Checkpoints cannot be modified when loaded from a save.", "Warning!");
+            if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab")
+                SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
             return obj;
         }
@@ -897,12 +910,23 @@ namespace UltraEditor.Classes
                                         cc.doors = new Door[0];
                                         cc.onlyWave = true;
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                        {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
+                                            SetAlert("Collider has been set to be a trigger.", "Warning!");
+                                        }
                                     }
                                     if (c is ActivateObject)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                        {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
+                                            SetAlert("Collider has been set to be a trigger.", "Warning!");
+                                        }
+                                    }
+
+                                    if (c is ActivateNextWave)
+                                    {
+                                        SetAlert("ActivateNextWave will remove any material from the object when saved, as it's meant to be in empty objects and make every enemy be in the child of this object.", "Warning!");
                                     }
 
                                     if (c is HudMessage)
@@ -1918,7 +1942,7 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
             {
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
-                if (co.transform.childCount != 0) continue;
+                if (co.transform.childCount == 0) continue;
 
                 text += "? CheckpointObject ?";
                 text += "\n";
@@ -2081,7 +2105,7 @@ namespace UltraEditor.Classes
                     
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {
-                        GameObject newObj = SpawnAsset(line);
+                        GameObject newObj = SpawnAsset(line, true);
                         newObj.transform.position = workingObject.transform.position;
                         newObj.transform.eulerAngles = workingObject.transform.eulerAngles;
                         newObj.transform.localScale = workingObject.transform.localScale;
@@ -2165,6 +2189,23 @@ namespace UltraEditor.Classes
                 if (obj.GetComponent<CheckpointObject>() != null)
                     obj.GetComponent<CheckpointObject>().createCheckpoint();
             }
+        }
+
+        public void SetAlert(string str, string title = "Error!")
+        {
+            GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
+            alert.GetComponent<Animator>().speed = 0.4f;
+            alert.SetActive(false);
+            alert.SetActive(true);
+
+            alert.transform.GetChild(0).GetComponent<TMP_Text>().text = title;
+            alert.transform.GetChild(1).GetComponent<TMP_Text>().text = str;
+        }
+
+        public void DisableAlert()
+        {
+            GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
+            alert.SetActive(false);
         }
 
         public static void Log(string str)
