@@ -1942,7 +1942,7 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
             {
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
-                if (co.transform.childCount == 0) continue;
+                if (co.transform.childCount != 0) continue;
 
                 text += "? CheckpointObject ?";
                 text += "\n";
