@@ -62,7 +62,7 @@ namespace UltraEditor.Classes
 
             renderer.material = newMat;
 
-            tile = renderer.material.GetTextureScale("_MainTex") * 0.1f;
+            tile = renderer.material.GetTextureScale("_MainTex") * 0.25f;
             offset = renderer.material.GetTextureOffset("_MainTex");
             mesh = null;
         }

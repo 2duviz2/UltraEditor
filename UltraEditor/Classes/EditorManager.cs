@@ -143,6 +143,7 @@ namespace UltraEditor.Classes
             
         }
 
+        static TMP_Text MissionNameText = null;
         static NavMeshSurface navMeshSurface;
         static string deleteLevel = "Endless";
         static string[] doNotDelete = new string[] { "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
@@ -170,6 +171,39 @@ namespace UltraEditor.Classes
 
                     StatsManager.Instance.levelNumber = 0;
                     StatsManager.Instance.endlessMode = false;
+
+                    StockMapInfo.Instance.layerName = "ULTRAEDITOR";
+                    StockMapInfo.Instance.layerName = "CUSTOM LEVEL";
+                    StockMapInfo.Instance.nextSceneName = "Main Menu";
+
+                    GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
+                    GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
+
+                    Destroy(finishCanvas.transform.GetChild(0).gameObject);
+                    GameObject spawnedRank = Instantiate(finalRankPanel, finishCanvas.transform);
+                    StatsManager.Instance.fr = spawnedRank.GetComponent<FinalRank>();
+                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Main Menu";
+                    spawnedRank.SetActive(false);
+                    finishCanvas.SetActive(true);
+                    MissionNameText = spawnedRank.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
+
+                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = true;
+                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startTimer = true;
+
+                    StatsManager.Instance.timeRanks[0] = int.MaxValue;
+                    StatsManager.Instance.timeRanks[1] = int.MaxValue;
+                    StatsManager.Instance.timeRanks[2] = int.MaxValue;
+                    StatsManager.Instance.timeRanks[3] = int.MaxValue;
+
+                    StatsManager.Instance.killRanks[0] = int.MaxValue;
+                    StatsManager.Instance.killRanks[1] = int.MaxValue;
+                    StatsManager.Instance.killRanks[2] = int.MaxValue;
+                    StatsManager.Instance.killRanks[3] = int.MaxValue;
+
+                    StatsManager.Instance.styleRanks[0] = int.MaxValue;
+                    StatsManager.Instance.styleRanks[1] = int.MaxValue;
+                    StatsManager.Instance.styleRanks[2] = int.MaxValue;
+                    StatsManager.Instance.styleRanks[3] = int.MaxValue;
                 }
             }
         }
@@ -2188,6 +2222,12 @@ namespace UltraEditor.Classes
                     obj.GetComponent<ActivateObject>().createActivator();
                 if (obj.GetComponent<CheckpointObject>() != null)
                     obj.GetComponent<CheckpointObject>().createCheckpoint();
+            }
+
+            if (MissionNameText != null)
+            {
+                Destroy(MissionNameText.GetComponent<LevelNameFinder>());
+                MissionNameText.text = sceneName.Replace(".uterus", "");
             }
         }
 
