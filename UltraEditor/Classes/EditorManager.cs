@@ -1744,10 +1744,7 @@ namespace UltraEditor.Classes
             addButton.onClick.AddListener(() =>
             {
                 saveScenePopup.SetActive(false);
-                if (sceneResults.Count > 0)
-                {
-                    SaveShit(field.text);
-                }
+                SaveShit(field.text);
             });
         }
 
