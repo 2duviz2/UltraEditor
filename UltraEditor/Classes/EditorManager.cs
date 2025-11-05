@@ -149,7 +149,7 @@ namespace UltraEditor.Classes
         static string[] doNotDelete = new string[] { "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
-            if (force || (SceneHelper.CurrentScene == deleteLevel && !StatsManager.Instance.timer))
+            if (force || ((SceneHelper.CurrentScene == deleteLevel || StatsManager.Instance.endlessMode) && !StatsManager.Instance.timer))
             {
                 foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
                 {
