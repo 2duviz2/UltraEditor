@@ -2235,6 +2235,8 @@ namespace UltraEditor.Classes
         {
             GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
             alert.GetComponent<Animator>().speed = 0.4f;
+            if (title == "Warning!")
+            alert.GetComponent<Animator>().speed = 1.2f;
             alert.SetActive(false);
             alert.SetActive(true);
 
