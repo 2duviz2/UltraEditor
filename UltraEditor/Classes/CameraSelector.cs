@@ -31,6 +31,8 @@ namespace UltraEditor.Classes
         {
             if (!camera)
                 camera = GetComponent<Camera>();
+
+            
         }
 
         public void Update()

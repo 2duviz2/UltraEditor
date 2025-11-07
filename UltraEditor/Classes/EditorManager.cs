@@ -154,14 +154,14 @@ namespace UltraEditor.Classes
                 foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
                 {
                     Plugin.LogInfo($"Trying to detroy {obj.name}");
-                    if (!doNotDelete.Contains(obj.name) && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject) : true))
+                    if (!doNotDelete.Contains(obj.name) && !obj.name.StartsWith("MoveArrow_") && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject && obj != navMeshSurface.gameObject) : true))
                     {
                         Plugin.LogInfo($"Destroyed {obj.name}");
                         Destroy(obj);
                     }
                 }
 
-                if (navMeshSurface == null || force)
+                if (navMeshSurface == null)
                 {
                     GameObject navMeshObj = new GameObject("NavMeshSurface");
                     navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
@@ -174,7 +174,7 @@ namespace UltraEditor.Classes
 
                     StockMapInfo.Instance.layerName = "ULTRAEDITOR";
                     StockMapInfo.Instance.layerName = "CUSTOM LEVEL";
-                    StockMapInfo.Instance.nextSceneName = "Main Menu";
+                    StockMapInfo.Instance.nextSceneName = "Endless";
 
                     GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
                     GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
@@ -182,7 +182,7 @@ namespace UltraEditor.Classes
                     Destroy(finishCanvas.transform.GetChild(0).gameObject);
                     GameObject spawnedRank = Instantiate(finalRankPanel, finishCanvas.transform);
                     StatsManager.Instance.fr = spawnedRank.GetComponent<FinalRank>();
-                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Main Menu";
+                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Endless";
                     spawnedRank.SetActive(false);
                     finishCanvas.SetActive(true);
                     MissionNameText = spawnedRank.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
@@ -313,6 +313,11 @@ namespace UltraEditor.Classes
                 string path = Application.persistentDataPath;
                 path = path.Replace("/", "\\"); // make Windows happy
                 Process.Start("explorer.exe", $"\"{path}\"");
+            });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                DeleteScene(true);
             });
 
             // Edit
@@ -480,9 +485,6 @@ namespace UltraEditor.Classes
             NewInspectorVariable("message", typeof(HudMessage));
             NewInspectorVariable("timerTime", typeof(HudMessage));*/
 
-            /*NewInspectorVariable("damage", typeof(DeathZone));
-            NewInspectorVariable("notInstaKill", typeof(DeathZone));*/
-
             NewInspectorVariable("enemies", typeof(ActivateArena));
             NewInspectorVariable("onlyWave", typeof(ActivateArena));
 
@@ -495,9 +497,17 @@ namespace UltraEditor.Classes
             NewInspectorVariable("toDeactivate", typeof(ActivateObject));
             NewInspectorVariable("canBeReactivated", typeof(ActivateObject));
 
+            NewInspectorVariable("intensity", typeof(Light));
+            NewInspectorVariable("range", typeof(Light));
+            NewInspectorVariable("type", typeof(Light));
+
             //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
             NewInspectorVariable("rooms", typeof(CheckPoint));
             NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
+
+            NewInspectorVariable("notInstakill", typeof(DeathZone));
+            NewInspectorVariable("damage", typeof(DeathZone));
+            NewInspectorVariable("affected", typeof(DeathZone));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -533,9 +543,9 @@ namespace UltraEditor.Classes
                 }
             }
 
-            if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab")
-                SetAlert("Checkpoints cannot be modified when loaded from a save.", "Warning!");
-            if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab")
+            if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab" && !isLoading)
+                SetAlert("You need to assign at least one item in rooms for the checkpoint to work. Checkpoints cannot be modified when loaded from a save.", "Warning!");
+            if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
                 SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
             return obj;
@@ -754,6 +764,8 @@ namespace UltraEditor.Classes
                 list.Add(typeof(ActivateArena));
                 list.Add(typeof(ActivateNextWave));
                 list.Add(typeof(ActivateObject));
+                list.Add(typeof(DeathZone));
+                list.Add(typeof(Light));
 
                 return list;
             }
@@ -873,7 +885,7 @@ namespace UltraEditor.Classes
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null))
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null))
                 {
                     CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
@@ -943,24 +955,26 @@ namespace UltraEditor.Classes
                                         ActivateArena cc = (ActivateArena)c;
                                         cc.doors = new Door[0];
                                         cc.onlyWave = true;
-                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
-                                        {
-                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                            SetAlert("Collider has been set to be a trigger.", "Warning!");
-                                        }
+                                        
                                     }
                                     if (c is ActivateObject)
                                     {
+                                        
+                                    }
+
+                                    if (c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light)
+                                    {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                            SetAlert("Collider has been set to be a trigger.", "Warning!");
+                                            SetAlert("Collider has been set to be a trigger.", "Info!");
                                         }
                                     }
 
+
                                     if (c is ActivateNextWave)
                                     {
-                                        SetAlert("ActivateNextWave will remove any material from the object when saved, as it's meant to be in empty objects and make every enemy be in the child of this object.", "Warning!");
+                                        SetAlert("ActivateNextWave will remove any material from the object when saved, as it's meant to be in empty objects and make every enemy be in the child of this object.", "Advice!");
                                     }
 
                                     if (c is HudMessage)
@@ -1734,9 +1748,9 @@ namespace UltraEditor.Classes
             });
         }
 
-        public static string GetIdOfObj(GameObject obj)
+        public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
         {
-            return obj.name + obj.transform.position.ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
+            return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
         }
 
         public string addShit(SavableObject obj)
@@ -1828,7 +1842,7 @@ namespace UltraEditor.Classes
                     continue;
                 }
 
-                if (obj.GetComponent<ActivateObject>() != null)
+                if (obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null)
                 {
                     continue;
                 }
@@ -1870,7 +1884,6 @@ namespace UltraEditor.Classes
                 {
                     text += e + "\n";
                 }
-                text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -1904,7 +1917,6 @@ namespace UltraEditor.Classes
                 {
                     text += e + "\n";
                 }
-                text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -1949,7 +1961,10 @@ namespace UltraEditor.Classes
                 
                 foreach (var e in obj.rooms)
                 {
-                    co.addRoomId(GetIdOfObj(e));
+                    if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
+                        co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
+                    else
+                        co.addRoomId(GetIdOfObj(e));
                 }
                 foreach (var e in obj.roomsToInherit)
                 {
@@ -1958,7 +1973,10 @@ namespace UltraEditor.Classes
 
                 text += "? CheckpointObject ?";
                 text += "\n";
-                text += addShit(co);
+                if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
+                    text += addShit(co.transform.parent.GetComponent<CheckpointObject>());
+                else
+                    text += addShit(co);
                 foreach (var e in co.rooms)
                 {
                     text += e + "\n";
@@ -1968,28 +1986,63 @@ namespace UltraEditor.Classes
                 {
                     text += e + "\n";
                 }
+                text += "? END ?";
+                text += "\n";
+
+                Destroy(obj.GetComponent<CheckpointObject>());
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
+            {
+                if (obj.transform.childCount != 0) continue;
+
+                text += "? CheckpointObject ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.rooms)
+                {
+                    text += e + "\n";
+                }
+                text += "? PASS ?\n";
+                foreach (var e in obj.roomsToInherit)
+                {
+                    text += e + "\n";
+                }
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<DeathZone>(true))
+            {
+                if (obj.GetComponent<CubeObject>() == null) continue;
+                text += "? DeathZone ?";
+                text += "\n";
+                text += addShit(obj.gameObject.AddComponent<SavableObject>());
+                text += obj.notInstakill.ToString();
+                text += "\n";
+                text += "? PASS ?\n";
+                text += obj.damage.ToString();
+                text += "\n";
+                text += "? PASS ?\n";
+                text += (int)obj.affected;
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
+            foreach (var obj in GameObject.FindObjectsOfType<Light>(true))
             {
-                CheckpointObject co = CheckpointObject.Create(obj.gameObject);
-                if (co.transform.childCount != 0) continue;
-
-                text += "? CheckpointObject ?";
+                if (obj.GetComponent<CubeObject>() == null) continue;
+                text += "? Light ?";
                 text += "\n";
-                text += addShit(co);
-                foreach (var e in co.rooms)
-                {
-                    text += e + "\n";
-                }
+                text += addShit(obj.gameObject.AddComponent<SavableObject>());
+                text += obj.intensity.ToString();
+                text += "\n";
                 text += "? PASS ?\n";
-                foreach (var e in co.roomsToInherit)
-                {
-                    text += e + "\n";
-                }
+                text += obj.range.ToString();
+                text += "\n";
+                text += "? PASS ?\n";
+                text += (int)obj.type;
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -2192,6 +2245,26 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<CheckpointObject>().addRoomId(line);
                         else if (phase == 1)
                             workingObject.GetComponent<CheckpointObject>().addRoomToInheritId(line);
+
+                    if (scriptType == "DeathZone" && workingObject.GetComponent<DeathZoneObject>() == null)
+                        DeathZoneObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "DeathZone")
+                        if (phase == 0)
+                            workingObject.GetComponent<DeathZoneObject>().notInstaKill = line.ToLower() == "true";
+                        else if (phase == 1)
+                            workingObject.GetComponent<DeathZoneObject>().damage = int.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<DeathZoneObject>().affected = (AffectedSubjects)Enum.GetValues(typeof(AffectedSubjects)).GetValue(int.Parse(line));
+
+                    if (scriptType == "Light" && workingObject.GetComponent<LightObject>() == null)
+                        LightObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "Light")
+                        if (phase == 0)
+                            workingObject.GetComponent<LightObject>().intensity = int.Parse(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<LightObject>().range = int.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
                 }
 
                 lineIndex++;
@@ -2214,14 +2287,12 @@ namespace UltraEditor.Classes
 
             foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
             {
-                if (obj.GetComponent<ArenaObject>() != null)
-                    obj.GetComponent<ArenaObject>().createArena();
-                if (obj.GetComponent<NextArenaObject>() != null)
-                    obj.GetComponent<NextArenaObject>().createArena();
-                if (obj.GetComponent<ActivateObject>() != null)
-                    obj.GetComponent<ActivateObject>().createActivator();
-                if (obj.GetComponent<CheckpointObject>() != null)
-                    obj.GetComponent<CheckpointObject>().createCheckpoint();
+                obj.GetComponent<ArenaObject>()?.createArena();
+                obj.GetComponent<NextArenaObject>()?.createArena();
+                obj.GetComponent<ActivateObject>()?.createActivator();
+                obj.GetComponent<CheckpointObject>()?.createCheckpoint();
+                obj.GetComponent<DeathZoneObject>()?.createDeathzone();
+                obj.GetComponent<LightObject>()?.createLight();
             }
 
             if (MissionNameText != null)
@@ -2235,7 +2306,7 @@ namespace UltraEditor.Classes
         {
             GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
             alert.GetComponent<Animator>().speed = 0.4f;
-            if (title == "Warning!")
+            if (title == "Info!")
             alert.GetComponent<Animator>().speed = 1.2f;
             alert.SetActive(false);
             alert.SetActive(true);

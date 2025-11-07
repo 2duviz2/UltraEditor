@@ -17,7 +17,8 @@ namespace UltraEditor.Classes.Saving
         public static CheckpointObject Create(GameObject target)
         {
             CheckpointObject obj = target.AddComponent<CheckpointObject>();
-            obj.GetComponent<Collider>().isTrigger = true;
+            if (obj.GetComponent<Collider>() != null)
+                obj.GetComponent<Collider>().isTrigger = true;
             return obj;
         }
 
