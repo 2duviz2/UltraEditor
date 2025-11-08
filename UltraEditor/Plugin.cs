@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace UltraEditor
 {
-    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.1")]
+    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.2")]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin instance;
