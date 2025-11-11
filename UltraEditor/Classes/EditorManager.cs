@@ -151,7 +151,7 @@ namespace UltraEditor.Classes
         static TMP_Text MissionNameText = null;
         static NavMeshSurface navMeshSurface;
         static string deleteLevel = "Endless";
-        static string[] doNotDelete = new string[] { "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
+        static string[] doNotDelete = new string[] { "MapLoader", "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
             if (force || ((SceneHelper.CurrentScene == deleteLevel || StatsManager.Instance.endlessMode) && !StatsManager.Instance.timer))
@@ -179,7 +179,7 @@ namespace UltraEditor.Classes
 
                     StockMapInfo.Instance.layerName = "ULTRAEDITOR";
                     StockMapInfo.Instance.layerName = "CUSTOM LEVEL";
-                    StockMapInfo.Instance.nextSceneName = "Endless";
+                    StockMapInfo.Instance.nextSceneName = "Main Menu";
 
                     GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
                     GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
@@ -187,12 +187,12 @@ namespace UltraEditor.Classes
                     Destroy(finishCanvas.transform.GetChild(0).gameObject);
                     GameObject spawnedRank = Instantiate(finalRankPanel, finishCanvas.transform);
                     StatsManager.Instance.fr = spawnedRank.GetComponent<FinalRank>();
-                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Endless";
+                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Main Menu";
                     spawnedRank.SetActive(false);
                     finishCanvas.SetActive(true);
                     MissionNameText = spawnedRank.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
 
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = true;
+                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = false;
                     GameObject.FindObjectOfType<FinalDoorOpener>(true).startTimer = true;
 
                     StatsManager.Instance.timeRanks[0] = int.MaxValue;
@@ -513,6 +513,9 @@ namespace UltraEditor.Classes
             NewInspectorVariable("notInstakill", typeof(DeathZone));
             NewInspectorVariable("damage", typeof(DeathZone));
             NewInspectorVariable("affected", typeof(DeathZone));
+
+            NewInspectorVariable("calmThemeUrl", typeof(MusicObject));
+            NewInspectorVariable("battleThemeUrl", typeof(MusicObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -748,7 +751,7 @@ namespace UltraEditor.Classes
             {
                 if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == deleteLevel && navMeshSurface != null)
                 {
-                    if (obj.GetComponent<SavableObject>() == null)
+                    if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                         continue;
                 }
 
@@ -771,6 +774,7 @@ namespace UltraEditor.Classes
                 list.Add(typeof(ActivateObject));
                 list.Add(typeof(DeathZone));
                 list.Add(typeof(Light));
+                list.Add(typeof(MusicObject));
 
                 return list;
             }
@@ -967,7 +971,7 @@ namespace UltraEditor.Classes
                                         
                                     }
 
-                                    if (c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light)
+                                    if (c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
@@ -1799,6 +1803,7 @@ namespace UltraEditor.Classes
             return fileNames;
         }
 
+        string lastLoaded = "";
         public void TryToSaveShit()
         {
             GameObject saveScenePopup = editorCanvas.transform.GetChild(0).GetChild(9).gameObject;
@@ -1817,6 +1822,12 @@ namespace UltraEditor.Classes
                 foundComponents.text = "Save scene:\n";
                 foundComponents.text += $"{field.text}<color=grey>.uterus";
             });
+
+            if (lastLoaded != "")
+            {
+                field.text = lastLoaded.Replace(".uterus", "");
+                field.onValueChanged.Invoke(lastLoaded.Replace(".uterus", ""));
+            }
 
             addButton.onClick.AddListener(() =>
             {
@@ -1847,7 +1858,7 @@ namespace UltraEditor.Classes
                     continue;
                 }
 
-                if (obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null)
+                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null)
                 {
                     continue;
                 }
@@ -2019,7 +2030,7 @@ namespace UltraEditor.Classes
 
             foreach (var obj in GameObject.FindObjectsOfType<DeathZone>(true))
             {
-                if (obj.GetComponent<CubeObject>() == null) continue;
+                if (obj.GetComponent<SavableObject>() == null) continue;
                 text += "? DeathZone ?";
                 text += "\n";
                 text += addShit(obj.gameObject.AddComponent<SavableObject>());
@@ -2037,7 +2048,7 @@ namespace UltraEditor.Classes
 
             foreach (var obj in GameObject.FindObjectsOfType<Light>(true))
             {
-                if (obj.GetComponent<CubeObject>() == null) continue;
+                if (obj.GetComponent<SavableObject>() == null) continue;
                 text += "? Light ?";
                 text += "\n";
                 text += addShit(obj.gameObject.AddComponent<SavableObject>());
@@ -2048,6 +2059,21 @@ namespace UltraEditor.Classes
                 text += "\n";
                 text += "? PASS ?\n";
                 text += (int)obj.type;
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<MusicObject>(true))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                text += "? MusicObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.calmThemeUrl;
+                text += "\n";
+                text += "? PASS ?\n";
+                text += obj.battleThemeUrl;
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -2781,6 +2807,14 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<LightObject>().range = int.Parse(line);
                         else if (phase == 2)
                             workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
+
+                    if (scriptType == "MusicObject" && workingObject.GetComponent<MusicObject>() == null)
+                        MusicObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "MusicObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<MusicObject>().calmThemeUrl = line;
+                        else if (phase == 1)
+                            workingObject.GetComponent<MusicObject>().battleThemeUrl = line;
                 }
 
                 lineIndex++;
@@ -2809,12 +2843,14 @@ namespace UltraEditor.Classes
                 obj.GetComponent<CheckpointObject>()?.createCheckpoint();
                 obj.GetComponent<DeathZoneObject>()?.createDeathzone();
                 obj.GetComponent<LightObject>()?.createLight();
+                obj.GetComponent<MusicObject>()?.createMusic();
             }
 
             if (MissionNameText != null)
             {
                 Destroy(MissionNameText.GetComponent<LevelNameFinder>());
                 MissionNameText.text = sceneName.Replace(".uterus", "");
+                lastLoaded = sceneName;
             }
         }
 
