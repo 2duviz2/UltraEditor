@@ -19,7 +19,8 @@ namespace UltraEditor
         public static KeyCode selectCursorKey = KeyCode.F2;
         public static KeyCode selectMoveKey = KeyCode.F3;
         public static KeyCode selectScaleKey = KeyCode.F4;
-        public static KeyCode toggleEditorCanvasKey = KeyCode.F5;
+        public static KeyCode selectRotationKey = KeyCode.F5;
+        public static KeyCode toggleEditorCanvasKey = KeyCode.F9;
         public static KeyCode deleteObjectKey = KeyCode.Delete;
         public static KeyCode createCubeKey = KeyCode.KeypadPlus;
         public static KeyCode ctrlKey = KeyCode.LeftControl;

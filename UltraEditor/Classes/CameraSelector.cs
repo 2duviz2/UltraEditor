@@ -13,6 +13,7 @@ namespace UltraEditor.Classes
             Cursor,
             Move,
             Scale,
+            Rotate,
         }
 
         public Camera camera;
@@ -44,7 +45,7 @@ namespace UltraEditor.Classes
         public bool dragging = false;
         private int draggingAxis = -1;
         private Vector3 dragStartPos;
-        private Vector3 objectStartPos, objectStartScale;
+        private Vector3 objectStartPos, objectStartScale, objectStartEuler;
 
         public void Awake()
         {
@@ -61,6 +62,8 @@ namespace UltraEditor.Classes
             if (Input.GetKeyDown(Plugin.selectMoveKey)) selectionMode = SelectionMode.Move;
 
             if (Input.GetKeyDown(Plugin.selectScaleKey)) selectionMode = SelectionMode.Scale;
+
+            if (Input.GetKeyDown(Plugin.selectRotationKey)) selectionMode = SelectionMode.Rotate;
 
             if (selectionMode == SelectionMode.Cursor)
                 HandleCursorMode();
@@ -210,6 +213,7 @@ namespace UltraEditor.Classes
                         draggingAxis = hoveredAxis;
                         objectStartPos = selectedObject.transform.position;
                         objectStartScale = selectedObject.transform.localScale;
+                        objectStartEuler = selectedObject.transform.eulerAngles;
                         dragStartPos = mousePos;
                         scaleMultiplier = moveArrows[0].localScale.y;
                     }
@@ -242,6 +246,8 @@ namespace UltraEditor.Classes
                         selectedObject.transform.position = objectStartPos + moveDir * delta * moveSpeed;
                     if (selectionMode == SelectionMode.Scale)
                         selectedObject.transform.localScale = objectStartScale + moveDir * delta * moveSpeed;
+                    if (selectionMode == SelectionMode.Rotate)
+                        selectedObject.transform.eulerAngles = objectStartEuler + moveDir * delta * moveSpeed * 30;
 
                 }
                 if (Input.GetMouseButtonUp(0))
