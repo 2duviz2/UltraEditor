@@ -242,8 +242,11 @@ namespace UltraEditor.Classes
 
                 if (mouseLocked)
                 {
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
+                    if (SceneHelper.CurrentScene != "Main Menu")
+                    {
+                        Cursor.visible = false;
+                        Cursor.lockState = CursorLockMode.Locked;
+                    }
 
                     if (SceneHelper.CurrentScene == deleteLevel)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));

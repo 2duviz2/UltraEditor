@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.Saving;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -10,13 +11,31 @@ namespace UltraEditor.Classes
         public enum SelectionMode
         {
             Cursor,
-            Move
+            Move,
+            Scale,
         }
 
         public Camera camera;
         public GameObject selectedObject;
         public Material highlightMaterial;
-        public SelectionMode selectionMode = SelectionMode.Cursor;
+
+        SelectionMode _selectionMode = SelectionMode.Cursor;
+        public SelectionMode selectionMode 
+        { 
+            get
+            {
+                return _selectionMode;
+            }
+            set
+            {
+                if (value == SelectionMode.Cursor)
+                    DeleteArrows();
+                if (value != SelectionMode.Cursor)
+                    ClearHover();
+                _selectionMode = value;
+                ModeButton.UpdateButtons();
+            }
+        }
 
         private GameObject hoveredObject;
         private Dictionary<GameObject, Material> originalMaterials = new Dictionary<GameObject, Material>();
@@ -25,28 +44,28 @@ namespace UltraEditor.Classes
         public bool dragging = false;
         private int draggingAxis = -1;
         private Vector3 dragStartPos;
-        private Vector3 objectStartPos;
+        private Vector3 objectStartPos, objectStartScale;
 
         public void Awake()
         {
             if (!camera)
                 camera = GetComponent<Camera>();
 
-            
+            ModeButton.UpdateButtons();
         }
 
         public void Update()
         {
             if (Input.GetKeyDown(Plugin.selectCursorKey)) selectionMode = SelectionMode.Cursor;
-            if (Input.GetKeyDown(Plugin.selectCursorKey)) DeleteArrows();
 
             if (Input.GetKeyDown(Plugin.selectMoveKey)) selectionMode = SelectionMode.Move;
-            if (Input.GetKeyDown(Plugin.selectMoveKey)) ClearHover();
+
+            if (Input.GetKeyDown(Plugin.selectScaleKey)) selectionMode = SelectionMode.Scale;
 
             if (selectionMode == SelectionMode.Cursor)
                 HandleCursorMode();
 
-            if (selectionMode == SelectionMode.Move && selectedObject)
+            if (selectionMode != SelectionMode.Cursor && selectedObject)
                 HandleMoveMode();
 
             if (selectedObject == null)
@@ -190,6 +209,7 @@ namespace UltraEditor.Classes
                         dragging = true;
                         draggingAxis = hoveredAxis;
                         objectStartPos = selectedObject.transform.position;
+                        objectStartScale = selectedObject.transform.localScale;
                         dragStartPos = mousePos;
                         scaleMultiplier = moveArrows[0].localScale.y;
                     }
@@ -218,7 +238,11 @@ namespace UltraEditor.Classes
                     if (draggingAxis == 1) { moveDir = Vector3.up; delta = mouseDelta.y; }
                     if (draggingAxis == 2) { moveDir = Vector3.forward; delta = mouseDelta.x; }
 
-                    selectedObject.transform.position = objectStartPos + moveDir * delta * moveSpeed;
+                    if (selectionMode == SelectionMode.Move)
+                        selectedObject.transform.position = objectStartPos + moveDir * delta * moveSpeed;
+                    if (selectionMode == SelectionMode.Scale)
+                        selectedObject.transform.localScale = objectStartScale + moveDir * delta * moveSpeed;
+
                 }
                 if (Input.GetMouseButtonUp(0))
                 {

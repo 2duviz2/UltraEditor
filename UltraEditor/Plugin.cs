@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace UltraEditor
 {
-    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.2")]
+    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.3")]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin instance;
@@ -18,7 +18,8 @@ namespace UltraEditor
         public static KeyCode editorOpenKey = KeyCode.F1;
         public static KeyCode selectCursorKey = KeyCode.F2;
         public static KeyCode selectMoveKey = KeyCode.F3;
-        public static KeyCode toggleEditorCanvasKey = KeyCode.F4;
+        public static KeyCode selectScaleKey = KeyCode.F4;
+        public static KeyCode toggleEditorCanvasKey = KeyCode.F5;
         public static KeyCode deleteObjectKey = KeyCode.Delete;
         public static KeyCode createCubeKey = KeyCode.KeypadPlus;
         public static KeyCode ctrlKey = KeyCode.LeftControl;
