@@ -2262,6 +2262,7 @@ namespace UltraEditor.Classes
                         newObj.transform.localScale = workingObject.transform.localScale;
                         newObj.layer = workingObject.layer;
                         newObj.tag = workingObject.tag;
+                        newObj.name = workingObject.name;
                         newObj.SetActive(workingObject.activeSelf);
                         newObj.AddComponent<SpawnedObject>();
                         newObj.GetComponent<SpawnedObject>().ID = workingObject.GetComponent<SpawnedObject>().ID;
