@@ -32,6 +32,8 @@ namespace UltraEditor.Classes
         bool mouseLocked = true;
         bool advancedInspector = false;
 
+        string tempScene;
+
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
 
         class InspectorVariable
@@ -252,6 +254,15 @@ namespace UltraEditor.Classes
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
                 }
 
+                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector)
+                {
+                    StartCoroutine(GoToBackupScene());
+                }
+                if (mouseLocked && !advancedInspector)
+                {
+                    tempScene = GetSceneJson();
+                }
+
                 Time.timeScale = mouseLocked ? 1f : 0f;
                 DisableAlert();
 
@@ -384,6 +395,7 @@ namespace UltraEditor.Classes
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 advancedInspector = true;
+                SetAlert("Advanced inspector will remove some autoamtic features of the editor! It's recommended to use this option as a testing resource instead of level making.", "Warning!");
                 UpdateInspector();
             });
 
@@ -1836,6 +1848,13 @@ namespace UltraEditor.Classes
 
         public void SaveShit(string path)
         {
+            string text = GetSceneJson();
+
+            File.WriteAllText(Application.persistentDataPath + $"/{path}.uterus", text);
+        }
+
+        public string GetSceneJson()
+        {
             string text = "";
 
             foreach (var obj in GameObject.FindObjectsOfType<CubeObject>(true))
@@ -1907,15 +1926,15 @@ namespace UltraEditor.Classes
                 obj.enemyIds.Clear();
                 obj.toActivateIds.Clear();
                 if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
-                foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
-                {
-                    obj.addEnemyId(GetIdOfObj(e));
-                }
+                    foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
+                    {
+                        obj.addEnemyId(GetIdOfObj(e));
+                    }
                 if (obj.GetComponent<ActivateNextWave>().toActivate != null)
-                foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
-                {
-                    obj.addToActivateId(GetIdOfObj(e));
-                }
+                    foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
+                    {
+                        obj.addToActivateId(GetIdOfObj(e));
+                    }
 
                 text += "? NextArenaObject ?";
                 text += "\n";
@@ -1972,7 +1991,7 @@ namespace UltraEditor.Classes
                 while (obj.GetComponent<CheckpointObject>() != null)
                     Destroy(obj.GetComponent<CheckpointObject>());
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
-                
+
                 foreach (var e in obj.rooms)
                 {
                     if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
@@ -2077,7 +2096,7 @@ namespace UltraEditor.Classes
                 text += "\n";
             }
 
-            File.WriteAllText(Application.persistentDataPath + $"/{path}.uterus", text);
+            return text;
         }
 
         public void TryToLoadShit()
@@ -2157,6 +2176,18 @@ namespace UltraEditor.Classes
 
             string text = File.ReadAllText(path);
 
+            LoadSceneJson(text);
+
+            if (MissionNameText != null)
+            {
+                Destroy(MissionNameText.GetComponent<LevelNameFinder>());
+                MissionNameText.text = sceneName.Replace(".uterus", "");
+                lastLoaded = sceneName;
+            }
+        }
+
+        void LoadSceneJson(string text)
+        {
             int lineIndex = 0;
             int phase = 0;
             bool isInScript = false;
@@ -2218,7 +2249,7 @@ namespace UltraEditor.Classes
 
                     if (lineIndex == 10 && scriptType == "CubeObject")
                         CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
-                    
+
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {
                         GameObject newObj = SpawnAsset(line, true);
@@ -2332,13 +2363,15 @@ namespace UltraEditor.Classes
                 obj.GetComponent<LightObject>()?.createLight();
                 obj.GetComponent<MusicObject>()?.createMusic();
             }
+        }
 
-            if (MissionNameText != null)
-            {
-                Destroy(MissionNameText.GetComponent<LevelNameFinder>());
-                MissionNameText.text = sceneName.Replace(".uterus", "");
-                lastLoaded = sceneName;
-            }
+        IEnumerator GoToBackupScene()
+        {
+            DeleteScene(true);
+            yield return new WaitForEndOfFrame();
+            LoadSceneJson(tempScene);
+            yield return new WaitForEndOfFrame();
+            SetAlert("Loaded scene backup", "Info!");
         }
 
         public void SetAlert(string str, string title = "Error!")
