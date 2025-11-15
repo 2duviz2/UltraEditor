@@ -233,10 +233,12 @@ namespace UltraEditor.Classes
                 mouseLocked = !mouseLocked;
                 editorCamera.gameObject.SetActive(!mouseLocked);
                 if (NewMovement.Instance != null)
+                {
                     editorCamera.transform.position = NewMovement.Instance.transform.position;
-                editorCanvas.SetActive(!mouseLocked);
-                if (NewMovement.Instance != null)
+                    editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                     NewMovement.Instance.gameObject.SetActive(mouseLocked);
+                }
+                editorCanvas.SetActive(!mouseLocked);
                 blocker.SetActive(true);
                 cameraSelector.ClearHover();
                 cameraSelector.UnselectObject();
@@ -2363,6 +2365,8 @@ namespace UltraEditor.Classes
                 obj.GetComponent<LightObject>()?.createLight();
                 obj.GetComponent<MusicObject>()?.createMusic();
             }
+
+            cameraSelector.selectedObject = null;
         }
 
         IEnumerator GoToBackupScene()
