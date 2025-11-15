@@ -578,6 +578,8 @@ namespace UltraEditor.Classes
                 cameraSelector.ClearSelectedMaterial();
                 GameObject newObj = Instantiate(cameraSelector.selectedObject);
 
+                newObj.name = newObj.name.Replace("(Clone)", "");
+
                 if (cameraSelector.selectedObject.transform.parent != null)
                     newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
 
