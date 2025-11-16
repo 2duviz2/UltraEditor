@@ -76,7 +76,7 @@ namespace UltraEditor.Classes
             if (!mouseLocked)
             {
                 Cursor.lockState = CursorLockMode.None;
-                if (!cameraSelector.dragging)
+                if (!cameraSelector.dragging && !editorCamera.GetComponent<CameraMovement>().moving())
                     Cursor.visible = true;
             }
 
@@ -262,6 +262,15 @@ namespace UltraEditor.Classes
 
                     if (SceneHelper.CurrentScene == deleteLevel)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
+
+                    foreach (var item in FindObjectsOfType<Door>())
+                    {
+                        var m = item.GetType().GetMethod("GetPos",
+                            BindingFlags.Instance | BindingFlags.NonPublic);
+
+                        m.Invoke(item, null);
+
+                    }
                 }
 
                 if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
@@ -2302,6 +2311,15 @@ namespace UltraEditor.Classes
                         newObj.GetComponent<SpawnedObject>().ID = workingObject.GetComponent<SpawnedObject>().ID;
                         newObj.GetComponent<SpawnedObject>().parentID = workingObject.GetComponent<SpawnedObject>().parentID;
                         Destroy(workingObject);
+
+                        if (newObj.GetComponent<Door>() != null)
+                        {
+                            var m = newObj.GetComponent<Door>().GetType().GetMethod("GetPos",
+                                BindingFlags.Instance | BindingFlags.NonPublic);
+
+                            m.Invoke(newObj.GetComponent<Door>(), null);
+
+                        }
                     }
 
                     if (lineIndex == 10 && scriptType == "ArenaObject")
