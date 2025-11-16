@@ -34,16 +34,31 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             foreach (var e in enemyIds)
             {
-                foreach (var obj in FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> enemies = (activateArena.enemies ?? []).ToList();
                         enemies.Add(obj.gameObject);
                         activateArena.enemies = enemies.ToArray();
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            List<GameObject> enemies = (activateArena.enemies ?? []).ToList();
+                            enemies.Add(obj.gameObject);
+                            activateArena.enemies = enemies.ToArray();
+                            found = true;
+                            break;
+                        }
+                    }
             }
         }
     }

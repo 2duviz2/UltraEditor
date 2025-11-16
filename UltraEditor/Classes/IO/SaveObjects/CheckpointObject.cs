@@ -54,30 +54,60 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             foreach (var e in rooms)
             {
-                foreach (var obj in FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> rooms = (checkpoint.rooms ?? new GameObject[0]).ToList();
                         rooms.Add(obj.gameObject);
                         checkpoint.rooms = rooms.ToArray();
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            List<GameObject> rooms = (checkpoint.rooms ?? new GameObject[0]).ToList();
+                            rooms.Add(obj.gameObject);
+                            checkpoint.rooms = rooms.ToArray();
+                            found = true;
+                            break;
+                        }
+                    }
             }
 
             foreach (var e in roomsToInherit)
             {
-                foreach (var obj in FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> rooms = checkpoint.roomsToInherit ?? [];
                         rooms.Add(obj.gameObject);
                         checkpoint.roomsToInherit = rooms;
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            List<GameObject> rooms = checkpoint.roomsToInherit ?? [];
+                            rooms.Add(obj.gameObject);
+                            checkpoint.roomsToInherit = rooms;
+                            found = true;
+                            break;
+                        }
+                    }
             }
         }
     }

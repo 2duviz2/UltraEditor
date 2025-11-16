@@ -14,7 +14,7 @@ namespace UltraEditor
     {
         public const string GUID = "duviz.ultrakill.ultraeditor";
         public const string Name = "UltraEditor";
-        public const string Version = "0.0.2";
+        public const string Version = "0.0.3";
 
         public static Plugin instance;
         public plog.Logger Log;
@@ -22,7 +22,9 @@ namespace UltraEditor
         public static KeyCode editorOpenKey = KeyCode.F1;
         public static KeyCode selectCursorKey = KeyCode.F2;
         public static KeyCode selectMoveKey = KeyCode.F3;
-        public static KeyCode toggleEditorCanvasKey = KeyCode.F4;
+        public static KeyCode selectScaleKey = KeyCode.F4;
+        public static KeyCode selectRotationKey = KeyCode.F5;
+        public static KeyCode toggleEditorCanvasKey = KeyCode.F9;
         public static KeyCode deleteObjectKey = KeyCode.Delete;
         public static KeyCode createCubeKey = KeyCode.KeypadPlus;
         public static KeyCode ctrlKey = KeyCode.LeftControl;

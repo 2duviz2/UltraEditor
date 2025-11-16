@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -10,43 +11,66 @@ namespace UltraEditor.Classes
         public enum SelectionMode
         {
             Cursor,
-            Move
+            Move,
+            Scale,
+            Rotate,
         }
 
         public Camera camera;
         public GameObject selectedObject;
         public Material highlightMaterial;
-        public SelectionMode selectionMode = SelectionMode.Cursor;
 
-        private GameObject hoveredObject;
-        private Dictionary<GameObject, Material> originalMaterials = new Dictionary<GameObject, Material>();
+        SelectionMode _selectionMode = SelectionMode.Cursor;
+        public SelectionMode selectionMode 
+        { 
+            get
+            {
+                return _selectionMode;
+            }
+            set
+            {
+                if (value == SelectionMode.Cursor)
+                    DeleteArrows();
+                if (value != SelectionMode.Cursor)
+                    ClearHover();
+                _selectionMode = value;
+                ModeButton.UpdateButtons();
+            }
+        }
+
+        GameObject hoveredObject;
+        Dictionary<GameObject, Material> originalMaterials = new Dictionary<GameObject, Material>();
 
         private Transform[] moveArrows;
         public bool dragging = false;
-        private int draggingAxis = -1;
-        private Vector3 dragStartPos;
-        private Vector3 objectStartPos;
+        int draggingAxis = -1;
+        Vector3 dragStartPos;
+        Vector3 objectStartPos, objectStartScale, objectStartEuler;
+        Vector2 savedMousePos = Vector2.zero;
+        Vector2 realMousePos = Vector2.zero;
 
         public void Awake()
         {
             if (!camera)
                 camera = GetComponent<Camera>();
 
-            
+            ModeButton.UpdateButtons();
         }
 
         public void Update()
         {
             if (Input.GetKeyDown(Plugin.selectCursorKey)) selectionMode = SelectionMode.Cursor;
-            if (Input.GetKeyDown(Plugin.selectCursorKey)) DeleteArrows();
 
             if (Input.GetKeyDown(Plugin.selectMoveKey)) selectionMode = SelectionMode.Move;
-            if (Input.GetKeyDown(Plugin.selectMoveKey)) ClearHover();
+
+            if (Input.GetKeyDown(Plugin.selectScaleKey)) selectionMode = SelectionMode.Scale;
+
+            if (Input.GetKeyDown(Plugin.selectRotationKey)) selectionMode = SelectionMode.Rotate;
 
             if (selectionMode == SelectionMode.Cursor)
                 HandleCursorMode();
 
-            if (selectionMode == SelectionMode.Move && selectedObject)
+            if (selectionMode != SelectionMode.Cursor && selectedObject)
                 HandleMoveMode();
 
             if (selectedObject == null)
@@ -190,8 +214,13 @@ namespace UltraEditor.Classes
                         dragging = true;
                         draggingAxis = hoveredAxis;
                         objectStartPos = selectedObject.transform.position;
+                        objectStartScale = selectedObject.transform.localScale;
+                        objectStartEuler = selectedObject.transform.eulerAngles;
                         dragStartPos = mousePos;
                         scaleMultiplier = moveArrows[0].localScale.y;
+                        savedMousePos = mousePos;
+                        realMousePos = mousePos;
+                        Cursor.visible = false;
                     }
                 }
                 else
@@ -208,7 +237,9 @@ namespace UltraEditor.Classes
             {
                 if (Input.GetMouseButton(0))
                 {
-                    Vector3 mouseDelta = Input.mousePosition - dragStartPos;
+                    realMousePos += new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
+                    Vector3 mouseDelta = new Vector3(realMousePos.x, realMousePos.y, 0) - dragStartPos;
+                    MouseController.SetCursorPos((int)savedMousePos.x, Screen.height - (int)savedMousePos.y);
                     float moveSpeed = scaleMultiplier * 0.1f;
 
                     Vector3 moveDir = Vector3.zero;
@@ -218,13 +249,29 @@ namespace UltraEditor.Classes
                     if (draggingAxis == 1) { moveDir = Vector3.up; delta = mouseDelta.y; }
                     if (draggingAxis == 2) { moveDir = Vector3.forward; delta = mouseDelta.x; }
 
-                    selectedObject.transform.position = objectStartPos + moveDir * delta * moveSpeed;
+                    if (selectionMode == SelectionMode.Move)
+                    {
+                        Vector3 target = objectStartPos + moveDir * delta * moveSpeed * 3;
+                        selectedObject.transform.position = target;
+                    }
+                    if (selectionMode == SelectionMode.Scale)
+                    {
+                        Vector3 target = objectStartScale + moveDir * delta * moveSpeed * 3;
+                        selectedObject.transform.localScale = target;
+                    }
+                    if (selectionMode == SelectionMode.Rotate)
+                    {
+                        Vector3 target = objectStartEuler + moveDir * delta * 5;
+                        selectedObject.transform.eulerAngles = target;
+                    }
+
                 }
                 if (Input.GetMouseButtonUp(0))
                 {
                     dragging = false;
                     draggingAxis = -1;
                     EditorManager.Instance.UpdateInspector();
+                    Cursor.visible = true;
                 }
             }
         }
@@ -293,13 +340,13 @@ namespace UltraEditor.Classes
 
             Vector3 pos = selectedObject.transform.position;
 
-            moveArrows[0].position = pos + Vector3.right * moveArrows[0].localScale.y;
+            moveArrows[0].position = pos + Vector3.right * moveArrows[0].localScale.y * 2;
             moveArrows[0].rotation = Quaternion.Euler(0, 0, 90);
 
-            moveArrows[1].position = pos + Vector3.up * moveArrows[0].localScale.y;
+            moveArrows[1].position = pos + Vector3.up * moveArrows[0].localScale.y * 2;
             moveArrows[1].rotation = Quaternion.identity;
 
-            moveArrows[2].position = pos + Vector3.forward * moveArrows[0].localScale.y;
+            moveArrows[2].position = pos + Vector3.forward * moveArrows[0].localScale.y * 2;
             moveArrows[2].rotation = Quaternion.Euler(90, 0, 0);
 
             float distance = Vector3.Distance(camera.transform.position, pos);

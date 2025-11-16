@@ -45,35 +45,69 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             foreach (var e in enemyIds)
             {
-                foreach (var obj in FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> enemies = (activateNextWave.nextEnemies ?? new GameObject[0]).ToList();
                         enemies.Add(obj.gameObject);
                         activateNextWave.nextEnemies = enemies.ToArray();
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            List<GameObject> enemies = (activateNextWave.nextEnemies ?? new GameObject[0]).ToList();
+                            enemies.Add(obj.gameObject);
+                            activateNextWave.nextEnemies = enemies.ToArray();
+                            found = true;
+                            break;
+                        }
+                    }
             }
 
             foreach (var item in toActivateIds)
             {
-                Plugin.LogInfo(item);
+                if (EditorManager.logShit)
+                    Plugin.LogInfo(item);
             }
             foreach (var e in toActivateIds)
             {
-                foreach (var obj in FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
-                        Plugin.LogInfo($"FOUND OBEJCT {obj.name}");
+                        if (EditorManager.logShit)
+                            Plugin.LogInfo($"FOUND OBEJCT {obj.name}");
                         List<GameObject> toActivate = (activateNextWave.toActivate ?? []).ToList();
                         toActivate.Add(obj.gameObject);
                         activateNextWave.toActivate = toActivate.ToArray();
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            if (EditorManager.logShit)
+                                Plugin.LogInfo($"FOUND OBEJCT {obj.name}");
+                            List<GameObject> toActivate = (activateNextWave.toActivate ?? []).ToList();
+                            toActivate.Add(obj.gameObject);
+                            activateNextWave.toActivate = toActivate.ToArray();
+                            found = true;
+                            break;
+                        }
+                    }
             }
         }
     }

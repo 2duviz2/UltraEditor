@@ -15,4 +15,5 @@ Ideas 💡:
 
 Notes 🗒️:
 * I'm really bad at making projects public, if you see a lot of references in the project, that's because this mod is a branch from another mod
-* This editor is NOT FINISHED, that means that a lot of things are broken or won't work as intended.
+* This editor is NOT FINISHED, that means that a lot of things are broken or don't work as intended.
+* Saving is in a work in progress state, savings may break between versions! Any version that changes the letter (v0.0.0a) will mean that the saving has been changed drastically and old levels may not work.

@@ -62,7 +62,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 StartCoroutine(GetAudio(calmThemeUrl, clip => {
                     calmClip = clip;
                     musicManager.cleanTheme.clip = clip;
-                    Plugin.LogInfo("Clip downloaded!");
+                    if (EditorManager.logShit)
+                        Plugin.LogInfo("Clip downloaded!");
                     CheckBothReady();
                 }));
 
@@ -71,7 +72,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     battleClip = clip;
                     musicManager.battleTheme.clip = clip;
                     musicManager.bossTheme.clip = clip;
-                    Plugin.LogInfo("Clip downloaded!");
+                    if (EditorManager.logShit)
+                        Plugin.LogInfo("Clip downloaded!");
                     CheckBothReady();
                 }));
         }
