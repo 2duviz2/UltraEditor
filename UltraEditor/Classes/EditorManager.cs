@@ -33,7 +33,7 @@ namespace UltraEditor.Classes
         bool advancedInspector = false;
         public static bool logShit = false;
 
-        string tempScene;
+        static string tempScene;
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
 
@@ -264,11 +264,11 @@ namespace UltraEditor.Classes
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
                 }
 
-                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector)
+                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
                 {
                     StartCoroutine(GoToBackupScene());
                 }
-                if (mouseLocked && !advancedInspector)
+                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
                 {
                     tempScene = GetSceneJson();
                 }
@@ -317,6 +317,11 @@ namespace UltraEditor.Classes
             SetupButtons();
             if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
                 EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
+
+            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel) // load backup level after restart
+            {
+                StartCoroutine(GoToBackupScene());
+            }
         }
 
         void SetupButtons()
