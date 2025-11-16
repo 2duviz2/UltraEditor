@@ -39,30 +39,60 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in toActivateIds)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> activate = (toActivate ?? []).ToList();
                         activate.Add(obj.gameObject);
                         toActivate = activate.ToArray();
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            List<GameObject> activate = (toActivate ?? []).ToList();
+                            activate.Add(obj.gameObject);
+                            toActivate = activate.ToArray();
+                            found = true;
+                            break;
+                        }
+                    }
             }
 
             foreach (var e in toDeactivateIds)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                bool found = false;
+                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
                         List<GameObject> deactivate = (toDeactivate ?? []).ToList();
                         deactivate.Add(obj.gameObject);
                         toDeactivate = deactivate.ToArray();
+                        found = true;
                         break;
                     }
                 }
+
+                if (!found)
+                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                    {
+                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                        {
+                            List<GameObject> deactivate = (toDeactivate ?? []).ToList();
+                            deactivate.Add(obj.gameObject);
+                            toDeactivate = deactivate.ToArray();
+                            found = true;
+                            break;
+                        }
+                    }
             }
         }
 

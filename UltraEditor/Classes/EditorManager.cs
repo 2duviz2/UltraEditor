@@ -31,6 +31,7 @@ namespace UltraEditor.Classes
 
         bool mouseLocked = true;
         bool advancedInspector = false;
+        public static bool logShit = false;
 
         string tempScene;
 
@@ -108,13 +109,15 @@ namespace UltraEditor.Classes
 
             if (Input.GetMouseButtonUp(0))
             {
+                if (logShit)
                 Plugin.LogInfo($"Released mouse button with " +
                     $"{(holdingObject ? holdingObject.name : "null")} & " +
                     $"{(holdingTarget ? holdingTarget.name : "null")}");
 
                 if (holdingObject != null && holdingTarget != null && holdingObject != holdingTarget)
                 {
-                    Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
+                    if (logShit)
+                        Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
                     holdingObject.transform.SetParent(holdingTarget.transform);
                     cameraSelector.selectedObject = holdingTarget;
                     lastSelected = null;
@@ -125,7 +128,8 @@ namespace UltraEditor.Classes
 
                 else if (holdingObject == holdingTarget && holdingObject != null)
                 {
-                    Plugin.LogInfo($"Released object: {holdingObject.name} from target");
+                    if (logShit)
+                        Plugin.LogInfo($"Released object: {holdingObject.name} from target");
                     holdingObject.transform.SetParent(null);
                     cameraSelector.selectedObject = holdingTarget;
                     lastSelected = null;
@@ -156,10 +160,12 @@ namespace UltraEditor.Classes
             {
                 foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
                 {
-                    Plugin.LogInfo($"Trying to detroy {obj.name}");
+                    if (logShit)
+                        Plugin.LogInfo($"Trying to detroy {obj.name}");
                     if (!doNotDelete.Contains(obj.name) && !obj.name.StartsWith("MoveArrow_") && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject && obj != navMeshSurface.gameObject) : true))
                     {
-                        Plugin.LogInfo($"Destroyed {obj.name}");
+                        if (logShit)
+                            Plugin.LogInfo($"Destroyed {obj.name}");
                         Destroy(obj);
                     }
                 }
@@ -170,7 +176,8 @@ namespace UltraEditor.Classes
                     navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
                     navMeshSurface.collectObjects = CollectObjects.All;
                     navMeshSurface.BuildNavMesh();
-                    Plugin.LogInfo("NavMeshSurface created.");
+                    if (logShit)
+                        Plugin.LogInfo("NavMeshSurface created.");
 
                     StatsManager.Instance.levelNumber = 0;
                     StatsManager.Instance.endlessMode = false;
@@ -437,7 +444,8 @@ namespace UltraEditor.Classes
 
                 navMeshSurface.BuildNavMesh();
                 EditorVisualizers.RebuildNavMeshVis(navMeshSurface);
-                Plugin.LogInfo("NavMesh rebuilt.");
+                if (logShit)
+                    Plugin.LogInfo("NavMesh rebuilt.");
             }
             else
             {
@@ -1170,7 +1178,8 @@ namespace UltraEditor.Classes
             }
             else if (supportedTypes.Contains(type)) CreateInspectorItem(fieldName, inspectorItemType.InputField, valueStr, value).AddListener(() =>
             {
-                Plugin.LogInfo(lastFieldText);
+                if (logShit)
+                    Plugin.LogInfo(lastFieldText);
 
                 if (type == typeof(string))
                     SetMemberValue(field, comp, lastFieldText);
@@ -1210,14 +1219,18 @@ namespace UltraEditor.Classes
                 {
                     CreateInspectorItem(fieldName, inspectorItemType.Dropdown, value != null ? value.ToString() : "null", value).AddListener(() =>
                     {
-                        Plugin.LogInfo($"Setting field {fieldName} to enum value: {lastEnum}");
+                        if (logShit)
+                            Plugin.LogInfo($"Setting field {fieldName} to enum value: {lastEnum}");
 
-                        Plugin.LogInfo($"Component type: {comp.GetType()}, Enum type: {lastEnumType}");
-                        Plugin.LogInfo($"Enum value: {lastEnum} ({lastEnum.GetType()})");
+                        if (logShit)
+                            Plugin.LogInfo($"Component type: {comp.GetType()}, Enum type: {lastEnumType}");
+                        if (logShit)
+                            Plugin.LogInfo($"Enum value: {lastEnum} ({lastEnum.GetType()})");
 
                         SetMemberValue(field, comp, Enum.Parse(lastEnumType, lastEnum.ToString()));
 
-                        Plugin.LogInfo($"After assignment: {((FieldInfo)field).GetValue(comp)}");
+                        if (logShit)
+                            Plugin.LogInfo($"After assignment: {((FieldInfo)field).GetValue(comp)}");
 
                         UpdateInspector();
                     });
@@ -1273,11 +1286,13 @@ namespace UltraEditor.Classes
                         }
                         else if (lastFieldText == "remove")
                         {
-                            Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
+                            if (logShit)
+                                Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
 
                             var arr = value as Array;
-                            for (int j = 0; j < arr.Length; j++)
-                                Plugin.LogInfo($"arr[{j}] = {(arr.GetValue(j) == null ? "null" : arr.GetValue(j).ToString())}");
+                            if (logShit)
+                                for (int j = 0; j < arr.Length; j++)
+                                    Plugin.LogInfo($"arr[{j}] = {(arr.GetValue(j) == null ? "null" : arr.GetValue(j).ToString())}");
 
                             if (arr == null) return;
                             int len = arr.Length;
@@ -1375,10 +1390,12 @@ namespace UltraEditor.Classes
                         }
                         else if (lastFieldText == "remove")
                         {
-                            Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
+                            if (logShit)
+                                Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
 
-                            for (int j = 0; j < list.Count; j++)
-                                Plugin.LogInfo($"list[{j}] = {(list[j] == null ? "null" : list[j].ToString())}");
+                            if (logShit)
+                                for (int j = 0; j < list.Count; j++)
+                                    Plugin.LogInfo($"list[{j}] = {(list[j] == null ? "null" : list[j].ToString())}");
 
                             if (list == null) return;
                             if (index < 0 || index >= list.Count) return;
@@ -1449,7 +1466,8 @@ namespace UltraEditor.Classes
 
                     choosing = false;
 
-                    Plugin.LogInfo($"Replaced element {choosing_index} with {cameraSelector.selectedObject.name}");
+                    if (logShit)
+                        Plugin.LogInfo($"Replaced element {choosing_index} with {cameraSelector.selectedObject.name}");
                 }
             }
         }
@@ -1554,7 +1572,8 @@ namespace UltraEditor.Classes
                 {
                     coppiedValue = value;
                     lastCoppiedType = value != null ? value.GetType() : null;
-                    Plugin.LogInfo($"Copied value: {coppiedValue} of type: {lastCoppiedType}");
+                    if (logShit)
+                        Plugin.LogInfo($"Copied value: {coppiedValue} of type: {lastCoppiedType}");
                 });
 
                 pasteButton.GetComponentInChildren<Button>().onClick.AddListener(() =>
@@ -1566,12 +1585,14 @@ namespace UltraEditor.Classes
                         else
                             lastFieldText = coppiedValue.ToString();
                         field.GetComponentInChildren<TMP_InputField>().text = lastFieldText;
-                        Plugin.LogInfo($"Pasted value: {lastFieldText}");
+                        if (logShit)
+                            Plugin.LogInfo($"Pasted value: {lastFieldText}");
                         e.Invoke();
                     }
                     else
                     {
-                        Plugin.LogInfo("No compatible value to paste.");
+                        if (logShit)
+                            Plugin.LogInfo("No compatible value to paste.");
                     }
                 });
 
@@ -1633,7 +1654,8 @@ namespace UltraEditor.Classes
                 {
                     dropdown.GetComponentInChildren<TMP_Dropdown>().options.Add(new TMP_Dropdown.OptionData(ee.ToString()));
 
-                    Plugin.LogInfo(ee.ToString() + value.ToString());
+                    if (logShit)
+                        Plugin.LogInfo(ee.ToString() + value.ToString());
                     if (ee.ToString() == value.ToString())
                         selectIndex = i;
 
@@ -1750,12 +1772,13 @@ namespace UltraEditor.Classes
             {
                 if (obj == null) return;
                 holdingObject = obj;
-                Plugin.LogInfo($"Holding object: {holdingObject.name}");
+                if (logShit)
+                    Plugin.LogInfo($"Holding object: {holdingObject.name}");
             });
             
             eventTrigger.triggers[2].callback.AddListener((data) =>
             {
-                if (obj != null)
+                if (obj != null && logShit)
                     Plugin.LogInfo($"Entered object: {obj.name}");
                 if (holdingObject != null && holdingObject != obj)
                 {
@@ -2181,6 +2204,7 @@ namespace UltraEditor.Classes
 
             string text = File.ReadAllText(path);
 
+            Plugin.LogInfo($"Loading {sceneName}...");
             LoadSceneJson(text);
 
             if (MissionNameText != null)
@@ -2189,10 +2213,13 @@ namespace UltraEditor.Classes
                 MissionNameText.text = sceneName.Replace(".uterus", "");
                 lastLoaded = sceneName;
             }
+
         }
 
         void LoadSceneJson(string text)
         {
+            float startTime = Time.realtimeSinceStartup;
+
             int lineIndex = 0;
             int phase = 0;
             bool isInScript = false;
@@ -2213,7 +2240,8 @@ namespace UltraEditor.Classes
                 }
                 else if (isInScript)
                 {
-                    //Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
+                    if (logShit)
+                        Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
 
                     if (line == "? END ?")
                     {
@@ -2344,22 +2372,28 @@ namespace UltraEditor.Classes
                 lineIndex++;
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+            Plugin.LogInfo("Assigning parents...");
+
+            var allObjs = GameObject.FindObjectsOfType<SpawnedObject>(true);
+
+            var dict = new Dictionary<string, SpawnedObject>();
+            foreach (var o in allObjs)
             {
-                if (obj.parentID != "")
+                if (!string.IsNullOrEmpty(o.ID))
+                    dict[o.ID] = o;
+            }
+
+            foreach (var obj in allObjs)
+            {
+                if (!string.IsNullOrEmpty(obj.parentID) && dict.TryGetValue(obj.parentID, out var parent))
                 {
-                    foreach (var findingObj in GameObject.FindObjectsOfType<SpawnedObject>(true))
-                    {
-                        if (obj.parentID == findingObj.ID)
-                        {
-                            obj.transform.SetParent(findingObj.transform, true);
-                            break;
-                        }
-                    }
+                    obj.transform.SetParent(parent.transform, true);
                 }
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<SpawnedObject>(true))
+            Plugin.LogInfo("Creating objects...");
+
+            foreach (var obj in allObjs)
             {
                 obj.GetComponent<ArenaObject>()?.createArena();
                 obj.GetComponent<NextArenaObject>()?.createArena();
@@ -2369,6 +2403,8 @@ namespace UltraEditor.Classes
                 obj.GetComponent<LightObject>()?.createLight();
                 obj.GetComponent<MusicObject>()?.createMusic();
             }
+
+            Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
 
             cameraSelector.selectedObject = null;
         }
