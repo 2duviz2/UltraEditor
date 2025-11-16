@@ -28,7 +28,7 @@ namespace UltraEditor
         public static KeyCode ctrlKey = KeyCode.LeftControl;
         public static KeyCode shiftKey = KeyCode.LeftShift;
         public static KeyCode altKey = KeyCode.LeftAlt;
-        
+
         public static bool isToggleEnabledKeyPressed()
         {
             if (Input.GetKey(altKey) && Input.GetKey(shiftKey) && Input.GetKeyDown(KeyCode.A))
@@ -61,7 +61,7 @@ namespace UltraEditor
             return !Input.GetKey(ctrlKey) && !Input.GetKey(altKey);
         }
 
-        public void Awake() 
+        public void Awake()
         {
             instance = this;
 
@@ -104,15 +104,21 @@ namespace UltraEditor
                 LogError($"Resources.Load failed for '{path}'");
             return obj;
         }
-        public static void LogInfo(object data) 
+        public static void LogInfo(object data, string stackTrace = null)
         {
-            instance.Logger?.LogInfo(data);
-            (instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString());
+            instance.Logger?.LogInfo(stackTrace != null 
+                ? $"{data}\n{stackTrace}" 
+                : data);
+
+            (instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString(), stackTrace: stackTrace);
         }
-        public static void LogError(object data) 
+        public static void LogError(object data, string stackTrace = null) 
         { 
-            instance.Logger?.LogError(data);
-            (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString());
+            instance.Logger?.LogError(stackTrace != null 
+                ? $"{data}\n{stackTrace}" 
+                : data);
+
+            (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString(), stackTrace: stackTrace);
         }
     }
 }

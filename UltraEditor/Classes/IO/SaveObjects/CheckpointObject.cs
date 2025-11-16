@@ -7,7 +7,7 @@ using System.Text;
 using Unity.AI.Navigation;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
     internal class CheckpointObject : SavableObject
     {
@@ -54,7 +54,7 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in rooms)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                foreach (var obj in FindObjectsOfType<Transform>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {
@@ -68,7 +68,7 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in roomsToInherit)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                foreach (var obj in FindObjectsOfType<Transform>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {

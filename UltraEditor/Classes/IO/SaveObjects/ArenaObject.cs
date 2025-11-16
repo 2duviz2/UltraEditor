@@ -5,7 +5,7 @@ using System.Text;
 using Unity.AI.Navigation;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
     internal class ArenaObject : SavableObject
     {
@@ -34,7 +34,7 @@ namespace UltraEditor.Classes.Saving
 
             foreach (var e in enemyIds)
             {
-                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                foreach (var obj in FindObjectsOfType<Transform>(true))
                 {
                     if (e == EditorManager.GetIdOfObj(obj.gameObject))
                     {

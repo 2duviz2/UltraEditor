@@ -3,7 +3,7 @@ using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
     internal class MusicObject : SavableObject
     {

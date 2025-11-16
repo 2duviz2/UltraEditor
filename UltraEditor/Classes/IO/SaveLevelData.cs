@@ -1,9 +1,13 @@
-﻿namespace UltraEditor.Classes.Saving;
+﻿namespace UltraEditor.Classes.IO;
 
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary> 
+/// This is what we get after opening up the uterus and ripping out the insides.
+/// <para>Also helps with ripping the insides out.</para>
+/// </summary>
 public class UnpackedLevel
 {
     /// <summary> Level name, for UI and SceneHelper.CurrentScene in the future when we stop relying on cybergrind. </summary>
@@ -31,9 +35,10 @@ public class UnpackedLevel
     public AudioClip music;
 
     /// <summary> All the data of all saved objects. </summary>
-    public List<SavableObjectData> savedObjects; // these aren't unpacked til during load
+    public List<SavableObjectData> savedObjects; // these aren't unpacked til during load due to like needing to parse extra data
 }
 
+/// <summary> Read: UltraEditor.Classes.Saving.SavableObjectData's summary. </summary>
 public class SaveLevelData
 {
     /// <summary> Level name, for UI and SceneHelper.CurrentScene in the future when we stop relying on cybergrind. </summary>
@@ -67,6 +72,8 @@ public class SaveLevelData
     public List<SavableObjectData> savedObjects;
 }
 
+/// <summary> This is like fancy stuff for the jsonconvert to write into the .uterus </summary>
+[Serializable]
 public class SavableObjectData
 {
     /// <summary> GameObject Identifier. </summary>
@@ -93,6 +100,8 @@ public class SavableObjectData
     public List<object> Data;
 }
 
+/// <summary> Serializable Vector3, why the fuck cant i serialize a vector3 are we fucking serious rn </summary>
+/// <param name="v">Vector3 to be replicated.</param>
 [Serializable]
 public struct SerializableVector3(Vector3 v)
 {
@@ -104,52 +113,4 @@ public struct SerializableVector3(Vector3 v)
 
     public static implicit operator Vector3(SerializableVector3 sv) => sv.ToVector3();
     public static implicit operator SerializableVector3(Vector3 v) => new(v);
-}
-
-
-public class SaveData
-{
-    public string typeFull;
-    public List<FieldData> data;
-
-    public class FieldData
-    {
-        public string Field;
-        public string FieldType;
-        public object Data;
-    }
-}
-
-public class CubeObjectData : SavableObjectData {
-    public int matType;
-}
-
-public class PrefabObjectData : SavableObjectData {
-    public string PrefabAsset;
-}
-
-public class ArenaObjectData : SavableObjectData {
-    public List<string> enemyIds;
-    public bool onlyWave;
-}
-
-public class NextArenaObjectData : SavableObjectData
-{
-    public List<string> enemyIds;
-    public List<string> toActivateIds;
-    public bool lastWave;
-    public int enemyCount;
-}
-
-public class ActivateObjectData : SavableObjectData
-{
-    public List<string> toActivateIds;
-    public List<string> toDeactivateIds;
-    public bool canBeReactivated;
-}
-
-public class CheckpointObjectData : SavableObjectData
-{
-    public List<string> rooms;
-    public List<string> roomsToInherit;
 }

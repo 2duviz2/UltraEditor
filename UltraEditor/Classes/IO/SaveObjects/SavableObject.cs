@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
     public class SavableObject : MonoBehaviour
     {
