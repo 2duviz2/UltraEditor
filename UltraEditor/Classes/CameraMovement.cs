@@ -24,7 +24,7 @@ namespace UltraEditor.Classes
             if (!Plugin.canMove()) return;
             if (EditorManager.Instance.blocker.activeSelf) return;
 
-            float speed = movementSpeed * (Input.GetKey(KeyCode.LeftShift) ? shiftMultiplier : 1f) * Time.unscaledDeltaTime;
+            float speed = movementSpeed * (Input.GetKey(KeyCode.LeftShift) ? shiftMultiplier : 1f) * Mathf.Min(Time.unscaledDeltaTime, 0.1f);
             float horizontal = Input.GetAxisRaw("Horizontal") * speed;
             float vertical = Input.GetAxisRaw("Vertical") * speed;
             float ascend = (Input.GetKey(KeyCode.E) ? 1 : 0 - (Input.GetKey(KeyCode.Q) ? 1 : 0)) * speed;

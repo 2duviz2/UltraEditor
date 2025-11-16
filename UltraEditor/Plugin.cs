@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UltraEditor.Classes;
 using UnityEngine.SceneManagement;
+using System;
 
 namespace UltraEditor
 {
@@ -111,6 +112,11 @@ namespace UltraEditor
         { 
             instance.Logger?.LogError(data);
             (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString());
+        }
+
+        public static Version GetVersion()
+        {
+            return instance.Info.Metadata.Version;
         }
     }
 }
