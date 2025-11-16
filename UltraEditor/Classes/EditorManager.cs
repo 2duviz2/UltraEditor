@@ -2089,7 +2089,7 @@ namespace UltraEditor.Classes
 
             foreach (var obj in GameObject.FindObjectsOfType<DeathZone>(true))
             {
-                if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() == null) continue;
+                if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
                 text += "? DeathZone ?";
                 text += "\n";
                 text += addShit(obj.gameObject.AddComponent<SavableObject>());
