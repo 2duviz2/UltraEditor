@@ -75,7 +75,8 @@ namespace UltraEditor.Classes
             if (!mouseLocked)
             {
                 Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
+                if (!cameraSelector.dragging)
+                    Cursor.visible = true;
             }
 
             if (Input.GetKeyDown(Plugin.toggleEditorCanvasKey))
