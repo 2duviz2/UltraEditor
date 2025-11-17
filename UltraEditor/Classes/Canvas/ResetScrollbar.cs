@@ -12,6 +12,11 @@ namespace UltraEditor.Classes.Canvas
 
         void Start()
         {
+            ResetPos();
+        }
+
+        public void ResetPos()
+        {
             GetComponent<Scrollbar>().value = value;
         }
     }

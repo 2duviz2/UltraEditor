@@ -81,7 +81,7 @@ namespace UltraEditor.Classes
             if (!mouseLocked)
             {
                 Cursor.lockState = CursorLockMode.None;
-                if (!cameraSelector.dragging)
+                if (!cameraSelector.dragging && !editorCamera.GetComponent<CameraMovement>().moving())
                     Cursor.visible = true;
             }
 
@@ -267,6 +267,15 @@ namespace UltraEditor.Classes
 
                     if (SceneHelper.CurrentScene == deleteLevel)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
+
+                    foreach (var item in FindObjectsOfType<Door>())
+                    {
+                        var m = item.GetType().GetMethod("GetPos",
+                            BindingFlags.Instance | BindingFlags.NonPublic);
+
+                        m.Invoke(item, null);
+
+                    }
                 }
 
                 if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
@@ -587,6 +596,9 @@ namespace UltraEditor.Classes
             if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
                 SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
+            if (dir == "Bonus")
+                obj.GetComponent<Bonus>().secretNumber = 100000;
+            
             return obj;
         }
 
@@ -654,7 +666,7 @@ namespace UltraEditor.Classes
         void createFloor(Vector3 scale)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
+            cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f + Vector3.down * 1f;
             cube.transform.localScale = scale;
             cube.layer = LayerMask.NameToLayer("Outdoors");
             cube.tag = "Floor";
@@ -2085,7 +2097,7 @@ namespace UltraEditor.Classes
 
             foreach (var obj in GameObject.FindObjectsOfType<DeathZone>(true))
             {
-                if (obj.GetComponent<SavableObject>() == null) continue;
+                if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
                 text += "? DeathZone ?";
                 text += "\n";
                 text += addShit(obj.gameObject.AddComponent<SavableObject>());
@@ -2309,6 +2321,15 @@ namespace UltraEditor.Classes
                         newObj.GetComponent<SpawnedObject>().ID = workingObject.GetComponent<SpawnedObject>().ID;
                         newObj.GetComponent<SpawnedObject>().parentID = workingObject.GetComponent<SpawnedObject>().parentID;
                         Destroy(workingObject);
+
+                        if (newObj.GetComponent<Door>() != null)
+                        {
+                            var m = newObj.GetComponent<Door>().GetType().GetMethod("GetPos",
+                                BindingFlags.Instance | BindingFlags.NonPublic);
+
+                            m.Invoke(newObj.GetComponent<Door>(), null);
+
+                        }
                     }
 
                     if (lineIndex == 10 && scriptType == "ArenaObject")

@@ -46,7 +46,7 @@ namespace UltraEditor.Classes
         int draggingAxis = -1;
         Vector3 dragStartPos;
         Vector3 objectStartPos, objectStartScale, objectStartEuler;
-        Vector2 savedMousePos = Vector2.zero;
+        (int x, int y) savedMousePos = new (0,0);
         Vector2 realMousePos = Vector2.zero;
 
         public void Awake()
@@ -218,7 +218,7 @@ namespace UltraEditor.Classes
                         objectStartEuler = selectedObject.transform.eulerAngles;
                         dragStartPos = mousePos;
                         scaleMultiplier = moveArrows[0].localScale.y;
-                        savedMousePos = mousePos;
+                        savedMousePos = MouseController.GetMousePos();
                         realMousePos = mousePos;
                         Cursor.visible = false;
                     }
@@ -239,7 +239,7 @@ namespace UltraEditor.Classes
                 {
                     realMousePos += new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
                     Vector3 mouseDelta = new Vector3(realMousePos.x, realMousePos.y, 0) - dragStartPos;
-                    MouseController.SetCursorPos((int)savedMousePos.x, Screen.height - (int)savedMousePos.y);
+                    MouseController.SetCursorPos(savedMousePos.x, savedMousePos.y);
                     float moveSpeed = scaleMultiplier * 0.1f;
 
                     Vector3 moveDir = Vector3.zero;
@@ -252,16 +252,31 @@ namespace UltraEditor.Classes
                     if (selectionMode == SelectionMode.Move)
                     {
                         Vector3 target = objectStartPos + moveDir * delta * moveSpeed * 3;
+                        var s = 0.25f;
+                        if (Input.GetKey(Plugin.shiftKey))
+                            s = 1;
+                        if (Input.GetKey(Plugin.ctrlKey))
+                            target = Snap(target, s);
                         selectedObject.transform.position = target;
                     }
                     if (selectionMode == SelectionMode.Scale)
                     {
                         Vector3 target = objectStartScale + moveDir * delta * moveSpeed * 3;
+                        var s = 0.25f;
+                        if (Input.GetKey(Plugin.shiftKey))
+                            s = 1;
+                        if (Input.GetKey(Plugin.ctrlKey))
+                            target = Snap(target, s);
                         selectedObject.transform.localScale = target;
                     }
                     if (selectionMode == SelectionMode.Rotate)
                     {
                         Vector3 target = objectStartEuler + moveDir * delta * 5;
+                        var s = 15f;
+                        if (Input.GetKey(Plugin.shiftKey))
+                            s = 45;
+                        if (Input.GetKey(Plugin.ctrlKey))
+                            target = Snap(target, s);
                         selectedObject.transform.eulerAngles = target;
                     }
 
@@ -364,6 +379,14 @@ namespace UltraEditor.Classes
             Ray ray = camera.ScreenPointToRay(Input.mousePosition);
             plane.Raycast(ray, out float distance);
             return ray.GetPoint(distance);
+        }
+
+        Vector3 Snap(Vector3 v, float s = 0.25f)
+        {
+            v.x = Mathf.Round(v.x / s) * s;
+            v.y = Mathf.Round(v.y / s) * s;
+            v.z = Mathf.Round(v.z / s) * s;
+            return v;
         }
     }
 }

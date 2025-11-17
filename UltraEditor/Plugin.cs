@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UltraEditor.Classes;
 using UnityEngine.SceneManagement;
+using System;
 
 namespace UltraEditor
 {
@@ -14,7 +15,7 @@ namespace UltraEditor
     {
         public const string GUID = "duviz.ultrakill.ultraeditor";
         public const string Name = "UltraEditor";
-        public const string Version = "0.0.3";
+        public const string Version = "0.0.4";
 
         public static Plugin instance;
         public plog.Logger Log;
@@ -31,6 +32,8 @@ namespace UltraEditor
         public static KeyCode shiftKey = KeyCode.LeftShift;
         public static KeyCode altKey = KeyCode.LeftAlt;
 
+        static bool seenWelcomeMessage = false;
+        
         public static bool isToggleEnabledKeyPressed()
         {
             if (Input.GetKey(altKey) && Input.GetKey(shiftKey) && Input.GetKeyDown(KeyCode.A))
@@ -91,6 +94,12 @@ namespace UltraEditor
             {
                 EditorManager.Create();
             }
+
+            if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !seenWelcomeMessage)
+            {
+                Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("WelcomeCanvas"));
+                seenWelcomeMessage = true;
+            }
         }
 
         public void LateUpdate()
@@ -121,6 +130,11 @@ namespace UltraEditor
                 : data);
 
             (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString(), stackTrace: stackTrace);
+        }
+
+        public static Version GetVersion()
+        {
+            return instance.Info.Metadata.Version;
         }
     }
 }
