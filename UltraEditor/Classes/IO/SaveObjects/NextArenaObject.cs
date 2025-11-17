@@ -8,17 +8,18 @@ using UnityEngine;
 
 namespace UltraEditor.Classes.IO.SaveObjects
 {
-    internal class NextArenaObject : SavableObject
+    public class NextArenaObject : SavableObject
     {
         public List<string> enemyIds = new List<string>();
         public List<string> toActivateIds = new List<string>();
         public bool lastWave = true;
         public int enemyCount = 0;
 
-        public static NextArenaObject Create(GameObject target)
+        public static NextArenaObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
-            NextArenaObject obj = target.AddComponent<NextArenaObject>();
-            return obj;
+            NextArenaObject nextArenaObject = target.AddComponent<NextArenaObject>();
+            if (spawnedObject != null) spawnedObject.nextArenaObject = nextArenaObject;
+            return nextArenaObject;
         }
 
         public void addEnemyId(string id)

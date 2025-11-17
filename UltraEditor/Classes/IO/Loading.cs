@@ -2,9 +2,12 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
+using UnityEngine.Networking;
 using static UnityEngine.Object;
 
 namespace UltraEditor.Classes.IO;
@@ -13,7 +16,7 @@ namespace UltraEditor.Classes.IO;
 public class Loading
 {
     /// <summary> List of actions to be ran when loading a level depending on the type of object it is. </summary>
-    public static Dictionary<string, Action<SavableObjectData, GameObject>> listeners = [];
+    public static Dictionary<string, Action<SavableObjectData, GameObject, SpawnedObject>> listeners = [];
 
     /// <summary> Loads all the listeners for different savable object types. </summary>
     public static void Load()
@@ -27,10 +30,10 @@ public class Loading
 
         */
 
-        AddListener("CubeObject", (data, workingObject) => 
+        AddListener("CubeObject", (data, workingObject, spawnedObject) => 
             CubeObject.Create(workingObject, Enum<MaterialChoser.materialTypes>(data.Data[0])));
 
-        AddListener("PrefabObject", (data, workingObject) => 
+        AddListener("PrefabObject", (data, workingObject, spawnedObject) => 
         {
             GameObject newObj = EditorManager.Instance.SpawnAsset((string)data.Data[0], true);
             newObj.transform.position = workingObject.transform.position;
@@ -45,19 +48,19 @@ public class Loading
             Destroy(workingObject);
         });
 
-        AddListener("ArenaObject", (data, workingObject) =>
+        AddListener("ArenaObject", (data, workingObject, spawnedObject) =>
         {
-            ArenaObject.Create(workingObject);
-            Plugin.LogInfo($"ArenaObject:: onlyWave: {(bool)data.Data[0]} | enemyIds: {string.Join(", ", StringList(data.Data[1]))}");
+            ArenaObject.Create(workingObject, spawnedObject);
+            //Plugin.LogInfo($"ArenaObject:: onlyWave: {(bool)data.Data[0]} | enemyIds: {string.Join(", ", StringList(data.Data[1]))}");
 
             workingObject.GetComponent<ArenaObject>().onlyWave = (bool)data.Data[0];
             workingObject.GetComponent<ArenaObject>().enemyIds = StringList(data.Data[1]);
         });
 
-        AddListener("NextArenaObject", (data, workingObject) =>
+        AddListener("NextArenaObject", (data, workingObject, spawnedObject) =>
         {
-            NextArenaObject nextArenaObject = NextArenaObject.Create(workingObject);
-            Plugin.LogInfo($"NextArenaObject:: lastWave: {(bool)data.Data[0]} | enemyCount: {Convert.ToInt32(data.Data[1])} | enemyIds: {string.Join(", ", StringList(data.Data[2]))} | toActivateIds: {string.Join(", ", StringList(data.Data[3]))}");
+            NextArenaObject nextArenaObject = NextArenaObject.Create(workingObject, spawnedObject);
+            //Plugin.LogInfo($"NextArenaObject:: lastWave: {(bool)data.Data[0]} | enemyCount: {Convert.ToInt32(data.Data[1])} | enemyIds: {string.Join(", ", StringList(data.Data[2]))} | toActivateIds: {string.Join(", ", StringList(data.Data[3]))}");
 
             nextArenaObject.lastWave = (bool)data.Data[0];
             nextArenaObject.enemyCount = Convert.ToInt32(data.Data[1]);
@@ -65,92 +68,99 @@ public class Loading
             nextArenaObject.toActivateIds = StringList(data.Data[3]);
         });
 
-        AddListener("ActivateObject", (data, workingObject) =>
+        AddListener("ActivateObject", (data, workingObject, spawnedObject) =>
         {
-            ActivateObject.Create(workingObject);
+            ActivateObject.Create(workingObject, spawnedObject);
 
             workingObject.GetComponent<ActivateObject>().toActivateIds = StringList(data.Data[0]);
             workingObject.GetComponent<ActivateObject>().toDeactivateIds = StringList(data.Data[1]);
             workingObject.GetComponent<ActivateObject>().canBeReactivated = (bool)data.Data[2];
         });
 
-        AddListener("CheckpointObject", (data, workingObject) =>
+        AddListener("CheckpointObject", (data, workingObject, spawnedObject) =>
         {
-            CheckpointObject.Create(workingObject);
+            CheckpointObject.Create(workingObject, spawnedObject);
 
             workingObject.GetComponent<CheckpointObject>().rooms = StringList(data.Data[0]);
             workingObject.GetComponent<CheckpointObject>().roomsToInherit = StringList(data.Data[1]);
         });
 
-        AddListener("DeathZone", (data, workingObject) =>
+        AddListener("DeathZone", (data, workingObject, spawnedObject) =>
         {
-            DeathZoneObject.Create(workingObject);
+            DeathZoneObject.Create(workingObject, spawnedObject);
 
             workingObject.GetComponent<DeathZoneObject>().notInstaKill = (bool)data.Data[0];
             workingObject.GetComponent<DeathZoneObject>().damage = (int)data.Data[1];
             workingObject.GetComponent<DeathZoneObject>().affected = Enum<AffectedSubjects>(data.Data[2]);
         });
 
-        AddListener("Light", (data, workingObject) =>
+        AddListener("Light", (data, workingObject, spawnedObject) =>
         {
-            LightObject.Create(workingObject);
+            LightObject.Create(workingObject, spawnedObject);
 
             workingObject.GetComponent<LightObject>().intensity = (float)data.Data[0];
             workingObject.GetComponent<LightObject>().range = (float)data.Data[1];
             workingObject.GetComponent<LightObject>().type = Enum<LightType>(data.Data[2]);
         });
+
+        AddListener("MusicObject", (data, workingObject, spawnedObject) =>
+        {
+            MusicObject.Create(workingObject, spawnedObject);
+
+            bool calmOnline = (bool)data.Data[0];
+            string calmName = (string)data.Data[1];
+
+            workingObject.GetComponent<MusicObject>().calmThemeOnline = calmOnline;
+            workingObject.GetComponent<MusicObject>().calmThemePath = calmName;
+
+            if (!calmOnline)
+            {
+                byte[] music = (byte[])data.Data[2];
+
+                string tempFile = Path.Combine(Application.temporaryCachePath, calmName);
+                File.WriteAllBytes(tempFile, music);
+
+                workingObject.GetComponent<MusicObject>().calmThemePath = tempFile;
+            }
+
+            bool battleOnline = calmOnline ? (bool)data.Data[2] : (bool)data.Data[3];
+            string battleName = calmOnline ? (string)data.Data[3] : (string)data.Data[4];
+
+            workingObject.GetComponent<MusicObject>().battleThemeOnline = battleOnline;
+            workingObject.GetComponent<MusicObject>().battleThemePath = battleName;
+
+            if (!battleOnline)
+            {
+                byte[] music = (byte[])data.Data[5];
+
+                string tempFile = Path.Combine(Application.temporaryCachePath, battleName);
+                File.WriteAllBytes(tempFile, music);
+
+                workingObject.GetComponent<MusicObject>().battleThemePath = tempFile;
+            }
+        });
     }
 
     /// <summary> Invokes a listener for that type of savable object. </summary>
-    public static void InvokeListener(SavableObjectData data, GameObject workingObject)
+    public static void InvokeListener(SavableObjectData data, GameObject workingObject, SpawnedObject spawnedObject)
     {
         if (listeners.Count == 0) Load();
 
         if (listeners.TryGetValue(data.Type, out var listener))
-            try { listener(data, workingObject); }
+            try { listener(data, workingObject, spawnedObject); }
             catch (Exception ex) { 
                 Plugin.LogError($"EXCEPTION WHILE INVOKING LOAD LISTENER({data.Type}):\n{ex}\n{ex.Message}", ex.StackTrace); 
             }
     }
 
-    /// <summary> Adds a listener for that type of savable object. </summary>
-    public static void AddListener(string type, Action<SavableObjectData, GameObject> listener) =>
-        listeners.Add(type, listener);
-
     #region tools
 
-    //private static Dictionary<object, Type> enumCache = [];
+    /// <summary> Adds a listener for that type of savable object. </summary>
+    public static void AddListener(string type, Action<SavableObjectData, GameObject, SpawnedObject> listener) =>
+        listeners.Add(type, listener);
 
     private static T Enum<T>(object obj) => 
         (T)System.Enum.Parse(typeof(T), obj.ToString());
-    
-    /*private static T Enumerator<T>(object obj) where T : struct
-    {
-        //if (enumCache.TryGetValue(obj, out var cacheResult))
-        //    return Enum.GetValues(cacheResult).Cast<T>()
-        if (Enum.TryParse(obj.ToString(), out T result))
-            return result;
-
-        throw new ArgumentException($"Loading enum failed... 3:");
-    }*/
-
-
-    /*private static T Obj<T>(object obj)
-    {
-        if (obj is JToken token)
-            return token.ToObject<T>();
-
-        if (obj is T t)
-            return t;
-
-        return (T)Convert.ChangeType(obj, typeof(T));
-    }
-
-    private static bool Boolean(object obj) =>
-        Obj<bool>(obj);
-
-    private static int Int(object obj) =>
-        Obj<int>(obj);*/
 
     private static List<string> StringList(object obj) =>
         (obj as JArray)?.ToObject<List<string>>();

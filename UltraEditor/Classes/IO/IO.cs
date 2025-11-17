@@ -15,20 +15,15 @@ using static UnityEngine.Object;
 
 public class IO
 {
-    public static async void testUnpack(string path, bool load)
+    public static void testUnpack(string path)
     {
-        var u = await UnpackLevel(path, load);
+        var u = UnpackLevel(path);
         Plugin.LogInfo($"\nname: {u.name}\ndesc: {u.description}\ncreator: {u.creator}\nversion: {u.editorVersion}\nbuilddate: {u.buildDate}\nid: {u.uniqueIdentifier}\nsavedObjects: {string.Join(", ", from blob in u.savedObjects where blob != null select blob.Name)}");
 
-        if (load)
-            AudioSource.PlayClipAtPoint(u.music, NewMovement.Instance.transform.position);
-        else
-        {
-            var obj = GameObject.Find("Image :3") ?? new GameObject("Image :3");
-            obj.transform.parent = GameObject.Find("Canvas").transform;
-            obj.transform.localPosition = new(0f, 0f, 0f);
-            (obj.GetComponent<Image>() ?? obj.AddComponent<Image>()).sprite = u.thumbnail;
-        }
+        var obj = GameObject.Find("Image :3") ?? new GameObject("Image :3");
+        obj.transform.parent = GameObject.Find("Canvas").transform;
+        obj.transform.localPosition = new(0f, 0f, 0f);
+        (obj.GetComponent<Image>() ?? obj.AddComponent<Image>()).sprite = u.thumbnail;
     }
 
     public static SavableObjectData CreateAndPopulate(SavableObject obj, string Type = null) => new()
@@ -46,25 +41,23 @@ public class IO
         Data = []
     };
 
-    public static void Save(string name, string description, string creator, string path, string thumbnailPath = null, string musicPath = null, string GUID = null)
+    public static void Save(string name, string description, string creator, string path, string thumbnailPath = null, string calmThemePath = null, string battleThemePath = null, string GUID = null)
     {
         // UltraEditor.Classes.IO.IO.Save("new saving system test uwu :3", "testing the new saving system rn", "Bryan_-000-", "newsavetesting", "C:\\Users\\freda\\Downloads\\absolute cinema.jpg", "C:\\Users\\freda\\Music\\fe\\femtanyl - LOVESICK, CANNIBAL! (feat takihasdied).mp3", "Bryan_-000-.ULTRAEDITOR.SaveSystemTest");
         // UltraEditor.Classes.IO.IO.Load("newsavetesting.uterus");
         // UltraEditor.Classes.IO.IO.testUnpack("newsavetesting.uterus", false);
 
         List<byte> imageBytes = thumbnailPath != null && File.Exists(thumbnailPath) ? [.. File.ReadAllBytes(thumbnailPath)] : [];
-        List<byte> musicBytes = musicPath != null && File.Exists(musicPath) ? [.. File.ReadAllBytes(musicPath)] : [];
         SaveLevelData level = new()
         {
             name = name,
             description = description,
             creator = creator,
             editorVersion = new(Plugin.Version),
+            MajorVersion = 2,
             buildDate = DateTime.UtcNow,
             uniqueIdentifier = GUID ?? Guid.NewGuid().ToString("N"),
             thumbnailSize = imageBytes.Count,
-            musicSize = musicBytes.Count,
-            musicName = musicPath == null ? null : Path.GetFileName(musicPath),
             savedObjects = []
         };
 
@@ -231,11 +224,30 @@ public class IO
             Plugin.LogInfo($"added lightObj to saved: {lightObj.Name}");
         }
 
-        //level.savedObjects.Add(new() { Name = "DEFAULT TESTING SAVE OBJ" });
+        foreach (var obj in FindObjectsOfType<MusicObject>(true))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+
+            SavableObjectData musicObj = CreateAndPopulate(obj.gameObject.AddComponent<SavableObject>(), "MusicObject");
+            musicObj.Data.Add(obj.calmThemeOnline);
+            musicObj.Data.Add(obj.calmThemeOnline 
+                ? obj.calmThemePath 
+                : Path.GetFileName(obj.calmThemePath));
+            if (obj.calmThemeOnline) musicObj.Data.Add(File.ReadAllBytes(obj.calmThemePath));
+
+            musicObj.Data.Add(obj.battleThemeOnline);
+            musicObj.Data.Add(obj.battleThemeOnline
+                ? obj.battleThemePath
+                : Path.GetFileName(obj.battleThemePath));
+            if (obj.battleThemeOnline) musicObj.Data.Add(File.ReadAllBytes(obj.battleThemePath));
+
+            level.savedObjects.Add(musicObj);
+        }
+
         Plugin.LogInfo($"savedObjects: {string.Join(", ", from sav in level.savedObjects where sav != null select sav.Name)}");
 
         // write the file
-        var fileStream = new FileStream(Path.Combine(Application.persistentDataPath, $"{path}.uterus"), FileMode.Create, FileAccess.Write);
+        var fileStream = new FileStream(Path.Combine(UnityEngine.Application.persistentDataPath, $"{path}.uterus"), FileMode.Create, FileAccess.Write);
         BinaryWriter binaryWriter = new(fileStream, Encoding.UTF8, leaveOpen: false);
 
         // add level stuff
@@ -244,17 +256,18 @@ public class IO
         // add thumbnail
         binaryWriter.Write([.. imageBytes]);
 
-        // add music
-        binaryWriter.Write([.. musicBytes]);
-
         // also btw if u dont close it then u'll get like "this file is open in ULTRAKILL" msgs when u try to open the .uterus
         // so i might add a try catch to everything before so just incase something fails, it closes the stream and writer
         binaryWriter.Close();
         fileStream.Close();
     }
 
-    public static async void Load(string sceneName)
+    public static void Load(string sceneName)
     {
+        //UltraEditor.Classes.IO.IO.Load("new checkpointTest.uterus");
+        float startTime = Time.realtimeSinceStartup;
+        float time = startTime;
+
         string path = Application.persistentDataPath + $"/{sceneName}";
 
         if (!File.Exists(path))
@@ -263,16 +276,24 @@ public class IO
             return;
         }
 
-        UnpackedLevel unpack = await UnpackLevel(sceneName, true);
+        UnpackedLevel unpack = UnpackLevel(sceneName, true);
+        Plugin.LogInfo($"Unpack in {Time.realtimeSinceStartup - time} seconds!");
+
+        if (unpack.MajorVersion != 2)
+        {
+            Plugin.LogError($"LEVEL IS MADE IN A DIFFERENT MAJOR VERSION, TO LOAD THIS LEVEL USE AN OLDER VERSION OF ULTRAEDITOR.\nLEVEL CREATED IN ULTRAEDITOR VERSION: {unpack.editorVersion}\n{unpack.LogData}");
+            return;
+        }
+
+        Plugin.LogInfo("Invoking load listeners...");
+        time = Time.realtimeSinceStartup;
 
         foreach (SavableObjectData saveData in unpack.savedObjects)
         {
             // create the gameobject to add stuff too and make it as a spawned object
             GameObject workingObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            workingObject.AddComponent<SpawnedObject>();
 
             // add generic stuff from CreateAndPopulate as its in every object
-            workingObject.GetComponent<SpawnedObject>().ID = saveData.Id;
             workingObject.name = saveData.Name;
             workingObject.layer = saveData.Layer;
             workingObject.tag = saveData.Tag;
@@ -280,47 +301,58 @@ public class IO
             workingObject.transform.eulerAngles = saveData.EulerAngles;
             workingObject.transform.localScale = saveData.Scale;
             workingObject.gameObject.SetActive(saveData.Active);
-            workingObject.GetComponent<SpawnedObject>().parentID = saveData.Parent;
+
+            SpawnedObject spawnedObject = workingObject.AddComponent<SpawnedObject>();
+            spawnedObject.ID = saveData.Id;
+            spawnedObject.parentID = saveData.Parent;
 
             // find a listener for this exact type of object and invoke it
-            Loading.InvokeListener(saveData, workingObject);
+            Loading.InvokeListener(saveData, workingObject, spawnedObject);
         }
 
-        // unpack.music; heres the song for the level if it has custom music, custom music doesnt exist yet which is why this is commented
+        Plugin.LogInfo($"Invoking load listeners completed in {Time.realtimeSinceStartup - time} seconds!");
+        Plugin.LogInfo("Assigning parents...");
+        time = Time.realtimeSinceStartup;
 
-        foreach (var obj in FindObjectsOfType<SpawnedObject>(true))
+        var allObjs = FindObjectsOfType<SpawnedObject>(true);
+
+        var dict = new Dictionary<string, SpawnedObject>();
+        foreach (var o in allObjs)
         {
-            if (obj.parentID != "")
+            if (!string.IsNullOrEmpty(o.ID))
+                dict[o.ID] = o;
+        }
+
+        foreach (var obj in allObjs)
+        {
+            if (!string.IsNullOrEmpty(obj.parentID) && dict.TryGetValue(obj.parentID, out var parent))
             {
-                foreach (var findingObj in FindObjectsOfType<SpawnedObject>(true))
-                {
-                    if (obj.parentID == findingObj.ID)
-                    {
-                        obj.transform.SetParent(findingObj.transform, true);
-                        break;
-                    }
-                }
+                obj.transform.SetParent(parent.transform, true);
             }
         }
 
-        foreach (var obj in FindObjectsOfType<SpawnedObject>(true))
+        Plugin.LogInfo($"Assigned parents in {Time.realtimeSinceStartup - time} seconds!");
+        Plugin.LogInfo("Creating objects...");
+        time = Time.realtimeSinceStartup;
+
+        foreach (var obj in allObjs)
         {
-            obj.GetComponent<ArenaObject>()?.createArena();
-            obj.GetComponent<NextArenaObject>()?.createArena();
-            obj.GetComponent<ActivateObject>()?.createActivator();
-            obj.GetComponent<CheckpointObject>()?.createCheckpoint();
-            obj.GetComponent<DeathZoneObject>()?.createDeathzone();
-            obj.GetComponent<LightObject>()?.createLight();
+            obj.arenaObject?.createArena();
+            obj.nextArenaObject?.createArena();
+            obj.activateObject?.createActivator();
+            obj.checkpointObject?.createCheckpoint();
+            obj.deathZoneObject?.createDeathzone();
+            obj.lightObject?.createLight();
+            obj.musicObject?.createMusic();
         }
 
-        if (EditorManager.MissionNameText != null)
-        {
-            Destroy(EditorManager.MissionNameText.GetComponent<LevelNameFinder>());
-            EditorManager.MissionNameText.text = sceneName.Replace(".uterus", "");
-        }
+        Plugin.LogInfo($"Object creation completed in {Time.realtimeSinceStartup - time} seconds!");
+        Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
+
+        EditorManager.Instance.cameraSelector.selectedObject = null;
     }
 
-    public static async Task<UnpackedLevel> UnpackLevel(string levelName, bool load = false)
+    public static UnpackedLevel UnpackLevel(string levelName, bool load = false)
     {
         string path = Application.persistentDataPath + $"/{levelName}";
         if (!path.EndsWith(".uterus") || !File.Exists(path))
@@ -343,27 +375,27 @@ public class IO
             description = levelData.description,
             creator = levelData.creator,
             editorVersion = new(levelData.editorVersion),
+            MajorVersion = levelData.MajorVersion,
             buildDate = levelData.buildDate,
             uniqueIdentifier = levelData.uniqueIdentifier,
             thumbnail = new Sprite(), // doing new Sprite() incase load is false but the level doesnt have a thumbnail
-            music = new AudioClip(), // same reason as the new Sprite()
             savedObjects = []
         };
 
-        if (load)
+        /*if (load)
         {
             // we dont need the thumbnail if we're just loading the level, so just skip its bytes
             binaryReader.BaseStream.Seek(levelData.thumbnailSize, SeekOrigin.Current);
 
-            if (levelData.musicSize > 0)
+            if (levelData.calmThemeSize > 0)
             {
-                byte[] music = binaryReader.ReadBytes(levelData.musicSize);
+                byte[] music = binaryReader.ReadBytes(levelData.calmThemeSize);
 
                 // temporarly write the music to a file so we can turn it into an audio clip (im sowwy idk any other way to turn audio bytes into an audioclip 3:)
-                string tempFile = Path.Combine(Application.temporaryCachePath, levelData.musicName);
+                string tempFile = Path.Combine(Application.temporaryCachePath, levelData.calmThemeName);
                 File.WriteAllBytes(tempFile, music);
 
-                AudioType audType = levelData.musicName.ToLower() switch
+                AudioType audType = levelData.calmThemeName.ToLower() switch
                 {
                     "wav" => AudioType.WAV,
                     "ogg" => AudioType.OGGVORBIS,
@@ -371,7 +403,7 @@ public class IO
                     "mp4" => AudioType.MPEG,
                     _ => AudioType.UNKNOWN
                 };
-                var request = UnityWebRequestMultimedia.GetAudioClip("file:///" + tempFile, levelData.musicName.ToLower() switch { "wav" => AudioType.WAV, "ogg" => AudioType.OGGVORBIS, "mp3" => AudioType.MPEG, "mp4" => AudioType.MPEG, _ => AudioType.UNKNOWN });
+                var request = UnityWebRequestMultimedia.GetAudioClip("file:///" + tempFile, levelData.calmThemeName.ToLower() switch { "wav" => AudioType.WAV, "ogg" => AudioType.OGGVORBIS, "mp3" => AudioType.MPEG, "mp4" => AudioType.MPEG, _ => AudioType.UNKNOWN });
                 var op = request.SendWebRequest();
 
                 var tcs = new TaskCompletionSource<AsyncOperation>();
@@ -381,14 +413,45 @@ public class IO
                 if (request.result != UnityWebRequest.Result.Success)
                     Plugin.LogError($"Could not load level music, request error: {request.error}");
                 else
-                    unpacked.music = DownloadHandlerAudioClip.GetContent(request);
+                    unpacked.calmTheme = DownloadHandlerAudioClip.GetContent(request);
+
+                File.Delete(tempFile);
+            }
+
+            if (levelData.battleThemeSize > 0)
+            {
+                byte[] music = binaryReader.ReadBytes(levelData.battleThemeSize);
+
+                // temporarly write the music to a file so we can turn it into an audio clip (im sowwy idk any other way to turn audio bytes into an audioclip 3:)
+                string tempFile = Path.Combine(Application.temporaryCachePath, levelData.battleThemeName);
+                File.WriteAllBytes(tempFile, music);
+
+                AudioType audType = levelData.battleThemeName.ToLower() switch
+                {
+                    "wav" => AudioType.WAV,
+                    "ogg" => AudioType.OGGVORBIS,
+                    "mp3" => AudioType.MPEG,
+                    "mp4" => AudioType.MPEG,
+                    _ => AudioType.UNKNOWN
+                };
+                var request = UnityWebRequestMultimedia.GetAudioClip("file:///" + tempFile, levelData.battleThemeName.ToLower() switch { "wav" => AudioType.WAV, "ogg" => AudioType.OGGVORBIS, "mp3" => AudioType.MPEG, "mp4" => AudioType.MPEG, _ => AudioType.UNKNOWN });
+                var op = request.SendWebRequest();
+
+                var tcs = new TaskCompletionSource<AsyncOperation>();
+                op.completed += _ => tcs.SetResult(op);
+                await tcs.Task; // turning it into a task since im too lazy to turn this whole thing into a coroutine
+
+                if (request.result != UnityWebRequest.Result.Success)
+                    Plugin.LogError($"Could not load level music, request error: {request.error}");
+                else
+                    unpacked.battleTheme = DownloadHandlerAudioClip.GetContent(request);
 
                 File.Delete(tempFile);
             }
 
             unpacked.savedObjects = levelData.savedObjects;
         }
-        else if (levelData.thumbnailSize > 0)
+        else */if (levelData.thumbnailSize > 0)
         {
             byte[] imageBytes = binaryReader.ReadBytes(levelData.thumbnailSize);
 

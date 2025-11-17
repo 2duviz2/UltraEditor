@@ -2125,10 +2125,10 @@ namespace UltraEditor.Classes
                 text += "? MusicObject ?";
                 text += "\n";
                 text += addShit(obj);
-                text += obj.calmThemeUrl;
+                text += obj.calmThemePath;
                 text += "\n";
                 text += "? PASS ?\n";
-                text += obj.battleThemeUrl;
+                text += obj.battleThemePath;
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -2376,9 +2376,9 @@ namespace UltraEditor.Classes
                         MusicObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "MusicObject")
                         if (phase == 0)
-                            workingObject.GetComponent<MusicObject>().calmThemeUrl = line;
+                            workingObject.GetComponent<MusicObject>().calmThemePath = line;
                         else if (phase == 1)
-                            workingObject.GetComponent<MusicObject>().battleThemeUrl = line;
+                            workingObject.GetComponent<MusicObject>().battleThemePath = line;
                 }
 
                 lineIndex++;

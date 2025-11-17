@@ -22,6 +22,9 @@ public class UnpackedLevel
     /// <summary> Version of the editor that the level was made in. </summary>
     public Version editorVersion;
 
+    /// <summary> Major version of the saving system, such as plain text being version 1 and json being version 2. </summary>
+    public int MajorVersion;
+
     /// <summary> Time of which the level was saved/built at. </summary>
     public DateTime buildDate;
 
@@ -31,11 +34,18 @@ public class UnpackedLevel
     /// <summary> The thumbnail for the level. </summary>
     public Sprite thumbnail;
 
-    /// <summary> The music played in the level. </summary>
-    public AudioClip music;
-
     /// <summary> All the data of all saved objects. </summary>
     public List<SavableObjectData> savedObjects; // these aren't unpacked til during load due to like needing to parse extra data
+
+    public string LogData =>
+        $@"--- Level Data ---
+Name:               {name}
+Description:        {description}
+Creator:            {creator}
+Editor Version:     {editorVersion}
+Major Version:      {MajorVersion}
+Creation Date:      {buildDate}
+Unique Identifier:  {uniqueIdentifier}";
 }
 
 /// <summary> Read: UltraEditor.Classes.Saving.SavableObjectData's summary. </summary>
@@ -53,6 +63,9 @@ public class SaveLevelData
     /// <summary> Version of the editor that the level was made in. </summary>
     public string editorVersion;
 
+    /// <summary> Major version of the saving system, such as plain text being version 1 and json being version 2. </summary>
+    public int MajorVersion;
+
     /// <summary> Time of which the level was saved/built at. </summary>
     public DateTime buildDate;
 
@@ -61,12 +74,6 @@ public class SaveLevelData
 
     /// <summary> How many bytes the thumbnail takes up in the .uterus file. </summary>
     public int thumbnailSize;
-
-    /// <summary> How many bytes the music takes up in the .uterus file. </summary>
-    public int musicSize;
-
-    /// <summary> The name of the music file. </summary>
-    public string musicName;
 
     /// <summary> All the data of all saved objects. </summary>
     public List<SavableObjectData> savedObjects;
