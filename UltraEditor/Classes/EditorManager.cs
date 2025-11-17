@@ -658,7 +658,7 @@ namespace UltraEditor.Classes
         void createFloor(Vector3 scale)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
+            cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f + Vector3.down * 1f;
             cube.transform.localScale = scale;
             cube.layer = LayerMask.NameToLayer("Outdoors");
             cube.tag = "Floor";

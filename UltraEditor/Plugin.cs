@@ -27,6 +27,8 @@ namespace UltraEditor
         public static KeyCode ctrlKey = KeyCode.LeftControl;
         public static KeyCode shiftKey = KeyCode.LeftShift;
         public static KeyCode altKey = KeyCode.LeftAlt;
+
+        static bool seenWelcomeMessage = false;
         
         public static bool isToggleEnabledKeyPressed()
         {
@@ -87,6 +89,12 @@ namespace UltraEditor
             if (Input.GetKeyDown(editorOpenKey))
             {
                 EditorManager.Create();
+            }
+
+            if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !seenWelcomeMessage)
+            {
+                Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("WelcomeCanvas"));
+                seenWelcomeMessage = true;
             }
         }
 
