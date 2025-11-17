@@ -591,6 +591,9 @@ namespace UltraEditor.Classes
             if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
                 SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
+            if (dir == "Bonus")
+                obj.GetComponent<Bonus>().secretNumber = 100000;
+            
             return obj;
         }
 
