@@ -14,9 +14,27 @@ namespace UltraEditor.Classes
         public float mouseSensitivity = 3f;
         public float shiftMultiplier = 3f;
         (int x, int y) savedMousePos = new (0,0);
+
+        public Light unlitLight = null;
+
         public bool moving()
         {
             return Input.GetMouseButton(1) && Plugin.canMove() && !EditorManager.Instance.blocker.activeSelf;
+        }
+
+        public void Awake()
+        {
+            GameObject obj = new GameObject("CameraLight");
+            obj.transform.parent = transform;
+            obj.transform.localPosition = Vector3.zero;
+            obj.transform.localEulerAngles = Vector3.zero;
+            unlitLight = obj.AddComponent<Light>();
+
+            unlitLight.range = 100;
+            unlitLight.renderMode = LightRenderMode.ForcePixel;
+            unlitLight.type = LightType.Point;
+
+            unlitLight.enabled = false;
         }
         
         public void Update()
@@ -42,6 +60,11 @@ namespace UltraEditor.Classes
                 transform.Rotate(Vector3.right, -mouseY, Space.Self);
                 MouseController.SetCursorPos(savedMousePos.x, savedMousePos.y);
             }
+        }
+
+        public void setUnlit(bool unlit)
+        {
+            unlitLight.enabled = unlit;
         }
     }
 }

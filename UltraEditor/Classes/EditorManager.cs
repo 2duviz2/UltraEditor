@@ -600,7 +600,7 @@ namespace UltraEditor.Classes
                 GameObject blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
                 blahaj.transform.SetParent(obj.transform);
                 blahaj.transform.localPosition = Vector3.zero;
-                blahaj.transform.eulerAngles = Vector3.zero;
+                blahaj.transform.localEulerAngles = Vector3.zero;
             }
 
             return obj;
@@ -691,19 +691,28 @@ namespace UltraEditor.Classes
             editorCamera.cullingMask = layerMask;
         }
 
+        bool legacyUnlit = false;
         void ChangeLighting(int lit)
         {
             if (lit == 1)
             {
-                editorCamera.ResetReplacementShader();
+                if (legacyUnlit)
+                    editorCamera.ResetReplacementShader();
+                else
+                    editorCamera.GetComponent<CameraMovement>().setUnlit(false);
             }
             else if (lit == 0)
             {
-                Shader unlitShader = Shader.Find("Unlit/Texture");
-                if (unlitShader != null)
-                    editorCamera.SetReplacementShader(unlitShader, "");
+                if (legacyUnlit)
+                {
+                    Shader unlitShader = Shader.Find("Unlit/Texture");
+                    if (unlitShader != null)
+                        editorCamera.SetReplacementShader(unlitShader, "");
+                    else
+                        Plugin.LogError("Unlit shader not found");
+                }
                 else
-                    Plugin.LogError("Unlit shader not found");
+                    editorCamera.GetComponent<CameraMovement>().setUnlit(true);
             }
         }
 
