@@ -10,7 +10,7 @@ using System;
 
 namespace UltraEditor
 {
-    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.4")]
+    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.5")]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin instance;

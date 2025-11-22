@@ -562,12 +562,13 @@ namespace UltraEditor.Classes
             });
         }
 
-        public GameObject SpawnAsset(string dir, bool isLoading = false)
+        public GameObject SpawnAsset(string dir, bool isLoading = false, bool createPrefabObject = true)
         {
             GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
 
-            PrefabObject.Create(obj, dir);
+            if (createPrefabObject)
+                PrefabObject.Create(obj, dir);
 
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
@@ -593,7 +594,15 @@ namespace UltraEditor.Classes
 
             if (dir == "Bonus")
                 obj.GetComponent<Bonus>().secretNumber = 100000;
-            
+
+            if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
+            {
+                GameObject blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
+                blahaj.transform.SetParent(obj.transform);
+                blahaj.transform.localPosition = Vector3.zero;
+                blahaj.transform.eulerAngles = Vector3.zero;
+            }
+
             return obj;
         }
 
@@ -1937,6 +1946,7 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
             {
                 if (obj.GetComponent<CheckPoint>() != null) continue;
+                if (obj.GetComponent<ItemIdentifier>() != null && obj.GetComponent<ItemIdentifier>().pickedUp) continue;
                 text += "? PrefabObject ?";
                 text += "\n";
                 text += addShit(obj);
