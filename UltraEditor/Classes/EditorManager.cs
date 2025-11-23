@@ -246,11 +246,7 @@ namespace UltraEditor.Classes
                 mouseLocked = !mouseLocked;
                 editorCamera.gameObject.SetActive(!mouseLocked);
                 if (NewMovement.Instance != null)
-                {
-                    editorCamera.transform.position = NewMovement.Instance.transform.position;
-                    editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                     NewMovement.Instance.gameObject.SetActive(mouseLocked);
-                }
                 editorCanvas.SetActive(!mouseLocked);
                 blocker.SetActive(true);
                 cameraSelector.ClearHover();
@@ -282,6 +278,11 @@ namespace UltraEditor.Classes
                         m.Invoke(item, null);
 
                     }
+                }
+                else
+                {
+                    editorCamera.transform.position = NewMovement.Instance.transform.position;
+                    editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                 }
 
                 if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
