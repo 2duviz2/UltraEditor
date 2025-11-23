@@ -87,7 +87,12 @@ namespace UltraEditor.Classes
             }
 
             if (Input.GetKeyDown(Plugin.deleteObjectKey))
-                deleteObject();
+            {
+                if (Input.GetKey(Plugin.ctrlKey))
+                    DeleteScene(true);
+                else
+                    deleteObject();
+            }
 
             if (Plugin.isToggleEnabledKeyPressed())
                 toggleObject();
@@ -258,6 +263,12 @@ namespace UltraEditor.Classes
                     {
                         Cursor.visible = false;
                         Cursor.lockState = CursorLockMode.Locked;
+                    }
+
+                    if (Input.GetKey(Plugin.shiftKey))
+                    {
+                        NewMovement.Instance.transform.position = editorCamera.transform.position;
+                        NewMovement.Instance.transform.rotation = editorCamera.transform.rotation;
                     }
 
                     if (SceneHelper.CurrentScene == deleteLevel)
