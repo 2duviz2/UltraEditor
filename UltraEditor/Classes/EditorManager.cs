@@ -368,6 +368,7 @@ namespace UltraEditor.Classes
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 DeleteScene(true);
+                SetAlert("Scene deleted!", "Info!");
             });
 
             // Edit

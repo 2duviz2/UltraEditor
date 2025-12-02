@@ -30,7 +30,7 @@ namespace UltraEditor.Classes
             obj.transform.localEulerAngles = Vector3.zero;
             unlitLight = obj.AddComponent<Light>();
 
-            unlitLight.range = 100;
+            unlitLight.range = 500;
             unlitLight.renderMode = LightRenderMode.ForcePixel;
             unlitLight.type = LightType.Point;
 
