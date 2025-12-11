@@ -80,6 +80,8 @@ namespace UltraEditor
             harmony.PatchAll();
 
             gameObject.hideFlags = HideFlags.DontSaveInEditor;
+
+            SceneManager.sceneLoaded += (_, _) => new GameObject("load pls uwu :3").AddComponent<EmptySceneLoader>();
         }
 
         public void Start()

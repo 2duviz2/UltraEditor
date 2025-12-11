@@ -1,6 +1,7 @@
 ﻿namespace UltraEditor.Classes.IO;
 
 using Newtonsoft.Json;
+using plog.Models;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -229,17 +230,15 @@ public class IO
             if (obj.GetComponent<SavableObject>() == null) continue;
 
             SavableObjectData musicObj = CreateAndPopulate(obj.gameObject.AddComponent<SavableObject>(), "MusicObject");
-            musicObj.Data.Add(obj.calmThemeOnline);
-            musicObj.Data.Add(obj.calmThemeOnline 
-                ? obj.calmThemePath 
-                : Path.GetFileName(obj.calmThemePath));
-            if (obj.calmThemeOnline) musicObj.Data.Add(File.ReadAllBytes(obj.calmThemePath));
+            bool calmOnline = obj.calmThemePath.StartsWith("http");
+            musicObj.Data.Add(calmOnline);
+            musicObj.Data.Add(calmOnline ? obj.calmThemePath : Path.GetFileName(obj.calmThemePath));
+            if (!calmOnline) musicObj.Data.Add(File.ReadAllBytes(obj.calmThemePath));
 
-            musicObj.Data.Add(obj.battleThemeOnline);
-            musicObj.Data.Add(obj.battleThemeOnline
-                ? obj.battleThemePath
-                : Path.GetFileName(obj.battleThemePath));
-            if (obj.battleThemeOnline) musicObj.Data.Add(File.ReadAllBytes(obj.battleThemePath));
+            bool battleOnline = obj.battleThemePath.StartsWith("http");
+            musicObj.Data.Add(battleOnline);
+            musicObj.Data.Add(battleOnline ? obj.battleThemePath : Path.GetFileName(obj.battleThemePath));
+            if (!battleOnline) musicObj.Data.Add(File.ReadAllBytes(obj.battleThemePath));
 
             level.savedObjects.Add(musicObj);
         }
@@ -247,7 +246,7 @@ public class IO
         Plugin.LogInfo($"savedObjects: {string.Join(", ", from sav in level.savedObjects where sav != null select sav.Name)}");
 
         // write the file
-        var fileStream = new FileStream(Path.Combine(UnityEngine.Application.persistentDataPath, $"{path}.uterus"), FileMode.Create, FileAccess.Write);
+        var fileStream = new FileStream(Path.Combine(Application.persistentDataPath, $"{path}.uterus"), FileMode.Create, FileAccess.Write);
         BinaryWriter binaryWriter = new(fileStream, Encoding.UTF8, leaveOpen: false);
 
         // add level stuff
@@ -255,6 +254,81 @@ public class IO
 
         // add thumbnail
         binaryWriter.Write([.. imageBytes]);
+
+        // also btw if u dont close it then u'll get like "this file is open in ULTRAKILL" msgs when u try to open the .uterus
+        // so i might add a try catch to everything before so just incase something fails, it closes the stream and writer
+        binaryWriter.Close();
+        fileStream.Close();
+    }
+
+    public class MapData
+    {
+        public string name;
+
+        public string description;
+
+        public long bundleSize;
+
+        public string bundleName;
+
+        public long thumbSize;
+
+        public string uniqueIdentifier;
+
+        public string author;
+
+        public int version;
+
+        public string[] placeholderPrefabs;
+
+        public string catalog;
+    }
+
+    public static void MakeVBlood()
+    {
+        var log = new plog.Logger("UWU");
+
+        byte[] imageBytes = File.ReadAllBytes("C:\\Users\\freda\\Downloads\\pick aparyt\\tundra default\\icon.png");
+        log.Info($"imageBytes: {string.Join(' ', imageBytes.Take(25).Select(b => b.ToString("X2")))}");
+        byte[] bundleBytes = File.ReadAllBytes("C:\\Users\\freda\\Downloads\\pick aparyt\\tundra default\\bundle_scenes_all.bundle");
+        log.Info($"bundleBytes: {string.Join(' ', bundleBytes.Take(25).Select(b => b.ToString("X2")))}");
+
+        MapData mapData = new() 
+        {
+            name = "Default Map with a Zombie in the middle",
+            description = "Default Map with a Zombie in the middle",
+            bundleSize = bundleBytes.Length,
+            bundleName = "8b1d219d24bbc9e4c83fab024f226517_scenes_all.bundle",
+            thumbSize = imageBytes.Length,
+            uniqueIdentifier = "8b1d219d24bbc9e4c83fab024f226517",
+            author = "PITR",
+            version = 3,
+            placeholderPrefabs = [ "FirstRoom" ],
+            catalog = Encoding.UTF8.GetString(File.ReadAllBytes("C:\\Users\\freda\\Downloads\\pick aparyt\\catalog.json"))
+        };
+        log.Info($@"name: {mapData.name}
+desc: {mapData.description}
+bundleSize: {mapData.bundleSize}
+bundleName: {mapData.bundleName}
+thumbSize: {mapData.thumbSize}
+guid: {mapData.uniqueIdentifier}
+author: {mapData.author}
+version: {mapData.version}
+placeholderPrefabs: {string.Join(", ", mapData.placeholderPrefabs)}
+catalog: {mapData.catalog.Substring(0, 100)}");
+        
+        // write the file
+        var fileStream = new FileStream("C:\\Users\\freda\\Downloads\\pick aparyt\\tundra default.blood", FileMode.Create, FileAccess.Write);
+        BinaryWriter binaryWriter = new(fileStream, Encoding.UTF8, leaveOpen: false);
+
+        // add level stuff
+        binaryWriter.Write(JsonConvert.SerializeObject(mapData));
+
+        // add thumbnail
+        binaryWriter.Write(imageBytes, 0, imageBytes.Length);
+
+        // add bundle
+        binaryWriter.Write(bundleBytes, 0, bundleBytes.Length);
 
         // also btw if u dont close it then u'll get like "this file is open in ULTRAKILL" msgs when u try to open the .uterus
         // so i might add a try catch to everything before so just incase something fails, it closes the stream and writer
@@ -469,5 +543,19 @@ public class IO
         fileStream.Close();
 
         return unpacked;
+    }
+
+    async void cSharp_script_UE()
+    {
+        await System.Threading.Tasks.Task.Delay(1500);
+
+        string bundlePath = @"C:\Users\freda\ULTRAEDITOR\Assets\Bundles\emptyscene.bundle";
+        UnityEngine.AssetBundle bundle = UnityEngine.AssetBundle.LoadFromFile(bundlePath);
+
+        string[] scenePaths = bundle.GetAllScenePaths();
+        string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePaths[0]);
+        UnityEngine.Debug.Log($"Loading scene: {sceneName}");
+
+        UnityEngine.SceneManagement.SceneManager.LoadScene(sceneName);
     }
 }

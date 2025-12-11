@@ -156,40 +156,20 @@ namespace UltraEditor.Classes
         }
 
         public static TMP_Text MissionNameText = null;
+        public static string EditorSceneName = "UltraEditor";
         static NavMeshSurface navMeshSurface;
-        static string deleteLevel = "Endless";
-        static string[] doNotDelete = new string[] { "MapLoader", "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
-            if (force || ((SceneHelper.CurrentScene == deleteLevel || StatsManager.Instance.endlessMode) && !StatsManager.Instance.timer))
+            if (force || ((SceneHelper.CurrentScene == EditorSceneName) && !StatsManager.Instance.timer))
             {
-                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
-                {
-                    if (logShit)
-                        Plugin.LogInfo($"Trying to detroy {obj.name}");
-                    if (!doNotDelete.Contains(obj.name) && !obj.name.StartsWith("MoveArrow_") && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject && obj != navMeshSurface.gameObject) : true))
-                    {
-                        if (logShit)
-                            Plugin.LogInfo($"Destroyed {obj.name}");
-                        Destroy(obj);
-                    }
-                }
-
                 if (navMeshSurface == null)
                 {
-                    GameObject navMeshObj = new GameObject("NavMeshSurface");
+                    GameObject navMeshObj = new("NavMeshSurface");
                     navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
                     navMeshSurface.collectObjects = CollectObjects.All;
                     navMeshSurface.BuildNavMesh();
                     if (logShit)
                         Plugin.LogInfo("NavMeshSurface created.");
-
-                    StatsManager.Instance.levelNumber = 0;
-                    StatsManager.Instance.endlessMode = false;
-
-                    StockMapInfo.Instance.layerName = "ULTRAEDITOR";
-                    StockMapInfo.Instance.layerName = "CUSTOM LEVEL";
-                    StockMapInfo.Instance.nextSceneName = "Main Menu";
 
                     GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
                     GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
@@ -265,7 +245,7 @@ namespace UltraEditor.Classes
                         Cursor.lockState = CursorLockMode.Locked;
                     }
 
-                    if (SceneHelper.CurrentScene == deleteLevel)
+                    if (SceneHelper.CurrentScene == EditorSceneName)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
 
                     foreach (var item in FindObjectsOfType<Door>())
@@ -278,11 +258,11 @@ namespace UltraEditor.Classes
                     }
                 }
 
-                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
+                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
                 {
                     StartCoroutine(GoToBackupScene());
                 }
-                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
+                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
                 {
                     tempScene = GetSceneJson();
                 }
@@ -332,7 +312,7 @@ namespace UltraEditor.Classes
             if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
                 EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
 
-            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel) // load backup level after restart
+            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName) // load backup level after restart
             {
                 StartCoroutine(GoToBackupScene());
             }
@@ -554,8 +534,8 @@ namespace UltraEditor.Classes
             NewInspectorVariable("damage", typeof(DeathZone));
             NewInspectorVariable("affected", typeof(DeathZone));
 
-            NewInspectorVariable("calmThemeUrl", typeof(MusicObject));
-            NewInspectorVariable("battleThemeUrl", typeof(MusicObject));
+            NewInspectorVariable("calmThemePath", typeof(MusicObject));
+            NewInspectorVariable("battleThemePath", typeof(MusicObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -794,7 +774,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == deleteLevel && navMeshSurface != null)
+                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == EditorSceneName && navMeshSurface != null)
                 {
                     if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                         continue;

@@ -110,9 +110,7 @@ public class Loading
             bool calmOnline = (bool)data.Data[0];
             string calmName = (string)data.Data[1];
 
-            workingObject.GetComponent<MusicObject>().calmThemeOnline = calmOnline;
             workingObject.GetComponent<MusicObject>().calmThemePath = calmName;
-
             if (!calmOnline)
             {
                 byte[] music = (byte[])data.Data[2];
@@ -125,10 +123,8 @@ public class Loading
 
             bool battleOnline = calmOnline ? (bool)data.Data[2] : (bool)data.Data[3];
             string battleName = calmOnline ? (string)data.Data[3] : (string)data.Data[4];
-
-            workingObject.GetComponent<MusicObject>().battleThemeOnline = battleOnline;
+            
             workingObject.GetComponent<MusicObject>().battleThemePath = battleName;
-
             if (!battleOnline)
             {
                 byte[] music = (byte[])data.Data[5];
