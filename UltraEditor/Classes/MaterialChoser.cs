@@ -23,6 +23,22 @@ namespace UltraEditor.Classes
             Wood,
             MasterShader,
             NoCollision,
+            Brick,
+            TilesDirty,
+            ConstructBuilding,
+            BloodPool,
+            CyberGrind,
+            wip,
+            Flesh,
+            BrickLight,
+            Sand,
+            CaveRock,
+            FerryFloor,
+            BoneWall,
+            WhiteBookshelf,
+            WhiteFlowers,
+            WarningStripes,
+            WhiteWood,
         }
 
         public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -47,13 +63,45 @@ namespace UltraEditor.Classes
             else if (type == materialTypes.Glass)
                 newMat = GetSandboxMaterial("Procedural Glass Variant");
             else if (type == materialTypes.Grass)
-                newMat = GetSandboxMaterial("Procedural Grass Variant");
+                newMat = GetPathMaterial("Environment/Layer 1/Grass");
             else if (type == materialTypes.Metal)
                 newMat = GetSandboxMaterial("Procedural Metal Cube Variant");
             else if (type == materialTypes.Wood)
                 newMat = GetSandboxMaterial("Procedural Wood Cube Variant");
             else if (type == materialTypes.MasterShader)
                 newMat = new Material(DefaultReferenceManager.Instance.masterShader);
+            else if (type == materialTypes.Brick)
+                newMat = GetPathMaterial("uk_construct/ConstructBricks");
+            else if (type == materialTypes.TilesDirty)
+                newMat = GetPathMaterial("uk_construct/TilesDirty 1");
+            else if (type == materialTypes.ConstructBuilding)
+                newMat = GetPathMaterial("uk_construct/ConstructBuilding");
+            else if (type == materialTypes.BloodPool)
+                newMat = GetPathMaterial("Blood/BloodPool");
+            else if (type == materialTypes.CyberGrind)
+                newMat = GetPathMaterial("Cyber Grind/Virtual");
+            else if (type == materialTypes.wip)
+                newMat = GetPathMaterial("Dev/wip");
+            else if (type == materialTypes.Flesh)
+                newMat = GetPathMaterial("Environment/Layer 3/Flesh1");
+            else if (type == materialTypes.BrickLight)
+                newMat = GetPathMaterial("Environment/Layer 4/BrickLight");
+            else if (type == materialTypes.Sand)
+                newMat = GetPathMaterial("Environment/Layer 4/SandLarge");
+            else if (type == materialTypes.CaveRock)
+                newMat = GetPathMaterial("Environment/Layer 5/CaveRock1");
+            else if (type == materialTypes.FerryFloor)
+                newMat = GetPathMaterial("Environment/Layer 5/FloorPanelBig");
+            else if (type == materialTypes.BoneWall)
+                newMat = GetPathMaterial("Environment/Layer 6/BoneWall");
+            else if (type == materialTypes.WhiteBookshelf)
+                newMat = GetPathMaterial("Environment/Layer 7/Bookshelf");
+            else if (type == materialTypes.WhiteFlowers)
+                newMat = GetPathMaterial("Environment/Layer 7/Flowers");
+            else if (type == materialTypes.WarningStripes)
+                newMat = GetPathMaterial("Environment/Layer 7/WarningStripes");
+            else if (type == materialTypes.WhiteWood)
+                newMat = GetPathMaterial("Environment/Layer 7/Wood");
             else if (type == materialTypes.NoCollision)
             {
                 newMat = new Material(DefaultReferenceManager.Instance.masterShader);
@@ -115,6 +163,11 @@ namespace UltraEditor.Classes
             Destroy(temporalCube);
 
             return mat;
+        }
+
+        Material GetPathMaterial(string path)
+        {
+            return new Material(Plugin.Ass<Material>($"Assets/Materials/{path}.mat"));
         }
     }
 }

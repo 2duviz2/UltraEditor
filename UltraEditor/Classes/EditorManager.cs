@@ -92,7 +92,12 @@ namespace UltraEditor.Classes
             }
 
             if (Input.GetKeyDown(Plugin.deleteObjectKey))
-                deleteObject();
+            {
+                if (Input.GetKey(Plugin.ctrlKey))
+                    DeleteScene(true);
+                else
+                    deleteObject();
+            }
 
             if (Plugin.isToggleEnabledKeyPressed())
                 toggleObject();
@@ -226,11 +231,7 @@ namespace UltraEditor.Classes
                 mouseLocked = !mouseLocked;
                 editorCamera.gameObject.SetActive(!mouseLocked);
                 if (NewMovement.Instance != null)
-                {
-                    editorCamera.transform.position = NewMovement.Instance.transform.position;
-                    editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                     NewMovement.Instance.gameObject.SetActive(mouseLocked);
-                }
                 editorCanvas.SetActive(!mouseLocked);
                 blocker.SetActive(true);
                 cameraSelector.ClearHover();
@@ -245,6 +246,12 @@ namespace UltraEditor.Classes
                         Cursor.lockState = CursorLockMode.Locked;
                     }
 
+                    if (Input.GetKey(Plugin.shiftKey))
+                    {
+                        NewMovement.Instance.transform.position = editorCamera.transform.position;
+                        NewMovement.Instance.transform.rotation = editorCamera.transform.rotation;
+                    }
+
                     if (SceneHelper.CurrentScene == EditorSceneName)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
 
@@ -256,6 +263,11 @@ namespace UltraEditor.Classes
                         m.Invoke(item, null);
 
                     }
+                }
+                else
+                {
+                    editorCamera.transform.position = NewMovement.Instance.transform.position;
+                    editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                 }
 
                 if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
@@ -341,6 +353,7 @@ namespace UltraEditor.Classes
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 DeleteScene(true);
+                SetAlert("Scene deleted!", "Info!");
             });
 
             // Edit
@@ -547,12 +560,13 @@ namespace UltraEditor.Classes
             });
         }
 
-        public GameObject SpawnAsset(string dir, bool isLoading = false)
+        public GameObject SpawnAsset(string dir, bool isLoading = false, bool createPrefabObject = true)
         {
             GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
 
-            PrefabObject.Create(obj, dir);
+            if (createPrefabObject)
+                PrefabObject.Create(obj, dir);
 
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
@@ -578,7 +592,15 @@ namespace UltraEditor.Classes
 
             if (dir == "Bonus")
                 obj.GetComponent<Bonus>().secretNumber = 100000;
-            
+
+            if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
+            {
+                GameObject blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
+                blahaj.transform.SetParent(obj.transform);
+                blahaj.transform.localPosition = Vector3.zero;
+                blahaj.transform.localEulerAngles = Vector3.zero;
+            }
+
             return obj;
         }
 
@@ -667,19 +689,28 @@ namespace UltraEditor.Classes
             editorCamera.cullingMask = layerMask;
         }
 
+        bool legacyUnlit = false;
         void ChangeLighting(int lit)
         {
             if (lit == 1)
             {
-                editorCamera.ResetReplacementShader();
+                if (legacyUnlit)
+                    editorCamera.ResetReplacementShader();
+                else
+                    editorCamera.GetComponent<CameraMovement>().setUnlit(false);
             }
             else if (lit == 0)
             {
-                Shader unlitShader = Shader.Find("Unlit/Texture");
-                if (unlitShader != null)
-                    editorCamera.SetReplacementShader(unlitShader, "");
+                if (legacyUnlit)
+                {
+                    Shader unlitShader = Shader.Find("Unlit/Texture");
+                    if (unlitShader != null)
+                        editorCamera.SetReplacementShader(unlitShader, "");
+                    else
+                        Plugin.LogError("Unlit shader not found");
+                }
                 else
-                    Plugin.LogError("Unlit shader not found");
+                    editorCamera.GetComponent<CameraMovement>().setUnlit(true);
             }
         }
 
@@ -1922,6 +1953,7 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
             {
                 if (obj.GetComponent<CheckPoint>() != null) continue;
+                if (obj.GetComponent<ItemIdentifier>() != null && obj.GetComponent<ItemIdentifier>().pickedUp) continue;
                 text += "? PrefabObject ?";
                 text += "\n";
                 text += addShit(obj);

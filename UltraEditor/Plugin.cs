@@ -15,7 +15,7 @@ namespace UltraEditor
     {
         public const string GUID = "duviz.ultrakill.ultraeditor";
         public const string Name = "UltraEditor";
-        public const string Version = "0.0.4";
+        public const string Version = "0.0.5";
 
         public static Plugin instance;
         public plog.Logger Log;
@@ -99,7 +99,11 @@ namespace UltraEditor
 
             if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !seenWelcomeMessage)
             {
-                Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("WelcomeCanvas"));
+                if (PlayerPrefs.GetString("UltraEditor_LastPlayedVersion") != GetVersion().ToString())
+                {
+                    Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("WelcomeCanvas"));
+                    PlayerPrefs.SetString("UltraEditor_LastPlayedVersion", GetVersion().ToString());
+                }
                 seenWelcomeMessage = true;
             }
         }
