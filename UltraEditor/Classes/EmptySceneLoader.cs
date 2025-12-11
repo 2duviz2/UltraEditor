@@ -1,16 +1,15 @@
-﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
-namespace UltraEditor.Classes;
+﻿namespace UltraEditor.Classes;
 
+using HarmonyLib;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary> Handles loading and accessing the empty scene. </summary>
-[HarmonyPatch]
 public class EmptySceneLoader : MonoBehaviour
 {
     /// <summary> Instance of the Loader. </summary>
@@ -26,7 +25,11 @@ public class EmptySceneLoader : MonoBehaviour
     public void Load()
     {
         // skip if we're already loaded
-        if (_loaded) { Destroy(gameObject); return; }
+        if (_loaded || Instance != null) 
+        { 
+            if (Instance != null) Destroy(gameObject); 
+            return; 
+        }
 
         new Harmony("EmptySceneLoader").PatchAll(GetType());
 
@@ -77,20 +80,24 @@ public class EmptySceneLoader : MonoBehaviour
         yield break;
     }
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(SceneHelper), "RestartScene")]
-    public static void RestartMissionPatch()
+    [HarmonyPatch]
+    public class Patches
     {
-        Plugin.LogInfo("restart mission patch:: start");
-        if (SceneHelper.CurrentScene == "UltraEditor")
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SceneHelper), "RestartScene")]
+        public static void RestartMissionPatch()
         {
-            Plugin.LogInfo("restart mission patch:: true");
-            Instance.LoadLevel();
-            //return true;
-        }
+            Plugin.LogInfo("restart mission patch:: start");
+            if (SceneHelper.CurrentScene == "UltraEditor")
+            {
+                Plugin.LogInfo("restart mission patch:: true");
+                Instance.LoadLevel();
+                //return true;
+            }
 
-        Plugin.LogInfo("restart mission patch:: false");
-        //return false;
+            Plugin.LogInfo("restart mission patch:: false");
+            //return false;
+        }
     }
 
     #region tools
