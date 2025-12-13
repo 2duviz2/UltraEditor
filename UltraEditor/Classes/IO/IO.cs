@@ -284,58 +284,6 @@ public class IO
         public string catalog;
     }
 
-    public static void MakeVBlood()
-    {
-        var log = new plog.Logger("UWU");
-
-        byte[] imageBytes = File.ReadAllBytes("C:\\Users\\freda\\Downloads\\pick aparyt\\tundra default\\icon.png");
-        log.Info($"imageBytes: {string.Join(' ', imageBytes.Take(25).Select(b => b.ToString("X2")))}");
-        byte[] bundleBytes = File.ReadAllBytes("C:\\Users\\freda\\Downloads\\pick aparyt\\tundra default\\bundle_scenes_all.bundle");
-        log.Info($"bundleBytes: {string.Join(' ', bundleBytes.Take(25).Select(b => b.ToString("X2")))}");
-
-        MapData mapData = new() 
-        {
-            name = "Default Map with a Zombie in the middle",
-            description = "Default Map with a Zombie in the middle",
-            bundleSize = bundleBytes.Length,
-            bundleName = "8b1d219d24bbc9e4c83fab024f226517_scenes_all.bundle",
-            thumbSize = imageBytes.Length,
-            uniqueIdentifier = "8b1d219d24bbc9e4c83fab024f226517",
-            author = "PITR",
-            version = 3,
-            placeholderPrefabs = [ "FirstRoom" ],
-            catalog = Encoding.UTF8.GetString(File.ReadAllBytes("C:\\Users\\freda\\Downloads\\pick aparyt\\catalog.json"))
-        };
-        log.Info($@"name: {mapData.name}
-desc: {mapData.description}
-bundleSize: {mapData.bundleSize}
-bundleName: {mapData.bundleName}
-thumbSize: {mapData.thumbSize}
-guid: {mapData.uniqueIdentifier}
-author: {mapData.author}
-version: {mapData.version}
-placeholderPrefabs: {string.Join(", ", mapData.placeholderPrefabs)}
-catalog: {mapData.catalog.Substring(0, 100)}");
-        
-        // write the file
-        var fileStream = new FileStream("C:\\Users\\freda\\Downloads\\pick aparyt\\tundra default.blood", FileMode.Create, FileAccess.Write);
-        BinaryWriter binaryWriter = new(fileStream, Encoding.UTF8, leaveOpen: false);
-
-        // add level stuff
-        binaryWriter.Write(JsonConvert.SerializeObject(mapData));
-
-        // add thumbnail
-        binaryWriter.Write(imageBytes, 0, imageBytes.Length);
-
-        // add bundle
-        binaryWriter.Write(bundleBytes, 0, bundleBytes.Length);
-
-        // also btw if u dont close it then u'll get like "this file is open in ULTRAKILL" msgs when u try to open the .uterus
-        // so i might add a try catch to everything before so just incase something fails, it closes the stream and writer
-        binaryWriter.Close();
-        fileStream.Close();
-    }
-
     public static void Load(string sceneName)
     {
         //UltraEditor.Classes.IO.IO.Load("new checkpointTest.uterus");
