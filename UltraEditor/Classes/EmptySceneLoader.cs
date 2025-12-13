@@ -1,5 +1,10 @@
 ﻿namespace UltraEditor.Classes;
 
+/* 
+await System.Threading.Tasks.Task.Delay(1000);
+UltraEditor.Classes.EmptySceneLoader.Instance.LoadLevel();
+*/
+
 using HarmonyLib;
 using System;
 using System.Collections;
@@ -85,18 +90,15 @@ public class EmptySceneLoader : MonoBehaviour
     {
         [HarmonyPrefix]
         [HarmonyPatch(typeof(SceneHelper), "RestartScene")]
-        public static void RestartMissionPatch()
+        public static bool RestartMissionPatch()
         {
-            Plugin.LogInfo("restart mission patch:: start");
-            if (SceneHelper.CurrentScene == "UltraEditor")
+            if (SceneHelper.CurrentScene == EditorManager.EditorSceneName)
             {
-                Plugin.LogInfo("restart mission patch:: true");
                 Instance.LoadLevel();
-                //return true;
+                return false;
             }
 
-            Plugin.LogInfo("restart mission patch:: false");
-            //return false;
+            return true;
         }
     }
 
