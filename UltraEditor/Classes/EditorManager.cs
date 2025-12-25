@@ -153,6 +153,9 @@ namespace UltraEditor.Classes
             {
                 SelectObject(cameraSelector.selectedObject);
             }
+
+            if (FinalRank.Instance != null)
+                FinalRank.Instance.targetLevelName = "Main Menu";
         }
 
         public void LateUpdate()
@@ -165,13 +168,21 @@ namespace UltraEditor.Classes
         static NavMeshSurface navMeshSurface;
         public static void DeleteScene(bool force = false)
         {
-            if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)) && navMeshSurface == null)
+            if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)))
             {
-                GameObject navMeshObj = new("NavMeshSurface");
-                navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
-                navMeshSurface.collectObjects = CollectObjects.All;
-                navMeshSurface.BuildNavMesh();
-                if (logShit) Plugin.LogInfo("NavMeshSurface created.");
+                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                {
+                    if (logShit)
+                        Plugin.LogInfo($"Trying to detroy {obj.name}");
+                    if (obj.GetComponent<SavableObject>() != null)
+                    {
+                        if (logShit)
+                            Plugin.LogInfo($"Destroyed {obj.name}");
+                        Destroy(obj);
+                    }
+                }
+
+                Instance.RebuildNavmesh(false);
             }
         }
 
@@ -204,6 +215,7 @@ namespace UltraEditor.Classes
                 cameraSelector.ClearHover();
                 cameraSelector.UnselectObject();
                 cameraSelector.selectionMode = CameraSelector.SelectionMode.Cursor;
+                RebuildNavmesh(false);
 
                 if (mouseLocked)
                 {
@@ -219,8 +231,6 @@ namespace UltraEditor.Classes
                         NewMovement.Instance.transform.rotation = editorCamera.transform.rotation;
                     }
 
-                    if (SceneHelper.CurrentScene == EditorSceneName)
-                        RebuildNavmesh(Input.GetKey(KeyCode.N));
 
                     foreach (var item in FindObjectsOfType<Door>())
                     {
@@ -407,9 +417,18 @@ namespace UltraEditor.Classes
 
         void RebuildNavmesh(bool forceFindNavmesh)
         {
-            if (navMeshSurface == null && forceFindNavmesh)
+            if (navMeshSurface == null)
             {
                 navMeshSurface = FindObjectOfType<NavMeshSurface>();
+            }
+
+            if (navMeshSurface == null)
+            {
+                GameObject navMeshObj = new("NavMeshSurface");
+                navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
+                navMeshSurface.collectObjects = CollectObjects.All;
+                navMeshSurface.BuildNavMesh();
+                if (logShit) Plugin.LogInfo("NavMeshSurface created.");
             }
 
             if (navMeshSurface != null)
@@ -772,7 +791,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == EditorSceneName && navMeshSurface != null)
+                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == EditorSceneName)
                 {
                     if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                         continue;

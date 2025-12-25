@@ -152,6 +152,10 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponent<RectTransform>().localScale = Vector3.one;
                     copyChapterButton2.transform.SetParent(bottomMiddleCS.transform);
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "CREATE LEVEL";
+                    copyChapterButton2.GetComponent<Button>().onClick.RemoveAllListeners();
+                    copyChapterButton2.GetComponent<Button>().onClick.AddListener(() => {
+                        EmptySceneLoader.Instance.LoadLevel();
+                    });
 
                     l1 = objectActivateInSequence.objectsToActivate.ToList();
                     l1.Add(copyChapterButton2);

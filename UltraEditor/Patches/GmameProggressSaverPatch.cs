@@ -4,7 +4,7 @@ namespace UltrakillStupid.Patches
 {
     [HarmonyPatch(typeof(GameProgressSaver))]
     [HarmonyPatch("SecretFound")]
-    internal class SecretFoundPatch
+    internal class GmameProggressSaverPatch
     {
         public static bool Prefix(int secretNum)
         {

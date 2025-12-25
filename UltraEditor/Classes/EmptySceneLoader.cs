@@ -33,10 +33,9 @@ public class EmptySceneLoader : MonoBehaviour
         if (_loaded || Instance != null) 
         { 
             if (Instance != null) Destroy(gameObject); 
-            return; 
+            if (_loaded )
+                return; 
         }
-
-        new Harmony("EmptySceneLoader").PatchAll(GetType());
 
         DontDestroyOnLoad((Instance = this).gameObject);
 
