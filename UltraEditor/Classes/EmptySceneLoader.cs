@@ -49,6 +49,7 @@ public class EmptySceneLoader : MonoBehaviour
         {
             Plugin.LogInfo("Loaded Empty Scene bundle.");
             _loaded = true;
+            SceneHelper.SetLoadingSubtext("");
         };
     }
 
@@ -60,7 +61,7 @@ public class EmptySceneLoader : MonoBehaviour
     {
         Plugin.LogInfo("Loading Empty Scene.");
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(true);
-        SceneHelper.SetLoadingSubtext("Loading empty...");
+        SceneHelper.SetLoadingSubtext("Loading editor...");
         yield return null;
         
         if (!_loaded)
