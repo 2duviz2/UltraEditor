@@ -165,46 +165,13 @@ namespace UltraEditor.Classes
         static NavMeshSurface navMeshSurface;
         public static void DeleteScene(bool force = false)
         {
-            if (force || ((SceneHelper.CurrentScene == EditorSceneName) && !StatsManager.Instance.timer))
+            if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)) && navMeshSurface == null)
             {
-                if (navMeshSurface == null)
-                {
-                    GameObject navMeshObj = new("NavMeshSurface");
-                    navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
-                    navMeshSurface.collectObjects = CollectObjects.All;
-                    navMeshSurface.BuildNavMesh();
-                    if (logShit)
-                        Plugin.LogInfo("NavMeshSurface created.");
-
-                    GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
-                    GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
-
-                    Destroy(finishCanvas.transform.GetChild(0).gameObject);
-                    GameObject spawnedRank = Instantiate(finalRankPanel, finishCanvas.transform);
-                    StatsManager.Instance.fr = spawnedRank.GetComponent<FinalRank>();
-                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Main Menu";
-                    spawnedRank.SetActive(false);
-                    finishCanvas.SetActive(true);
-                    MissionNameText = spawnedRank.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
-
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = false;
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startTimer = true;
-
-                    StatsManager.Instance.timeRanks[0] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[1] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[2] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[3] = int.MaxValue;
-
-                    StatsManager.Instance.killRanks[0] = int.MaxValue;
-                    StatsManager.Instance.killRanks[1] = int.MaxValue;
-                    StatsManager.Instance.killRanks[2] = int.MaxValue;
-                    StatsManager.Instance.killRanks[3] = int.MaxValue;
-
-                    StatsManager.Instance.styleRanks[0] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[1] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[2] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[3] = int.MaxValue;
-                }
+                GameObject navMeshObj = new("NavMeshSurface");
+                navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
+                navMeshSurface.collectObjects = CollectObjects.All;
+                navMeshSurface.BuildNavMesh();
+                if (logShit) Plugin.LogInfo("NavMeshSurface created.");
             }
         }
 

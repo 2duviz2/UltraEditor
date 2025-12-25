@@ -70,15 +70,14 @@ namespace UltraEditor
         {
             instance = this;
 
-            /*((UnityEngine.Object)((Component)this).gameObject).hideFlags = (HideFlags)61;
-            ((UnityEngine.Object)ThreadingHelper.Instance).hideFlags = (HideFlags)61;
+            /*gameObject.hideFlags = ThreadingHelper.Instance.hideFlags = (HideFlags)61;
             ((ConfigEntry<bool>)AccessTools.Field(typeof(Chainloader), "ConfigHideBepInExGOs").GetValue(null)).Value = true;*/
 
             LogInfo("Hello, the Instagram community!");
-
+            
             var harmony = new Harmony("duviz.ultrakill.ultraeditor");
             harmony.PatchAll();
-
+            
             gameObject.hideFlags = HideFlags.DontSaveInEditor;
 
             SceneManager.sceneLoaded += (_, _) => new GameObject("load pls uwu :3").AddComponent<EmptySceneLoader>();
@@ -88,6 +87,7 @@ namespace UltraEditor
         {
             GameObject obj = new GameObject("BundlesManager");
             obj.AddComponent<BundlesManager>();
+            obj.AddComponent<ChapterSelectChanger>();
         }
 
         public void Update()
