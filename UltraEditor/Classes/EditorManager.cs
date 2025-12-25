@@ -170,8 +170,9 @@ namespace UltraEditor.Classes
         {
             if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)))
             {
-                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList())
                 {
+                    if (obj == null) continue;
                     if (logShit)
                         Plugin.LogInfo($"Trying to detroy {obj.name}");
                     if (obj.GetComponent<SavableObject>() != null)
@@ -181,8 +182,6 @@ namespace UltraEditor.Classes
                         Destroy(obj);
                     }
                 }
-
-                Instance.RebuildNavmesh(false);
             }
         }
 
@@ -215,7 +214,6 @@ namespace UltraEditor.Classes
                 cameraSelector.ClearHover();
                 cameraSelector.UnselectObject();
                 cameraSelector.selectionMode = CameraSelector.SelectionMode.Cursor;
-                RebuildNavmesh(false);
 
                 if (mouseLocked)
                 {
@@ -238,8 +236,9 @@ namespace UltraEditor.Classes
                             BindingFlags.Instance | BindingFlags.NonPublic);
 
                         m.Invoke(item, null);
-
                     }
+
+                    RebuildNavmesh(false);
                 }
                 else
                 {
@@ -2240,6 +2239,8 @@ namespace UltraEditor.Classes
 
         void LoadSceneJson(string text)
         {
+            Log("Trying to load scene json...");
+
             float startTime = Time.realtimeSinceStartup;
 
             int lineIndex = 0;
