@@ -10,9 +10,13 @@ using System;
 
 namespace UltraEditor
 {
-    [BepInPlugin("duviz.ultrakill.ultraeditor", "UltraEditor", "0.0.5")]
+    [BepInPlugin(GUID, Name, Version)]
     public class Plugin : BaseUnityPlugin
     {
+        public const string GUID = "duviz.ultrakill.ultraeditor";
+        public const string Name = "UltraEditor";
+        public const string Version = "0.0.5";
+
         public static Plugin instance;
         public plog.Logger Log;
 
@@ -62,26 +66,28 @@ namespace UltraEditor
             return !Input.GetKey(ctrlKey) && !Input.GetKey(altKey);
         }
 
-        public void Awake() 
+        public void Awake()
         {
             instance = this;
 
-            /*((UnityEngine.Object)((Component)this).gameObject).hideFlags = (HideFlags)61;
-            ((UnityEngine.Object)ThreadingHelper.Instance).hideFlags = (HideFlags)61;
+            /*gameObject.hideFlags = ThreadingHelper.Instance.hideFlags = (HideFlags)61;
             ((ConfigEntry<bool>)AccessTools.Field(typeof(Chainloader), "ConfigHideBepInExGOs").GetValue(null)).Value = true;*/
 
             LogInfo("Hello, the Instagram community!");
-
+            
             var harmony = new Harmony("duviz.ultrakill.ultraeditor");
             harmony.PatchAll();
-
+            
             gameObject.hideFlags = HideFlags.DontSaveInEditor;
+
+            SceneManager.sceneLoaded += (_, _) => new GameObject("load pls uwu :3").AddComponent<EmptySceneLoader>();
         }
 
         public void Start()
         {
             GameObject obj = new GameObject("BundlesManager");
             obj.AddComponent<BundlesManager>();
+            obj.AddComponent<ChapterSelectChanger>();
         }
 
         public void Update()
@@ -115,15 +121,21 @@ namespace UltraEditor
                 LogError($"Resources.Load failed for '{path}'");
             return obj;
         }
-        public static void LogInfo(object data) 
+        public static void LogInfo(object data, string stackTrace = null)
         {
-            instance.Logger?.LogInfo(data);
-            (instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString());
+            instance.Logger?.LogInfo(stackTrace != null 
+                ? $"{data}\n{stackTrace}" 
+                : data);
+
+            (instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString(), stackTrace: stackTrace);
         }
-        public static void LogError(object data) 
+        public static void LogError(object data, string stackTrace = null) 
         { 
-            instance.Logger?.LogError(data);
-            (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString());
+            instance.Logger?.LogError(stackTrace != null 
+                ? $"{data}\n{stackTrace}" 
+                : data);
+
+            (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString(), stackTrace: stackTrace);
         }
 
         public static Version GetVersion()

@@ -1,21 +1,26 @@
-﻿using Newtonsoft.Json;
+﻿using HarmonyLib;
+using Newtonsoft.Json;
+using plog.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using TMPro;
-using UltraEditor.Classes.Saving;
+using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using UnityEngine.Networking;
 using UnityEngine.UI;
+using static UnityEngine.ExpressionEvaluator;
 using Component = UnityEngine.Component;
 
 namespace UltraEditor.Classes
@@ -155,71 +160,18 @@ namespace UltraEditor.Classes
             
         }
 
-        static TMP_Text MissionNameText = null;
+        public static TMP_Text MissionNameText = null;
+        public static string EditorSceneName = "UltraEditor";
         static NavMeshSurface navMeshSurface;
-        static string deleteLevel = "Endless";
-        static string[] doNotDelete = new string[] { "MapLoader", "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
-            if (force || ((SceneHelper.CurrentScene == deleteLevel || StatsManager.Instance.endlessMode) && !StatsManager.Instance.timer))
+            if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)) && navMeshSurface == null)
             {
-                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
-                {
-                    if (logShit)
-                        Plugin.LogInfo($"Trying to detroy {obj.name}");
-                    if (!doNotDelete.Contains(obj.name) && !obj.name.StartsWith("MoveArrow_") && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject && obj != navMeshSurface.gameObject) : true))
-                    {
-                        if (logShit)
-                            Plugin.LogInfo($"Destroyed {obj.name}");
-                        Destroy(obj);
-                    }
-                }
-
-                if (navMeshSurface == null)
-                {
-                    GameObject navMeshObj = new GameObject("NavMeshSurface");
-                    navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
-                    navMeshSurface.collectObjects = CollectObjects.All;
-                    navMeshSurface.BuildNavMesh();
-                    if (logShit)
-                        Plugin.LogInfo("NavMeshSurface created.");
-
-                    StatsManager.Instance.levelNumber = 0;
-                    StatsManager.Instance.endlessMode = false;
-
-                    StockMapInfo.Instance.layerName = "ULTRAEDITOR";
-                    StockMapInfo.Instance.layerName = "CUSTOM LEVEL";
-                    StockMapInfo.Instance.nextSceneName = "Main Menu";
-
-                    GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
-                    GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
-
-                    Destroy(finishCanvas.transform.GetChild(0).gameObject);
-                    GameObject spawnedRank = Instantiate(finalRankPanel, finishCanvas.transform);
-                    StatsManager.Instance.fr = spawnedRank.GetComponent<FinalRank>();
-                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Main Menu";
-                    spawnedRank.SetActive(false);
-                    finishCanvas.SetActive(true);
-                    MissionNameText = spawnedRank.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
-
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = false;
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startTimer = true;
-
-                    StatsManager.Instance.timeRanks[0] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[1] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[2] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[3] = int.MaxValue;
-
-                    StatsManager.Instance.killRanks[0] = int.MaxValue;
-                    StatsManager.Instance.killRanks[1] = int.MaxValue;
-                    StatsManager.Instance.killRanks[2] = int.MaxValue;
-                    StatsManager.Instance.killRanks[3] = int.MaxValue;
-
-                    StatsManager.Instance.styleRanks[0] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[1] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[2] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[3] = int.MaxValue;
-                }
+                GameObject navMeshObj = new("NavMeshSurface");
+                navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
+                navMeshSurface.collectObjects = CollectObjects.All;
+                navMeshSurface.BuildNavMesh();
+                if (logShit) Plugin.LogInfo("NavMeshSurface created.");
             }
         }
 
@@ -267,7 +219,7 @@ namespace UltraEditor.Classes
                         NewMovement.Instance.transform.rotation = editorCamera.transform.rotation;
                     }
 
-                    if (SceneHelper.CurrentScene == deleteLevel)
+                    if (SceneHelper.CurrentScene == EditorSceneName)
                         RebuildNavmesh(Input.GetKey(KeyCode.N));
 
                     foreach (var item in FindObjectsOfType<Door>())
@@ -285,11 +237,11 @@ namespace UltraEditor.Classes
                     editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                 }
 
-                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
+                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
                 {
                     StartCoroutine(GoToBackupScene());
                 }
-                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
+                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
                 {
                     tempScene = GetSceneJson();
                 }
@@ -339,7 +291,7 @@ namespace UltraEditor.Classes
             if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
                 EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
 
-            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel) // load backup level after restart
+            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName) // load backup level after restart
             {
                 StartCoroutine(GoToBackupScene());
             }
@@ -562,8 +514,8 @@ namespace UltraEditor.Classes
             NewInspectorVariable("damage", typeof(DeathZone));
             NewInspectorVariable("affected", typeof(DeathZone));
 
-            NewInspectorVariable("calmThemeUrl", typeof(MusicObject));
-            NewInspectorVariable("battleThemeUrl", typeof(MusicObject));
+            NewInspectorVariable("calmThemePath", typeof(MusicObject));
+            NewInspectorVariable("battleThemePath", typeof(MusicObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -820,7 +772,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == deleteLevel && navMeshSurface != null)
+                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == EditorSceneName && navMeshSurface != null)
                 {
                     if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                         continue;
@@ -1541,7 +1493,7 @@ namespace UltraEditor.Classes
             );
         }
 
-        Vector3 ParseVector3(string input)
+        public Vector3 ParseVector3(string input)
         {
             input = input.Trim('(', ')', ' ');
             var parts = input.Split(',');
@@ -2164,10 +2116,10 @@ namespace UltraEditor.Classes
                 text += "? MusicObject ?";
                 text += "\n";
                 text += addShit(obj);
-                text += obj.calmThemeUrl;
+                text += obj.calmThemePath;
                 text += "\n";
                 text += "? PASS ?\n";
-                text += obj.battleThemeUrl;
+                text += obj.battleThemePath;
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -2178,6 +2130,8 @@ namespace UltraEditor.Classes
 
         public void TryToLoadShit()
         {
+            //UltraEditor.Classes.EditorManager.Instance.Save("new saving system test uwu :3", "testing the new saving system rn", "Bryan_-000-", "newsavetesting", "C:\\Users\\freda\\Downloads\\absolute cinema.jpg", "C:\\Users\\freda\\Music\\fe\\femtanyl - LOVESICK, CANNIBAL! (feat takihasdied).mp3", "Bryan_-000-.ULTRAEDITOR.SaveSystemTest");
+
             GameObject loadScenePopup = editorCanvas.transform.GetChild(0).GetChild(8).gameObject;
             TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
             TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
@@ -2422,9 +2376,9 @@ namespace UltraEditor.Classes
                         MusicObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "MusicObject")
                         if (phase == 0)
-                            workingObject.GetComponent<MusicObject>().calmThemeUrl = line;
+                            workingObject.GetComponent<MusicObject>().calmThemePath = line;
                         else if (phase == 1)
-                            workingObject.GetComponent<MusicObject>().battleThemeUrl = line;
+                            workingObject.GetComponent<MusicObject>().battleThemePath = line;
                 }
 
                 lineIndex++;

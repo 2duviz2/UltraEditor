@@ -5,9 +5,9 @@ using System.Text;
 using Unity.AI.Navigation;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
-    internal class ActivateObject : SavableObject
+    public class ActivateObject : SavableObject
     {
         public GameObject[] toActivate = [];
         public GameObject[] toDeactivate = [];
@@ -15,10 +15,11 @@ namespace UltraEditor.Classes.Saving
         public List<string> toDeactivateIds = [];
         public bool canBeReactivated = false;
 
-        public static ActivateObject Create(GameObject target)
+        public static ActivateObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
-            ActivateObject obj = target.AddComponent<ActivateObject>();
-            return obj;
+            ActivateObject activateObject = target.AddComponent<ActivateObject>();
+            if (spawnedObject != null) spawnedObject.activateObject = activateObject;
+            return activateObject;
         }
 
         public void addToActivateId(string id)

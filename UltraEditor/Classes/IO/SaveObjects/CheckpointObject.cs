@@ -7,19 +7,20 @@ using System.Text;
 using Unity.AI.Navigation;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
-    internal class CheckpointObject : SavableObject
+    public class CheckpointObject : SavableObject
     {
         public List<string> rooms = new List<string>();
         public List<string> roomsToInherit = new List<string>();
 
-        public static CheckpointObject Create(GameObject target)
+        public static CheckpointObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
-            CheckpointObject obj = target.AddComponent<CheckpointObject>();
-            if (obj.GetComponent<Collider>() != null)
-                obj.GetComponent<Collider>().isTrigger = true;
-            return obj;
+            CheckpointObject checkpointObject = target.AddComponent<CheckpointObject>();
+            if (spawnedObject != null) spawnedObject.checkpointObject = checkpointObject;
+            if (checkpointObject.GetComponent<Collider>() != null)
+                checkpointObject.GetComponent<Collider>().isTrigger = true;
+            return checkpointObject;
         }
 
         public void addRoomId(string id)
