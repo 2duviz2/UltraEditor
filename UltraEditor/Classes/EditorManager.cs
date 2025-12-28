@@ -1906,7 +1906,7 @@ namespace UltraEditor.Classes
         {
             string text = GetSceneJson();
 
-            File.WriteAllText(Application.persistentDataPath + $"/{path}.uterus", text);
+            File.WriteAllText(Application.persistentDataPath + $"/ULTRAEDITOR/{path}.uterus", text);
         }
 
         public string GetSceneJson()
