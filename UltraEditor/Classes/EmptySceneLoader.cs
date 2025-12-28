@@ -23,6 +23,12 @@ public class EmptySceneLoader : MonoBehaviour
     /// <summary> Whether its already loaded. </summary>
     private static bool _loaded = false;
 
+    /// <summary> Forces the editor to open as soon as the scene loads. </summary>
+    public static bool forceEditor = false;
+
+    /// <summary> Forces the editor to load a save as soon as the scene loads. </summary>
+    public static string forceSave = "";
+
     /// <summary> Force the loader to load. </summary>
     void Awake() => Load();
 
@@ -82,7 +88,42 @@ public class EmptySceneLoader : MonoBehaviour
         Property(typeof(SceneHelper), "CurrentScene", EditorManager.EditorSceneName);
 
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
+
+        if (forceEditor)
+        {
+            EditorManager.canOpenEditor = false;
+            while (!NewMovement.Instance.activated && SceneHelper.PendingScene == null) { yield return null; }
+            OpenEditor();
+        }
+
+        else if (forceSave != "")
+        {
+            EditorManager.canOpenEditor = false;
+            EditorManager.Create();
+            EditorManager.DeleteScene(true);
+            EditorManager.Instance.LoadShit(forceSave);
+            EditorManager.Instance.CreateUI();
+            string levelName = forceSave.Replace(".uterus", "");
+            StockMapInfo.Instance.levelName = levelName.ToUpper();
+            StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", "CUSTOM LEVEL");
+            StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
+            LevelNamePopup.Instance.Invoke("Start", 0);
+        }
+
+        MusicManager.Instance.battleTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
+        MusicManager.Instance.cleanTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
+        MusicManager.Instance.bossTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
+        MusicManager.Instance.GetComponent<AudioSource>().outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
+
         yield break;
+    }
+
+    public void OpenEditor()
+    {
+        if (SceneHelper.PendingScene != null) return;
+
+        EditorManager.canOpenEditor = true;
+        EditorManager.Create();
     }
 
     [HarmonyPatch]

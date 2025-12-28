@@ -92,7 +92,7 @@ namespace UltraEditor
 
         public void Update()
         {
-            if (Input.GetKeyDown(editorOpenKey))
+            if (Input.GetKeyDown(editorOpenKey) && (SceneHelper.CurrentScene != EditorManager.EditorSceneName || EditorManager.canOpenEditor))
             {
                 EditorManager.Create();
             }

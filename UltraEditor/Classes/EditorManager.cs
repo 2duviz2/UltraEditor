@@ -37,6 +37,7 @@ namespace UltraEditor.Classes
         bool mouseLocked = true;
         bool advancedInspector = false;
         public static bool logShit = false;
+        public static bool canOpenEditor = true;
 
         static string tempScene;
 
@@ -246,11 +247,11 @@ namespace UltraEditor.Classes
                     editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                 }
 
-                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
+                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
                 {
                     StartCoroutine(GoToBackupScene());
                 }
-                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName)
+                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
                 {
                     tempScene = GetSceneJson();
                 }
@@ -300,7 +301,7 @@ namespace UltraEditor.Classes
             if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
                 EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
 
-            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName) // load backup level after restart
+            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor) // load backup level after restart
             {
                 StartCoroutine(GoToBackupScene());
             }
@@ -321,8 +322,10 @@ namespace UltraEditor.Classes
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
-                string path = Application.persistentDataPath;
+                string path = Application.persistentDataPath + "/ULTRAEDITOR";
                 path = path.Replace("/", "\\"); // make Windows happy
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
                 Process.Start("explorer.exe", $"\"{path}\"");
             });
 
@@ -911,7 +914,7 @@ namespace UltraEditor.Classes
         object coppiedValue = null;
         Type lastCoppiedType = null;
         List<(string, Type, float)> searchResults = new List<(string, Type, float)>();
-        List<(string, float)> sceneResults = new List<(string, float)>();
+        static List<(string, float)> sceneResults = new List<(string, float)>();
         Type arrayType = null;
         public void UpdateInspector()
         {
@@ -1845,9 +1848,16 @@ namespace UltraEditor.Classes
             return text;
         }
 
-        public List<string> GetAllScenes()
+        public static List<string> GetAllScenes()
         {
-            string path = Application.persistentDataPath;
+            string appPath = Application.persistentDataPath;
+
+            string path = appPath + "\\ULTRAEDITOR";
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+
             List<string> fileNames = new List<string>();
 
             foreach (var item in Directory.GetFiles(path))
@@ -2146,6 +2156,73 @@ namespace UltraEditor.Classes
             return text;
         }
 
+        public static void StaticLoadPopup(GameObject canvas)
+        {
+            GameObject loadScenePopup = canvas.transform.GetChild(0).GetChild(8).gameObject;
+            TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+            TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
+            Button addButton = loadScenePopup.transform.GetChild(4).GetComponent<Button>();
+
+            loadScenePopup.SetActive(true);
+
+            field.Select();
+
+            field.onValueChanged.RemoveAllListeners();
+            addButton.onClick.RemoveAllListeners();
+            field.onValueChanged.AddListener((string val) =>
+            {
+                sceneResults.Clear();
+
+                List<string> scenes = GetAllScenes();
+
+                foreach (string type in scenes)
+                {
+                    float accuracy = 0f;
+                    string typeName = type.ToLower();
+                    string searchName = val.ToLower();
+                    int minLength = Math.Min(typeName.Length, searchName.Length);
+                    for (int i = 0; i < minLength; i++)
+                    {
+                        if (typeName[i] == searchName[i])
+                            accuracy += 1f / minLength;
+                        else
+                            break;
+                    }
+                    if (typeName.Contains(searchName))
+                        accuracy += 0.5f;
+
+                    if (typeName == searchName)
+                        accuracy += 10000f;
+
+                    if (accuracy > 0f)
+                        sceneResults.Add((type, accuracy));
+                }
+
+                sceneResults = sceneResults.OrderByDescending(t => t.Item2).ToList();
+
+                foundComponents.text = "Found saves:\n";
+                foreach (var result in sceneResults.Take(3))
+                {
+                    foundComponents.text += $"{result.Item1}<color=grey>   ";
+                }
+            });
+
+            addButton.onClick.AddListener(() =>
+            {
+                loadScenePopup.SetActive(false);
+                if (sceneResults.Count > 0)
+                {
+                    string sceneName = sceneResults[0].Item1;
+                    if (sceneName != null)
+                    {
+                        EmptySceneLoader.forceSave = sceneName;
+                        EmptySceneLoader.forceEditor = false;
+                        EmptySceneLoader.Instance.LoadLevel();
+                    }
+                }
+            });
+        }
+
         public void TryToLoadShit()
         {
             //UltraEditor.Classes.EditorManager.Instance.Save("new saving system test uwu :3", "testing the new saving system rn", "Bryan_-000-", "newsavetesting", "C:\\Users\\freda\\Downloads\\absolute cinema.jpg", "C:\\Users\\freda\\Music\\fe\\femtanyl - LOVESICK, CANNIBAL! (feat takihasdied).mp3", "Bryan_-000-.ULTRAEDITOR.SaveSystemTest");
@@ -2213,9 +2290,9 @@ namespace UltraEditor.Classes
             });
         }
 
-        void LoadShit(string sceneName)
+        public void LoadShit(string sceneName)
         {
-            string path = Application.persistentDataPath + $"/{sceneName}";
+            string path = Application.persistentDataPath + $"/ULTRAEDITOR/{sceneName}";
 
             if (!File.Exists(path))
             {

@@ -67,7 +67,7 @@ namespace UltraEditor.Classes
                     objectActivateInSequence.objectsToActivate = new GameObject[] { };
 
                     topLeftCS.GetComponent<RectTransform>().localPosition = new Vector2(-200, 200);
-                    topRightCS.GetComponent<RectTransform>().localPosition = new Vector2(200, 210);
+                    topRightCS.GetComponent<RectTransform>().localPosition = new Vector2(200, 212);
                     bottomMiddleCS.GetComponent<RectTransform>().localPosition = new Vector2(-200, -50);
                     topLeftCS.GetComponent<RectTransform>().localScale = Vector3.one;
                     topRightCS.GetComponent<RectTransform>().localScale = Vector3.one;
@@ -154,6 +154,7 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "CREATE LEVEL";
                     copyChapterButton2.GetComponent<Button>().onClick.RemoveAllListeners();
                     copyChapterButton2.GetComponent<Button>().onClick.AddListener(() => {
+                        EmptySceneLoader.forceEditor = true;
                         EmptySceneLoader.Instance.LoadLevel();
                     });
 
@@ -165,6 +166,10 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponent<RectTransform>().localScale = Vector3.one;
                     copyChapterButton2.transform.SetParent(bottomMiddleCS.transform);
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "OPEN LEVEL";
+                    copyChapterButton2.GetComponent<Button>().onClick.AddListener(() => {
+                        GameObject loadLevelCanvas = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("OpenLevelCanvas"));
+                        EditorManager.StaticLoadPopup(loadLevelCanvas);
+                    });
 
                     l1 = objectActivateInSequence.objectsToActivate.ToList();
                     l1.Add(copyChapterButton2);
@@ -174,6 +179,9 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponent<RectTransform>().localScale = Vector3.one;
                     copyChapterButton2.transform.SetParent(bottomMiddleCS.transform);
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "EXPLORE LEVELS";
+                    copyChapterButton2.GetComponent<Button>().interactable = false;
+                    copyChapterButton2.GetComponentInChildren<TMP_Text>().color = new Color(1, 1, 1, 0.5f);
+                    copyChapterButton2.GetComponentInChildren<Image>().color = new Color(1, 1, 1, 0.5f);
 
                     l1 = objectActivateInSequence.objectsToActivate.ToList();
                     l1.Add(copyChapterButton2);
