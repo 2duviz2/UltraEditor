@@ -1596,7 +1596,7 @@ https://duviz.xyz/static/audio/altars.mp3
             );
         }
 
-        public Vector3 ParseVector3(string input)
+        public static Vector3 ParseVector3(string input)
         {
             input = input.Trim('(', ')', ' ');
             var parts = input.Split(',');
@@ -1611,7 +1611,7 @@ https://duviz.xyz/static/audio/altars.mp3
             );
         }
 
-        Vector2 ParseVector2(string input)
+        public static Vector2 ParseVector2(string input)
         {
             input = input.Trim('(', ')', ' ');
             var parts = input.Split(',');

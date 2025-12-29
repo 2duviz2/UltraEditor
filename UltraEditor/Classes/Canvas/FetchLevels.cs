@@ -22,11 +22,14 @@ namespace UltraEditor.Classes.Canvas
         {
             public string author;
             public string data;
+            public int id;
+            public string color;
             public string image;
             public string name;
             public string ptime;
             public string pkills;
             public string pstyle;
+            public string rank;
         }
 
         public void Start()
@@ -67,14 +70,15 @@ namespace UltraEditor.Classes.Canvas
                         LevelData levelData = JsonUtility.FromJson<LevelData>(str2);
 
                         GameObject lv = Instantiate(template, container);
-                        lv.GetComponent<ImageGetter>().imageUrl = $"{getImageUrl}{index}";
+                        lv.GetComponent<ImageGetter>().imageUrl = $"{getImageUrl}{levelData.id}";
                         lv.GetComponent<ImageGetter>().SetImg();
-                        lv.GetComponent<LevelDownloader>().levelUrl = $"{downloadLevelUrl}{index}";
+                        lv.GetComponent<LevelDownloader>().levelUrl = $"{downloadLevelUrl}{levelData.id}";
                         lv.GetComponent<LevelDownloader>().levelName = levelData.name;
                         lv.GetComponent<LevelDownloader>().levelAuthor = levelData.author;
                         lv.GetComponent<LevelDownloader>().pTime = levelData.ptime;
                         lv.GetComponent<LevelDownloader>().pKills = levelData.pkills;
                         lv.GetComponent<LevelDownloader>().pStyle = levelData.pstyle;
+                        lv.GetComponent<LevelDownloader>().color = levelData.color;
                         lv.GetComponent<LevelDownloader>().SetTexts();
                     }
                     _loaded = true;
