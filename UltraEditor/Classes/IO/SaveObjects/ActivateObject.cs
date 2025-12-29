@@ -14,6 +14,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public List<string> toActivateIds = [];
         public List<string> toDeactivateIds = [];
         public bool canBeReactivated = false;
+        public float delay = 0;
 
         public static ActivateObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
@@ -101,19 +102,24 @@ namespace UltraEditor.Classes.IO.SaveObjects
         {
             if (other.gameObject.CompareTag("Player"))
             {
-                foreach (var item in toActivate)
-                {
-                    item.SetActive(true);
-                }
-
-                foreach (var item in toDeactivate)
-                {
-                    item.SetActive(false);
-                }
-
-                if (!canBeReactivated)
-                    Destroy(this);
+                Invoke("ProcessTrigger", delay);
             }
+        }
+
+        public void ProcessTrigger()
+        {
+            foreach (var item in toActivate)
+            {
+                item.SetActive(true);
+            }
+
+            foreach (var item in toDeactivate)
+            {
+                item.SetActive(false);
+            }
+
+            if (!canBeReactivated)
+                Destroy(this);
         }
     }
 }

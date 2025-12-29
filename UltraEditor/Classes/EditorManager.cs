@@ -591,6 +591,7 @@ https://duviz.xyz/static/audio/altars.mp3
             NewInspectorVariable("toActivate", typeof(ActivateObject));
             NewInspectorVariable("toDeactivate", typeof(ActivateObject));
             NewInspectorVariable("canBeReactivated", typeof(ActivateObject));
+            NewInspectorVariable("delay", typeof(ActivateObject));
 
             NewInspectorVariable("intensity", typeof(Light));
             NewInspectorVariable("range", typeof(Light));
@@ -2122,6 +2123,9 @@ https://duviz.xyz/static/audio/altars.mp3
                 text += "? PASS ?\n";
                 text += obj.canBeReactivated.ToString();
                 text += "\n";
+                text += "? PASS ?\n";
+                text += obj.delay.ToString();
+                text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2560,6 +2564,8 @@ https://duviz.xyz/static/audio/altars.mp3
                             workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
                         else if (phase == 2)
                             workingObject.GetComponent<ActivateObject>().canBeReactivated = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<ActivateObject>().delay = float.Parse(line);
 
                     if (scriptType == "CheckpointObject" && workingObject.GetComponent<CheckpointObject>() == null)
                         CheckpointObject.Create(workingObject);
