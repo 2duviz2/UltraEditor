@@ -19,6 +19,7 @@ namespace UltraEditor.Patches
         [HarmonyPrefix]
         private static bool Fetch_Prefix(LevelSelectLeaderboard __instance, string levelName, ref IEnumerator __result)
         {
+            return true;
             __result = CustomFetch(__instance, levelName);
             return false;
         }

@@ -37,6 +37,8 @@ public class EmptySceneLoader : MonoBehaviour
     public static string pTime = "";
     public static string pKills = "";
     public static string pStyle = "";
+    public static bool forceLevelCanOpenEditor = false;
+    public static string forceLevelLayer = "CUSTOM LEVEL";
 
     /// <summary> Forces the editor to set a scene name, only happens if forceSave is "?". </summary>
     public static string forceLevelName = "";
@@ -112,8 +114,10 @@ public class EmptySceneLoader : MonoBehaviour
         if (forceEditor)
         {
             EditorManager.canOpenEditor = false;
+            forceLevelCanOpenEditor = false;
             while (!NewMovement.Instance.activated && SceneHelper.PendingScene == null) { yield return null; }
             OpenEditor();
+            forceLevelLayer = "CUSTOM LEVEL";
         }
 
         else if (forceSave != "")
@@ -125,6 +129,8 @@ public class EmptySceneLoader : MonoBehaviour
             if (forceSave != "?")
             {
                 EditorManager.Instance.LoadShit(forceSave);
+                forceLevelCanOpenEditor = false;
+                forceLevelLayer = "CUSTOM LEVEL";
             }
             else
             {
@@ -153,7 +159,7 @@ public class EmptySceneLoader : MonoBehaviour
             StatsManager.Instance.secretObjects = secrets.ToArray();
             EditorManager.Instance.CreateUI();
             StockMapInfo.Instance.levelName = levelName.ToUpper();
-            StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", "CUSTOM LEVEL");
+            StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", forceLevelLayer);
             StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
             LevelNamePopup.Instance.Invoke("Start", 0);
         }

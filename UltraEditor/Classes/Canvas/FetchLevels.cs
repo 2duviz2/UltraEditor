@@ -30,6 +30,8 @@ namespace UltraEditor.Classes.Canvas
             public string pkills;
             public string pstyle;
             public string rank;
+            public string layer;
+            public int canOpenEditor;
         }
 
         public void Start()
@@ -79,6 +81,8 @@ namespace UltraEditor.Classes.Canvas
                         lv.GetComponent<LevelDownloader>().pKills = levelData.pkills;
                         lv.GetComponent<LevelDownloader>().pStyle = levelData.pstyle;
                         lv.GetComponent<LevelDownloader>().color = levelData.color;
+                        lv.GetComponent<LevelDownloader>().levelLayer = levelData.layer;
+                        lv.GetComponent<LevelDownloader>().canOpenEditor = levelData.canOpenEditor == 1;
                         lv.GetComponent<LevelDownloader>().SetTexts();
                     }
                     _loaded = true;

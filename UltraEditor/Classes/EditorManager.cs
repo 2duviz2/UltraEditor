@@ -2348,6 +2348,7 @@ https://duviz.xyz/static/audio/altars.mp3
                         canOpenEditor = false;
                         EmptySceneLoader.forceSave = sceneName;
                         EmptySceneLoader.forceEditor = false;
+                        EmptySceneLoader.forceLevelCanOpenEditor = false;
                         EmptySceneLoader.Instance.LoadLevel();
                     }
                 }

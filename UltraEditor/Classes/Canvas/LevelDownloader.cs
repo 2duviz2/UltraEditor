@@ -16,6 +16,8 @@ namespace UltraEditor.Classes.Canvas
         public string pKills;
         public string pStyle;
         public string color;
+        public string levelLayer;
+        public bool canOpenEditor;
 
         public TMP_Text levelNameText;
         public TMP_Text levelAuthorText;
@@ -46,6 +48,8 @@ namespace UltraEditor.Classes.Canvas
                         EmptySceneLoader.forceSave = "?";
                         EmptySceneLoader.forceSaveData = str;
                         EmptySceneLoader.forceLevelName = levelName;
+                        EmptySceneLoader.forceLevelLayer = levelLayer;
+                        EmptySceneLoader.forceLevelCanOpenEditor = canOpenEditor;
                         EmptySceneLoader.pTime = pTime;
                         EmptySceneLoader.pKills = pKills;
                         EmptySceneLoader.pStyle = pStyle;
