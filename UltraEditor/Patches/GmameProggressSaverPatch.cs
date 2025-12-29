@@ -8,7 +8,8 @@ namespace UltrakillStupid.Patches
     {
         public static bool Prefix(int secretNum)
         {
-            return secretNum != 100000;
+            //return secretNum != 100000;
+            return true;
         }
     }
 }

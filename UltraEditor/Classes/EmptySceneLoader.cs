@@ -10,7 +10,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -28,6 +30,16 @@ public class EmptySceneLoader : MonoBehaviour
 
     /// <summary> Forces the editor to load a save as soon as the scene loads. </summary>
     public static string forceSave = "";
+
+    /// <summary> Forces the editor to load a data string as soon as the scene loads, only happens if forceSave is "?". </summary>
+    public static string forceSaveData = "";
+
+    public static string pTime = "";
+    public static string pKills = "";
+    public static string pStyle = "";
+
+    /// <summary> Forces the editor to set a scene name, only happens if forceSave is "?". </summary>
+    public static string forceLevelName = "";
 
     /// <summary> Force the loader to load. </summary>
     void Awake() => Load();
@@ -78,16 +90,24 @@ public class EmptySceneLoader : MonoBehaviour
             // wait til its loaded
             while (!_loaded) yield return null;
         }
+
         var sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
         while (!sceneload.isDone) 
         { Plugin.LogInfo("waiting for sceneload to complete"); yield return null; }
 
+        Plugin.LogInfo("Scene loaded!");
+
         if (SceneHelper.CurrentScene != "UltraEditor") Property(typeof(SceneHelper), "LastScene", SceneHelper.CurrentScene);
         Property(typeof(SceneHelper), "CurrentScene", EditorManager.EditorSceneName);
 
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
+
+        /*GameObject statsManager = new GameObject("StatsManager", typeof(StatsManager));
+        GameObject levelInfo = new GameObject("LevelInfo", typeof(StockMapInfo));
+
+        GameObject firstRoom = Instantiate(Plugin.Ass<GameObject>("FirstRoom"));*/
 
         if (forceEditor)
         {
@@ -101,15 +121,44 @@ public class EmptySceneLoader : MonoBehaviour
             EditorManager.canOpenEditor = false;
             EditorManager.Create();
             EditorManager.DeleteScene(true);
-            EditorManager.Instance.LoadShit(forceSave);
-            EditorManager.Instance.CreateUI();
             string levelName = forceSave.Replace(".uterus", "");
+            if (forceSave != "?")
+            {
+                EditorManager.Instance.LoadShit(forceSave);
+            }
+            else
+            {
+                EditorManager.Instance.LoadSceneJson(forceSaveData);
+                levelName = forceLevelName;
+
+                int pt = int.Parse(pTime);
+                int pk = int.Parse(pKills);
+                int ps = int.Parse(pStyle);
+
+                for (int i = 0; i < 4; i++)
+                    StatsManager.Instance.timeRanks[3 - i] = pt * (i + 1);
+                for (int i = 0; i < 4; i++)
+                    StatsManager.Instance.killRanks[3 - i] = pk - (i * 5);
+                for (int i = 0; i < 4; i++)
+                    StatsManager.Instance.styleRanks[3 - i] = ps - (i * 1000);
+            }
+            List<GameObject> secrets = [];
+            int ind = 0;
+            foreach (var secret in FindObjectsOfType<Bonus>())
+            {
+                secret.secretNumber = ind;
+                secrets.Add(secret.gameObject);
+                ind++;
+            }
+            StatsManager.Instance.secretObjects = secrets.ToArray();
+            EditorManager.Instance.CreateUI();
             StockMapInfo.Instance.levelName = levelName.ToUpper();
             StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", "CUSTOM LEVEL");
             StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
             LevelNamePopup.Instance.Invoke("Start", 0);
         }
 
+        ChallengeManager.Instance.challengePanel.transform.parent.Find("ChallengeText").GetComponent<TMP_Text>().text = "(NO CHALLENGE)";
         MusicManager.Instance.battleTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.cleanTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.bossTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;

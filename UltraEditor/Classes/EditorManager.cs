@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
+using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -22,6 +23,7 @@ using UnityEngine.Networking;
 using UnityEngine.UI;
 using static UnityEngine.ExpressionEvaluator;
 using Component = UnityEngine.Component;
+using NewTeleportObject = UltraEditor.Classes.IO.SaveObjects.TeleportObject;
 
 namespace UltraEditor.Classes
 {
@@ -37,7 +39,7 @@ namespace UltraEditor.Classes
         bool mouseLocked = true;
         bool advancedInspector = false;
         public static bool logShit = false;
-        public static bool canOpenEditor = true;
+        public static bool canOpenEditor = false;
 
         static string tempScene;
 
@@ -537,6 +539,13 @@ namespace UltraEditor.Classes
 
             NewInspectorVariable("calmThemePath", typeof(MusicObject));
             NewInspectorVariable("battleThemePath", typeof(MusicObject));
+
+
+            NewInspectorVariable("message", typeof(HUDMessageObject));
+            NewInspectorVariable("disableAfterShowing", typeof(HUDMessageObject));
+
+            NewInspectorVariable("teleportPosition", typeof(NewTeleportObject));
+            NewInspectorVariable("canBeReactivated", typeof(NewTeleportObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -816,6 +825,8 @@ namespace UltraEditor.Classes
                 list.Add(typeof(ActivateArena));
                 list.Add(typeof(ActivateNextWave));
                 list.Add(typeof(ActivateObject));
+                list.Add(typeof(HUDMessageObject));
+                list.Add(typeof(NewTeleportObject));
                 list.Add(typeof(DeathZone));
                 list.Add(typeof(Light));
                 list.Add(typeof(MusicObject));
@@ -938,7 +949,7 @@ namespace UltraEditor.Classes
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null))
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null))
                 {
                     CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
@@ -1015,7 +1026,7 @@ namespace UltraEditor.Classes
                                         
                                     }
 
-                                    if (c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
+                                    if (c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
@@ -1931,7 +1942,7 @@ namespace UltraEditor.Classes
                     continue;
                 }
 
-                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null)
+                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null)
                 {
                     continue;
                 }
@@ -2039,6 +2050,30 @@ namespace UltraEditor.Classes
                 text += "? PASS ?\n";
                 text += obj.canBeReactivated.ToString();
                 text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<HUDMessageObject>(true))
+            {
+                text += "? HUDMessageObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.message + "\n";
+                text += "? PASS ?\n";
+                text += obj.disableAfterShowing + "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<NewTeleportObject>(true))
+            {
+                text += "? TeleportObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.teleportPosition + "\n";
+                text += "? PASS ?\n";
+                text += obj.canBeReactivated + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2215,6 +2250,7 @@ namespace UltraEditor.Classes
                     string sceneName = sceneResults[0].Item1;
                     if (sceneName != null)
                     {
+                        canOpenEditor = false;
                         EmptySceneLoader.forceSave = sceneName;
                         EmptySceneLoader.forceEditor = false;
                         EmptySceneLoader.Instance.LoadLevel();
@@ -2314,7 +2350,7 @@ namespace UltraEditor.Classes
 
         }
 
-        void LoadSceneJson(string text)
+        public void LoadSceneJson(string text)
         {
             Log("Trying to load scene json...");
 
@@ -2476,6 +2512,22 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<MusicObject>().calmThemePath = line;
                         else if (phase == 1)
                             workingObject.GetComponent<MusicObject>().battleThemePath = line;
+
+                    if (scriptType == "HUDMessageObject" && workingObject.GetComponent<HUDMessageObject>() == null)
+                        HUDMessageObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "HUDMessageObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<HUDMessageObject>().message = line;
+                        else if (phase == 1)
+                            workingObject.GetComponent<HUDMessageObject>().disableAfterShowing = line.ToLower() == "true";
+
+                    if (scriptType == "TeleportObject" && workingObject.GetComponent<NewTeleportObject>() == null)
+                        NewTeleportObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "TeleportObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseVector3(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
                 }
 
                 lineIndex++;
@@ -2511,6 +2563,8 @@ namespace UltraEditor.Classes
                 obj.GetComponent<DeathZoneObject>()?.createDeathzone();
                 obj.GetComponent<LightObject>()?.createLight();
                 obj.GetComponent<MusicObject>()?.createMusic();
+                obj.GetComponent<HUDMessageObject>()?.createHudMessage();
+                obj.GetComponent<NewTeleportObject>()?.createTeleporter();
             }
 
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");

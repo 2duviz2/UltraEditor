@@ -1,0 +1,40 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Unity.AI.Navigation;
+using UnityEngine;
+
+namespace UltraEditor.Classes.IO.SaveObjects
+{
+    public class TeleportObject : SavableObject
+    {
+        public Vector3 teleportPosition;
+        public bool canBeReactivated = false;
+
+        public static TeleportObject Create(GameObject target, SpawnedObject spawnedObject = null)
+        {
+            TeleportObject teleportObject = target.AddComponent<TeleportObject>();
+            if (spawnedObject != null) spawnedObject.teleportObject = teleportObject;
+            return teleportObject;
+        }
+
+        public void createTeleporter()
+        {
+            NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
+            mod.ignoreFromBuild = true;
+            gameObject.GetComponent<Collider>().isTrigger = true;
+        }
+
+        public void OnTriggerEnter(Collider other)
+        {
+            if (other.gameObject.CompareTag("Player"))
+            {
+                NewMovement.Instance.transform.position = teleportPosition;
+
+                if (!canBeReactivated)
+                    Destroy(this);
+            }
+        }
+    }
+}

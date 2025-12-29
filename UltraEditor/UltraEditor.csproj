@@ -15,8 +15,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Assets\editorscenes.bundle" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<!-- Embed the assetbundles into the dll. -->
 		<EmbeddedResource Include="Assets\editorcanvas.bundle" />
+		<EmbeddedResource Include="Assets\editorscenes.bundle" />
 		<EmbeddedResource Include="Assets\emptyscene.bundle" />
 
 		<!-- Packages -->

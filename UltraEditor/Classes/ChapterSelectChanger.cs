@@ -126,6 +126,11 @@ namespace UltraEditor.Classes
                             if (chapterButton.name.Contains("(Clone)"))
                             {
                                 copyChapterButton = chapterButton;
+
+                                if (chapterButton.name == "CustomLevels(Clone)") // angry level loader
+                                {
+                                    chapterButton.GetComponentInChildren<TMP_Text>().text = "ANGRY LEVEL LOADER";
+                                }
                             }
                             else
                             {
@@ -152,6 +157,7 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponent<RectTransform>().localScale = Vector3.one;
                     copyChapterButton2.transform.SetParent(bottomMiddleCS.transform);
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "CREATE LEVEL";
+                    copyChapterButton2.GetComponent<Button>().onClick = new();
                     copyChapterButton2.GetComponent<Button>().onClick.RemoveAllListeners();
                     copyChapterButton2.GetComponent<Button>().onClick.AddListener(() => {
                         EmptySceneLoader.forceEditor = true;
@@ -166,6 +172,7 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponent<RectTransform>().localScale = Vector3.one;
                     copyChapterButton2.transform.SetParent(bottomMiddleCS.transform);
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "OPEN LEVEL";
+                    copyChapterButton2.GetComponent<Button>().onClick = new();
                     copyChapterButton2.GetComponent<Button>().onClick.AddListener(() => {
                         GameObject loadLevelCanvas = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("OpenLevelCanvas"));
                         EditorManager.StaticLoadPopup(loadLevelCanvas);
@@ -179,9 +186,13 @@ namespace UltraEditor.Classes
                     copyChapterButton2.GetComponent<RectTransform>().localScale = Vector3.one;
                     copyChapterButton2.transform.SetParent(bottomMiddleCS.transform);
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().text = "EXPLORE LEVELS";
-                    copyChapterButton2.GetComponent<Button>().interactable = false;
+                    /*copyChapterButton2.GetComponent<Button>().interactable = false;
                     copyChapterButton2.GetComponentInChildren<TMP_Text>().color = new Color(1, 1, 1, 0.5f);
-                    copyChapterButton2.GetComponentInChildren<Image>().color = new Color(1, 1, 1, 0.5f);
+                    copyChapterButton2.GetComponentInChildren<Image>().color = new Color(1, 1, 1, 0.5f);*/
+                    copyChapterButton2.GetComponent<Button>().onClick = new();
+                    copyChapterButton2.GetComponent<Button>().onClick.AddListener(() => {
+                        GameObject loadLevelCanvas = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("ExploreLevelsCanvas"));
+                    });
 
                     l1 = objectActivateInSequence.objectsToActivate.ToList();
                     l1.Add(copyChapterButton2);

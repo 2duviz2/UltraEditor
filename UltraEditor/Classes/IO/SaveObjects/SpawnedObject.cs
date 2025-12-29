@@ -17,5 +17,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public DeathZoneObject deathZoneObject = null;
         public LightObject lightObject = null;
         public MusicObject musicObject = null;
+        public HUDMessageObject hudObject = null;
+        public TeleportObject teleportObject = null;
     }
 }
