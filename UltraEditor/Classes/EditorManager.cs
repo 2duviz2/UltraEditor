@@ -697,8 +697,15 @@ https://duviz.xyz/static/audio/altars.mp3
         {
             if (cameraSelector.selectedObject != null)
             {
-                Destroy(cameraSelector.selectedObject);
-                cameraSelector.UnselectObject();
+                GameObject toDestroy = cameraSelector.selectedObject;
+                GameObject toParent = null;
+                if (cameraSelector.selectedObject.transform.parent != null)
+                    toParent = cameraSelector.selectedObject.transform.parent.gameObject;
+                else
+                    cameraSelector.UnselectObject();
+                DestroyImmediate(toDestroy);
+                if (toParent != null)
+                    cameraSelector.SelectObject(toParent);
             }
         }
 
@@ -2669,6 +2676,7 @@ https://duviz.xyz/static/audio/altars.mp3
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
 
             cameraSelector.selectedObject = null;
+            cameraSelector.UnselectObject();
         }
 
         IEnumerator GoToBackupScene()
