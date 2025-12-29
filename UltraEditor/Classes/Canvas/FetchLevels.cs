@@ -31,6 +31,8 @@ namespace UltraEditor.Classes.Canvas
 
         public void Start()
         {
+            ImageGetter._loaded = true;
+
             StartCoroutine(FetchLevels.GetStringFromUrl(url, str =>
             {
                 if (str != null)
@@ -43,6 +45,12 @@ namespace UltraEditor.Classes.Canvas
                     StartCoroutine(LoadLevels(parsedNum));
                 }
             }));
+        }
+
+        private void Update()
+        {
+            if (Input.GetKeyDown(KeyCode.Escape))
+                Destroy(gameObject);
         }
 
         public IEnumerator LoadLevels(int parsedNum)
