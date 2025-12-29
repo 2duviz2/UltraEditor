@@ -19,5 +19,6 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public MusicObject musicObject = null;
         public HUDMessageObject hudObject = null;
         public TeleportObject teleportObject = null;
+        public LevelInfoObject levelInfoObject = null;
     }
 }

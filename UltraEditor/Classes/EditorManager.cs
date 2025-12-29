@@ -41,7 +41,74 @@ namespace UltraEditor.Classes
         public static bool logShit = false;
         public static bool canOpenEditor = false;
 
-        static string tempScene;
+        static string tempScene = @"
+? CubeObject ?
+Wall(-10.00, 98.75, 20.00)(0.00, 0.00, 90.00)(20.00, 0.25, 40.00)
+Wall
+24
+Wall
+(-10.00, 98.75, 20.00)
+(0.00, 0.00, 90.00)
+(20.00, 0.25, 40.00)
+1
+
+0
+
+? END ?
+? CubeObject ?
+Floor(0.00, 89.25, 20.00)(0.00, 0.00, 0.00)(20.00, 1.00, 40.00)
+Floor
+24
+Floor
+(0.00, 89.25, 20.00)
+(0.00, 0.00, 0.00)
+(20.00, 1.00, 40.00)
+1
+
+0
+
+? END ?
+? PrefabObject ?
+Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
+Zombie(Clone)
+12
+Enemy
+(0.00, 90.00, 20.00)
+(0.00, 0.00, 0.00)
+(0.23, 0.23, 0.23)
+0
+
+Assets/Prefabs/Enemies/Zombie.prefab
+
+? END ?
+? ArenaObject ?
+Spawn Trigger(0.00, 100.00, 0.00)(0.00, 0.00, 0.00)(20.00, 20.00, 5.00)
+Spawn Trigger
+16
+Untagged
+(0.00, 100.00, 0.00)
+(0.00, 0.00, 0.00)
+(20.00, 20.00, 5.00)
+1
+
+True
+Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
+? END ?
+? MusicObject ?
+Music Trigger(0.00, 100.00, 0.00)(0.00, 0.00, 0.00)(20.00, 20.00, 5.00)
+Music Trigger
+16
+Untagged
+(0.00, 100.00, 0.00)
+(0.00, 0.00, 0.00)
+(20.00, 20.00, 5.00)
+1
+
+https://duviz.xyz/static/audio/altars.mp3
+? PASS ?
+https://duviz.xyz/static/audio/altars.mp3
+? END ?
+";
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
 
@@ -546,6 +613,9 @@ namespace UltraEditor.Classes
 
             NewInspectorVariable("teleportPosition", typeof(NewTeleportObject));
             NewInspectorVariable("canBeReactivated", typeof(NewTeleportObject));
+
+            NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
+            NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -827,6 +897,7 @@ namespace UltraEditor.Classes
                 list.Add(typeof(ActivateObject));
                 list.Add(typeof(HUDMessageObject));
                 list.Add(typeof(NewTeleportObject));
+                list.Add(typeof(LevelInfoObject));
                 list.Add(typeof(DeathZone));
                 list.Add(typeof(Light));
                 list.Add(typeof(MusicObject));
@@ -949,7 +1020,7 @@ namespace UltraEditor.Classes
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null))
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null && cameraSelector.selectedObject.GetComponent<LevelInfoObject>() == null))
                 {
                     CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
@@ -1026,7 +1097,7 @@ namespace UltraEditor.Classes
                                         
                                     }
 
-                                    if (c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
+                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
@@ -1942,7 +2013,7 @@ namespace UltraEditor.Classes
                     continue;
                 }
 
-                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null)
+                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
                 {
                     continue;
                 }
@@ -1959,6 +2030,7 @@ namespace UltraEditor.Classes
             foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
             {
                 if (obj.GetComponent<CheckPoint>() != null) continue;
+                if (obj.transform.parent != null && obj.transform.parent.name == "Automated Gore Zone") continue;
                 if (obj.GetComponent<ItemIdentifier>() != null && obj.GetComponent<ItemIdentifier>().pickedUp) continue;
                 text += "? PrefabObject ?";
                 text += "\n";
@@ -2074,6 +2146,18 @@ namespace UltraEditor.Classes
                 text += obj.teleportPosition + "\n";
                 text += "? PASS ?\n";
                 text += obj.canBeReactivated + "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in GameObject.FindObjectsOfType<LevelInfoObject>(true))
+            {
+                text += "? LevelInfoObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.ambientColor + "\n";
+                text += "? PASS ?\n";
+                text += obj.intensityMultiplier + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2499,9 +2583,9 @@ namespace UltraEditor.Classes
                         LightObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "Light")
                         if (phase == 0)
-                            workingObject.GetComponent<LightObject>().intensity = int.Parse(line);
+                            workingObject.GetComponent<LightObject>().intensity = float.Parse(line);
                         else if (phase == 1)
-                            workingObject.GetComponent<LightObject>().range = int.Parse(line);
+                            workingObject.GetComponent<LightObject>().range = float.Parse(line);
                         else if (phase == 2)
                             workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
 
@@ -2528,6 +2612,14 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseVector3(line);
                         else if (phase == 1)
                             workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
+
+                    if (scriptType == "LevelInfoObject" && workingObject.GetComponent<LevelInfoObject>() == null)
+                        LevelInfoObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "LevelInfoObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseVector3(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<LevelInfoObject>().intensityMultiplier = float.Parse(line);
                 }
 
                 lineIndex++;
@@ -2565,6 +2657,7 @@ namespace UltraEditor.Classes
                 obj.GetComponent<MusicObject>()?.createMusic();
                 obj.GetComponent<HUDMessageObject>()?.createHudMessage();
                 obj.GetComponent<NewTeleportObject>()?.createTeleporter();
+                obj.GetComponent<LevelInfoObject>()?.createLevelInfo();
             }
 
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
