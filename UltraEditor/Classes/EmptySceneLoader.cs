@@ -140,7 +140,7 @@ public class EmptySceneLoader : MonoBehaviour
                 int ps = int.Parse(pStyle);
 
                 for (int i = 0; i < 4; i++)
-                    StatsManager.Instance.timeRanks[3 - i] = pt * (i + 1);
+                    StatsManager.Instance.timeRanks[3 - i] = (int)(pt * ((i*0.25f) + 1f));
                 for (int i = 0; i < 4; i++)
                     StatsManager.Instance.killRanks[3 - i] = pk - (i * 5);
                 for (int i = 0; i < 4; i++)
