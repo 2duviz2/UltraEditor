@@ -59,6 +59,7 @@
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Message Text="Copying DLL to: $(CopyPath)..." Importance="high" />
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyPath)" OverwriteReadOnlyFiles="true" />
 	</Target>
 
