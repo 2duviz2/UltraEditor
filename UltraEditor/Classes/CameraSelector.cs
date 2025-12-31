@@ -73,9 +73,9 @@ namespace UltraEditor.Classes
             if (selectionMode != SelectionMode.Cursor && selectedObject)
                 HandleMoveMode();
 
-            if (selectedObject == null)
+            if (selectedObject == null || !EditorManager.Instance.IsObjectEditable())
             {
-                if (selectionMode == SelectionMode.Move)
+                if (selectionMode != SelectionMode.Cursor)
                     DeleteArrows();
                 selectionMode = SelectionMode.Cursor;
             }

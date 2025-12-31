@@ -94,20 +94,6 @@ Untagged
 True
 Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
 ? END ?
-? MusicObject ?
-Music Trigger(0.00, 100.00, 0.00)(0.00, 0.00, 0.00)(20.00, 20.00, 5.00)
-Music Trigger
-16
-Untagged
-(0.00, 100.00, 0.00)
-(0.00, 0.00, 0.00)
-(20.00, 20.00, 5.00)
-1
-
-https://duviz.xyz/static/audio/altars.mp3
-? PASS ?
-https://duviz.xyz/static/audio/altars.mp3
-? END ?
 ";
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
@@ -161,7 +147,7 @@ https://duviz.xyz/static/audio/altars.mp3
                 cameraSelector.ClearHover();
             }
 
-            if (Input.GetKeyDown(Plugin.deleteObjectKey))
+            if (Input.GetKeyDown(Plugin.deleteObjectKey) && IsObjectEditable())
             {
                 if (Input.GetKey(Plugin.ctrlKey))
                     DeleteScene(true);
@@ -169,10 +155,10 @@ https://duviz.xyz/static/audio/altars.mp3
                     deleteObject();
             }
 
-            if (Plugin.isToggleEnabledKeyPressed())
+            if (Plugin.isToggleEnabledKeyPressed() && IsObjectEditable())
                 toggleObject();
 
-            if (Plugin.isDuplicateKeyPressed())
+            if (Plugin.isDuplicateKeyPressed() && IsObjectEditable())
                 duplicateObject();
 
             if (Input.GetKey(Plugin.createCubeKey))
@@ -245,7 +231,7 @@ https://duviz.xyz/static/audio/altars.mp3
                     if (obj == null) continue;
                     if (logShit)
                         Plugin.LogInfo($"Trying to detroy {obj.name}");
-                    if (obj.GetComponent<SavableObject>() != null)
+                    if (obj.GetComponent<SavableObject>() != null || obj.name == "Automated Gore Zone")
                     {
                         if (logShit)
                             Plugin.LogInfo($"Destroyed {obj.name}");
@@ -999,6 +985,15 @@ https://duviz.xyz/static/audio/altars.mp3
             }
         }
 
+        public bool IsObjectEditable(GameObject obj = null)
+        {
+            if (obj != null)
+                return obj.GetComponent<SavableObject>() != null || advancedInspector;
+            if (advancedInspector) return true;
+            if (cameraSelector.selectedObject == null) return false;
+            return cameraSelector.selectedObject.GetComponent<SavableObject>() != null;
+        }
+
         string lastFieldText = "";
         Enum lastEnum = null;
         Type lastEnumType = null;
@@ -1024,7 +1019,7 @@ https://duviz.xyz/static/audio/altars.mp3
 
             if (cameraSelector.selectedObject != null)
             {
-                if (!advancedInspector && cameraSelector.selectedObject.GetComponent<SavableObject>() == null)
+                if (!IsObjectEditable())
                 {
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
@@ -1176,7 +1171,8 @@ https://duviz.xyz/static/audio/altars.mp3
                     }
                     else
                     {
-                        CreateInspectorItem(compName, inspectorItemType.None);
+                        if (advancedInspector) // lmao
+                            CreateInspectorItem(compName, inspectorItemType.None);
                     }
 
                         var type = component.GetType();
@@ -1883,6 +1879,7 @@ https://duviz.xyz/static/audio/altars.mp3
             eventTrigger.triggers[0].callback.AddListener((data) =>
             {
                 if (obj == null) return;
+                if (!IsObjectEditable(obj)) return;
                 holdingObject = obj;
                 if (logShit)
                     Plugin.LogInfo($"Holding object: {holdingObject.name}");
