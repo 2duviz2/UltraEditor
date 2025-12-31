@@ -1906,6 +1906,7 @@ Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
 
         public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
         {
+            if (obj == null) return "";
             return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
         }
 
