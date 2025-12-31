@@ -127,10 +127,10 @@ namespace UltraEditor.Classes
                             {
                                 copyChapterButton = chapterButton;
 
-                                if (chapterButton.name == "CustomLevels(Clone)") // angry level loader
+                                /*if (chapterButton.name == "CustomLevels(Clone)") // angry level loader
                                 {
                                     chapterButton.GetComponentInChildren<TMP_Text>().text = "ANGRY LEVEL LOADER";
-                                }
+                                }*/
                             }
                             else
                             {

@@ -55,17 +55,10 @@ public class EmptySceneLoader : MonoBehaviour
 
         DontDestroyOnLoad((Instance = this).gameObject);
 
-        Addressables.LoadAssetAsync<GameObject>("Assets/Prefabs/Attacks and Projectiles/Projectile Decorative.prefab").WaitForCompletion();
-
         Addressables.LoadAssetAsync<GameObject>("FirstRoom").WaitForCompletion();
         Addressables.LoadAssetAsync<GameObject>("FirstRoom Secret").WaitForCompletion();
         Addressables.LoadAssetAsync<GameObject>("FirstRoom Prime").WaitForCompletion();
         Addressables.LoadAssetAsync<GameObject>("Assets/Prefabs/Levels/Special Rooms/FirstRoom Encore.prefab").WaitForCompletion();
-
-        Addressables.LoadAssetAsync<Font>("Assets/Fonts/VCR_OSD_MONO_1.001.ttf").WaitForCompletion();
-        Addressables.LoadAssetAsync<Sprite>("Assets/Textures/UI/meter.png").WaitForCompletion();
-        Addressables.LoadAssetAsync<Sprite>("Assets/Textures/UI/arrow.png").WaitForCompletion();
-        Addressables.LoadAssetAsync<Material>("Assets/Materials/Environment/Metal/Metal Decoration 20.mat").WaitForCompletion();
 
         Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");
 
