@@ -147,11 +147,11 @@ Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
                 cameraSelector.ClearHover();
             }
 
-            if (Input.GetKeyDown(Plugin.deleteObjectKey) && IsObjectEditable())
+            if (Input.GetKeyDown(Plugin.deleteObjectKey))
             {
                 if (Input.GetKey(Plugin.ctrlKey))
                     DeleteScene(true);
-                else
+                else if (IsObjectEditable())
                     deleteObject();
             }
 
