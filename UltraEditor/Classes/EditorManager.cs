@@ -569,6 +569,7 @@ https://duviz.xyz/static/audio/altars.mp3
             /*NewInspectorVariable("ignoreFromBuild", typeof(NavMeshModifier));*/
 
             NewInspectorVariable("matType", typeof(CubeObject));
+            NewInspectorVariable("matTiling", typeof(CubeObject));
 
             // Enemies
             /*NewInspectorVariable("health", typeof(Zombie));
@@ -2030,7 +2031,8 @@ https://duviz.xyz/static/audio/altars.mp3
                 text += "\n";
                 text += addShit(obj);
                 text += (int)obj.matType + "\n";
-                text += "\n";
+                text += "? PASS ?\n";
+                text += obj.matTiling + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2456,6 +2458,7 @@ https://duviz.xyz/static/audio/altars.mp3
             int phase = 0;
             bool isInScript = false;
             string scriptType = "";
+            List<string> passes = [];
             GameObject workingObject = null;
 
             foreach (var line in text.Split(["\r\n", "\n"], StringSplitOptions.None))
@@ -2512,8 +2515,15 @@ https://duviz.xyz/static/audio/altars.mp3
                     if (lineIndex == 9)
                         workingObject.GetComponent<SpawnedObject>().parentID = line;
 
+                    if (lineIndex >= 10)
+                    {
+                        passes.Append(line);
+                    }
                     if (lineIndex == 10 && scriptType == "CubeObject")
                         CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
+                    if (lineIndex >= 10 && scriptType == "CubeObject")
+                        if (phase == 1)
+                            workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
 
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {

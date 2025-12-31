@@ -8,7 +8,9 @@ namespace UltraEditor.Classes.IO.SaveObjects
     public class CubeObject : SavableObject
     {
         public MaterialChoser.materialTypes matType;
+        public float matTiling = 0.25f;
         MaterialChoser.materialTypes _matType;
+        float _matTiling;
 
         public static CubeObject Create(GameObject target, MaterialChoser.materialTypes materialType)
         {
@@ -20,10 +22,12 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void Tick()
         {
-            if (matType != _matType)
+            if (matType != _matType || matTiling != _matTiling)
             {
                 _matType = matType;
-                GetComponent<MaterialChoser>()?.ProcessMaterial(matType);
+                _matTiling = matTiling;
+                GetComponent<MaterialChoser>()?.ProcessMaterial(matType, matTiling);
+                EditorManager.Instance.SetAlert("Material edits related to tiling only update when reloading the editor.", "Info!");
             }
         }
     }

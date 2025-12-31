@@ -39,6 +39,7 @@ namespace UltraEditor.Classes
             WhiteFlowers,
             WarningStripes,
             WhiteWood,
+            UnbreakableGlass,
         }
 
         public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -48,7 +49,7 @@ namespace UltraEditor.Classes
             return obj;
         }
 
-        public void ProcessMaterial(materialTypes type)
+        public void ProcessMaterial(materialTypes type, float tiling = 0.25f)
         {
             Renderer renderer = GetComponent<Renderer>();
 
@@ -107,10 +108,12 @@ namespace UltraEditor.Classes
                 newMat = new Material(DefaultReferenceManager.Instance.masterShader);
                 GetComponent<Collider>().enabled = false;
             }
+            else if (type == materialTypes.UnbreakableGlass)
+                newMat = GetPathMaterial("GlassUnbreakable");
 
             renderer.material = newMat;
 
-            tile = renderer.material.GetTextureScale("_MainTex") * 0.25f;
+            tile = renderer.material.GetTextureScale("_MainTex") * tiling;
             offset = renderer.material.GetTextureOffset("_MainTex");
             mesh = null;
         }
