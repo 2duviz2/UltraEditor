@@ -1,10 +1,5 @@
 ﻿namespace UltraEditor.Classes;
 
-/* 
-await System.Threading.Tasks.Task.Delay(1000);
-UltraEditor.Classes.EmptySceneLoader.Instance.LoadLevel();
-*/
-
 using HarmonyLib;
 using System;
 using System.Collections;
@@ -14,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using TMPro;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 
 /// <summary> Handles loading and accessing the empty scene. </summary>
@@ -58,6 +54,18 @@ public class EmptySceneLoader : MonoBehaviour
         }
 
         DontDestroyOnLoad((Instance = this).gameObject);
+
+        Addressables.LoadAssetAsync<GameObject>("Assets/Prefabs/Attacks and Projectiles/Projectile Decorative.prefab").WaitForCompletion();
+
+        Addressables.LoadAssetAsync<GameObject>("FirstRoom").WaitForCompletion();
+        Addressables.LoadAssetAsync<GameObject>("FirstRoom Secret").WaitForCompletion();
+        Addressables.LoadAssetAsync<GameObject>("FirstRoom Prime").WaitForCompletion();
+        Addressables.LoadAssetAsync<GameObject>("Assets/Prefabs/Levels/Special Rooms/FirstRoom Encore.prefab").WaitForCompletion();
+
+        Addressables.LoadAssetAsync<Font>("Assets/Fonts/VCR_OSD_MONO_1.001.ttf").WaitForCompletion();
+        Addressables.LoadAssetAsync<Sprite>("Assets/Textures/UI/meter.png").WaitForCompletion();
+        Addressables.LoadAssetAsync<Sprite>("Assets/Textures/UI/arrow.png").WaitForCompletion();
+        Addressables.LoadAssetAsync<Material>("Assets/Materials/Environment/Metal/Metal Decoration 20.mat").WaitForCompletion();
 
         Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");
 
