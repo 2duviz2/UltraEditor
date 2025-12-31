@@ -66,34 +66,6 @@ Floor
 1
 
 0
-
-? END ?
-? PrefabObject ?
-Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
-Zombie(Clone)
-12
-Enemy
-(0.00, 90.00, 20.00)
-(0.00, 0.00, 0.00)
-(0.23, 0.23, 0.23)
-0
-
-Assets/Prefabs/Enemies/Zombie.prefab
-
-? END ?
-? ArenaObject ?
-Spawn Trigger(0.00, 100.00, 0.00)(0.00, 0.00, 0.00)(20.00, 20.00, 5.00)
-Spawn Trigger
-16
-Untagged
-(0.00, 100.00, 0.00)
-(0.00, 0.00, 0.00)
-(20.00, 20.00, 5.00)
-1
-
-True
-Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
-? END ?
 ";
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
