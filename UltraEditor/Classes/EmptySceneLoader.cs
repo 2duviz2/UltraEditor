@@ -56,9 +56,6 @@ public class EmptySceneLoader : MonoBehaviour
         DontDestroyOnLoad((Instance = this).gameObject);
 
         Addressables.LoadAssetAsync<GameObject>("FirstRoom").WaitForCompletion();
-        /*Addressables.LoadAssetAsync<GameObject>("FirstRoom Secret").WaitForCompletion(); not planned to be added yet
-        Addressables.LoadAssetAsync<GameObject>("FirstRoom Prime").WaitForCompletion();
-        Addressables.LoadAssetAsync<GameObject>("Assets/Prefabs/Levels/Special Rooms/FirstRoom Encore.prefab").WaitForCompletion();*/
 
         Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");
 
