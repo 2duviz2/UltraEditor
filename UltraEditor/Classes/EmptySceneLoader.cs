@@ -148,7 +148,7 @@ public class EmptySceneLoader : MonoBehaviour
             }
             List<GameObject> secrets = [];
             int ind = 0;
-            foreach (var secret in FindObjectsOfType<Bonus>())
+            foreach (var secret in FindObjectsOfType<Bonus>(true))
             {
                 secret.secretNumber = ind;
                 secrets.Add(secret.gameObject);
