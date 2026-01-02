@@ -51,11 +51,13 @@ namespace UltraEditor.Classes
 
         public void ProcessMaterial(materialTypes type, float tiling = 0.25f)
         {
-            Renderer renderer = GetComponent<Renderer>();
+            var renderer = GetComponent<Renderer>();
+            if (!renderer) return;
+
+            var collider = GetComponent<Collider>();
+            if (collider) collider.enabled = true;
 
             Material newMat = null;
-
-            GetComponent<Collider>().enabled = true;
 
             if (type == materialTypes.Default)
                 newMat = GetSandboxMaterial("Procedural Cube");
@@ -111,6 +113,7 @@ namespace UltraEditor.Classes
             else if (type == materialTypes.UnbreakableGlass)
                 newMat = GetPathMaterial("GlassUnbreakable");
 
+            if (newMat == null) return;
             renderer.material = newMat;
 
             tile = renderer.material.GetTextureScale("_MainTex") * tiling;

@@ -158,14 +158,17 @@ public class EmptySceneLoader : MonoBehaviour
                 secrets.Add(secret.gameObject);
                 ind++;
             }
+            LevelInfoObject lio = FindObjectOfType<LevelInfoObject>();
             StatsManager.Instance.secretObjects = secrets.ToArray();
             EditorManager.Instance.CreateUI();
             StockMapInfo.Instance.levelName = levelName.ToUpper();
             StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", forceLevelLayer);
             StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
-            LevelInfoObject lio = FindObjectOfType<LevelInfoObject>();
             if (lio != null)
+            {
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = lio.tipOfTheDay };
+                StockMapInfo.Instance.layerName = lio.levelLayer;
+            }
             else
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = "Welcome!" };
             ShopZone[] sz = FindObjectsOfType<ShopZone>(true);

@@ -588,6 +588,7 @@ Floor
             NewInspectorVariable("canBeReactivated", typeof(NewTeleportObject));
 
             NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
+            NewInspectorVariable("levelLayer", typeof(LevelInfoObject));
             NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
@@ -1018,7 +1019,7 @@ Floor
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null && cameraSelector.selectedObject.GetComponent<LevelInfoObject>() == null))
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null && cameraSelector.selectedObject.GetComponent<LevelInfoObject>() == null && cameraSelector.selectedObject.GetComponent<Light>() == null))
                 {
                     CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
@@ -1165,8 +1166,30 @@ Floor
                     }
                     else
                     {
-                        if (advancedInspector) // lmao
-                            CreateInspectorItem(compName, inspectorItemType.None);
+                        if (GetAllMonoBehaviourTypes(true).Contains(component.GetType()))
+                            if (component is PrefabObject || component is CubeObject || (component is Light && cameraSelector.selectedObject.GetComponent<PrefabObject>() != null))
+                                CreateInspectorItem(compName, inspectorItemType.None);
+                            else
+                                CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
+                                {
+                                    Destroy(component);
+                                    if (cameraSelector.selectedObject.GetComponent<CubeObject>() != null)
+                                    {
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = false;
+                                        if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
+                                            cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
+                                    }
+                                    else if (cameraSelector.selectedObject.GetComponent<CubeObject>() == null)
+                                    {
+                                        CubeObject.Create(cameraSelector.selectedObject, MaterialChoser.materialTypes.Default);
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() == null) cameraSelector.selectedObject.AddComponent<BoxCollider>();
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = false;
+                                        if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
+                                            cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
+                                    }
+                                });
                     }
 
                         var type = component.GetType();
@@ -1388,6 +1411,12 @@ Floor
                         }
                         else if (lastFieldText == "remove")
                         {
+                            if (choosing_field == field && choosing_comp == comp)
+                            {
+                                SetMessageText("");
+                                choosing = false;
+                            }
+
                             if (logShit)
                                 Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
 
@@ -2046,6 +2075,7 @@ Floor
 
             foreach (var obj in GameObject.FindObjectsOfType<ArenaObject>(true))
             {
+                if (obj.GetComponent<ActivateArena>() == null) continue;
                 obj.enemyIds.Clear();
                 foreach (var e in obj.GetComponent<ActivateArena>().enemies)
                 {
@@ -2066,6 +2096,7 @@ Floor
 
             foreach (var obj in GameObject.FindObjectsOfType<NextArenaObject>(true))
             {
+                if (obj.GetComponent<ActivateNextWave>() == null) continue;
                 obj.enemyIds.Clear();
                 obj.toActivateIds.Clear();
                 if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
@@ -2168,6 +2199,8 @@ Floor
                 text += obj.changeLighting + "\n";
                 text += "? PASS ?\n";
                 text += obj.tipOfTheDay + "\n";
+                text += "? PASS ?\n";
+                text += obj.levelLayer + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2646,6 +2679,8 @@ Floor
                             workingObject.GetComponent<LevelInfoObject>().changeLighting = line.ToLower() == "true";
                         else if (phase == 3)
                             workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
+                        else if (phase == 4)
+                            workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
                 }
 
                 lineIndex++;
