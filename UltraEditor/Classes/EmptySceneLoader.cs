@@ -91,6 +91,9 @@ public class EmptySceneLoader : MonoBehaviour
             while (!_loaded) yield return null;
         }
 
+        if (SceneHelper.CurrentScene != "UltraEditor") Property(typeof(SceneHelper), "LastScene", SceneHelper.CurrentScene);
+        Property(typeof(SceneHelper), "CurrentScene", EditorManager.EditorSceneName);
+
         var sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
@@ -98,9 +101,6 @@ public class EmptySceneLoader : MonoBehaviour
         { Plugin.LogInfo("waiting for sceneload to complete"); yield return null; }
 
         Plugin.LogInfo("Scene loaded!");
-
-        if (SceneHelper.CurrentScene != "UltraEditor") Property(typeof(SceneHelper), "LastScene", SceneHelper.CurrentScene);
-        Property(typeof(SceneHelper), "CurrentScene", EditorManager.EditorSceneName);
 
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
 
