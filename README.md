@@ -1,3 +1,4 @@
+Check the [thunderstore](https://new.thunderstore.io/c/ultrakill/p/duviz/UltraEditor/)
 # UltraEditor (W.I.P.)
 UltraEditor is a mod for ULTRAKILL that adds an in-game level editor, letting users modify existing levels and create entirely new ones (or at least that's the idea)
 
