@@ -14,12 +14,22 @@
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Classes\IO\IO.cs" />
+	  <Compile Remove="Classes\IO\Loading.cs" />
+	  <Compile Remove="Classes\IO\SaveLevelData.cs" />
+	  <Compile Remove="Classes\IO\Saving.cs" />
+	</ItemGroup>
 	
 	<ItemGroup>
 		<!-- Embed the assetbundles into the dll. -->
-		<EmbeddedResource Include="Assets\editorscenes.bundle" />
   	<EmbeddedResource Include="Assets\emptyscene.bundle" />
    <EmbeddedResource Include="Assets\editorcanvas.bundle" />
+   <None Include="Classes\IO\IO.cs" />
+   <None Include="Classes\IO\Loading.cs" />
+   <None Include="Classes\IO\SaveLevelData.cs" />
+   <None Include="Classes\IO\Saving.cs" />
 
 		<!-- Packages -->
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />

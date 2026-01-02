@@ -106,6 +106,11 @@ Floor
 
         public void Update()
         {
+            if (editorCanvas.activeSelf)
+            {
+                UpdateHierarchy();
+            }
+
             if (!mouseLocked)
             {
                 Cursor.lockState = CursorLockMode.None;
@@ -139,11 +144,6 @@ Floor
             }
 
             cameraSelector.enabled = (!blocker.activeSelf || cameraSelector.dragging) && editorCamera.gameObject.activeSelf;
-
-            if (editorCanvas.activeSelf)
-            {
-                UpdateHierarchy();
-            }
 
             if (Input.GetMouseButtonUp(0))
             {
@@ -662,7 +662,7 @@ Floor
                     toParent = cameraSelector.selectedObject.transform.parent.gameObject;
                 else
                     cameraSelector.UnselectObject();
-                DestroyImmediate(toDestroy);
+                Destroy(toDestroy);
                 if (toParent != null)
                     cameraSelector.SelectObject(toParent);
             }
@@ -853,9 +853,9 @@ Floor
             UpdateInspector();
         }
 
-        public static List<Type> GetAllMonoBehaviourTypes()
+        public static List<Type> GetAllMonoBehaviourTypes(bool forceNormalOnes = false)
         {
-            if (Instance != null && !Instance.advancedInspector)
+            if ((Instance != null && !Instance.advancedInspector) || forceNormalOnes)
             {
                 List<Type> list = new List<Type>();
 
