@@ -66,34 +66,6 @@ Floor
 1
 
 0
-
-? END ?
-? PrefabObject ?
-Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
-Zombie(Clone)
-12
-Enemy
-(0.00, 90.00, 20.00)
-(0.00, 0.00, 0.00)
-(0.23, 0.23, 0.23)
-0
-
-Assets/Prefabs/Enemies/Zombie.prefab
-
-? END ?
-? ArenaObject ?
-Spawn Trigger(0.00, 100.00, 0.00)(0.00, 0.00, 0.00)(20.00, 20.00, 5.00)
-Spawn Trigger
-16
-Untagged
-(0.00, 100.00, 0.00)
-(0.00, 0.00, 0.00)
-(20.00, 20.00, 5.00)
-1
-
-True
-Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
-? END ?
 ";
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
@@ -134,6 +106,11 @@ Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
 
         public void Update()
         {
+            if (editorCanvas.activeSelf)
+            {
+                UpdateHierarchy();
+            }
+
             if (!mouseLocked)
             {
                 Cursor.lockState = CursorLockMode.None;
@@ -167,11 +144,6 @@ Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
             }
 
             cameraSelector.enabled = (!blocker.activeSelf || cameraSelector.dragging) && editorCamera.gameObject.activeSelf;
-
-            if (editorCanvas.activeSelf)
-            {
-                UpdateHierarchy();
-            }
 
             if (Input.GetMouseButtonUp(0))
             {
@@ -690,7 +662,7 @@ Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
                     toParent = cameraSelector.selectedObject.transform.parent.gameObject;
                 else
                     cameraSelector.UnselectObject();
-                DestroyImmediate(toDestroy);
+                Destroy(toDestroy);
                 if (toParent != null)
                     cameraSelector.SelectObject(toParent);
             }
@@ -881,9 +853,9 @@ Zombie(Clone)(0.00, 90.00, 20.00)(0.00, 0.00, 0.00)(0.23, 0.23, 0.23)
             UpdateInspector();
         }
 
-        public static List<Type> GetAllMonoBehaviourTypes()
+        public static List<Type> GetAllMonoBehaviourTypes(bool forceNormalOnes = false)
         {
-            if (Instance != null && !Instance.advancedInspector)
+            if ((Instance != null && !Instance.advancedInspector) || forceNormalOnes)
             {
                 List<Type> list = new List<Type>();
 
