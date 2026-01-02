@@ -83,6 +83,7 @@ namespace UltraEditor.Classes.Canvas
                         lv.GetComponent<LevelDownloader>().color = levelData.color;
                         lv.GetComponent<LevelDownloader>().levelLayer = levelData.layer;
                         lv.GetComponent<LevelDownloader>().canOpenEditor = levelData.canOpenEditor == 1;
+                        lv.GetComponent<LevelDownloader>().levelImageUrl = $"{getImageUrl}{levelData.id}";
                         lv.GetComponent<LevelDownloader>().SetTexts();
                     }
                     _loaded = true;

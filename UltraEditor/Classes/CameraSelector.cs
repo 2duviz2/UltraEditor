@@ -38,6 +38,94 @@ namespace UltraEditor.Classes
             }
         }
 
+        struct MeshEntry
+        {
+            public Mesh mesh;
+            public Matrix4x4 localToRoot;
+        }
+
+        List<MeshEntry> meshes = new List<MeshEntry>();
+        public Material ghostMaterial;
+        bool objectActive = false;
+
+        void CacheMeshes()
+        {
+            meshes.Clear();
+            if (selectedObject == null) return;
+
+            CacheRecursive(selectedObject.transform, selectedObject.transform);
+        }
+
+        void CacheRecursive(Transform t, Transform root)
+        {
+            var mf = t.GetComponent<MeshFilter>();
+            var mr = t.GetComponent<MeshRenderer>();
+
+            if (mf && mr && mf.sharedMesh)
+            {
+                if (!t.gameObject.activeInHierarchy && t.name != "Sphere")
+                {
+                    float scaleFactor = 1f;
+
+                    Bounds b = mf.sharedMesh.bounds;
+                    Vector3 worldScale = t.lossyScale;
+                    Vector3 worldSize = Vector3.Scale(b.size, worldScale);
+
+                    if (Mathf.Max(worldSize.x, worldSize.y, worldSize.z) > 100f && t.GetComponent<SavableObject> == null)
+                        scaleFactor = 0.01f;
+
+                    meshes.Add(new MeshEntry
+                    {
+                        mesh = mf.sharedMesh,
+                        localToRoot = root.worldToLocalMatrix * t.localToWorldMatrix * Matrix4x4.Scale(Vector3.one * scaleFactor)
+                    });
+                }
+            }
+
+            var skinned = t.GetComponent<SkinnedMeshRenderer>();
+            if (skinned && skinned.sharedMesh)
+            {
+                if (!t.gameObject.activeInHierarchy && t.name != "Sphere")
+                {
+                    var baked = new Mesh();
+                    skinned.BakeMesh(baked);
+
+                    float scaleFactor = 1f;
+                    Bounds b = baked.bounds;
+                    Vector3 worldScale = t.lossyScale;
+                    Vector3 worldSize = Vector3.Scale(b.size, worldScale);
+
+                    if (Mathf.Max(worldSize.x, worldSize.y, worldSize.z) > 100f && t.GetComponent<SavableObject> == null)
+                        scaleFactor = 0.01f;
+
+                    meshes.Add(new MeshEntry
+                    {
+                        mesh = baked,
+                        localToRoot = root.worldToLocalMatrix * t.localToWorldMatrix * Matrix4x4.Scale(Vector3.one * scaleFactor)
+                    });
+                }
+            }
+
+            for (int i = 0; i < t.childCount; i++)
+                CacheRecursive(t.GetChild(i), root);
+        }
+
+        static Bounds TransformBounds(Bounds b, Matrix4x4 m)
+        {
+            Vector3 center = m.MultiplyPoint3x4(b.center);
+
+            Vector3 extents = b.extents;
+            Vector3 axisX = m.MultiplyVector(new Vector3(extents.x, 0, 0));
+            Vector3 axisY = m.MultiplyVector(new Vector3(0, extents.y, 0));
+            Vector3 axisZ = m.MultiplyVector(new Vector3(0, 0, extents.z));
+
+            extents.x = Mathf.Abs(axisX.x) + Mathf.Abs(axisY.x) + Mathf.Abs(axisZ.x);
+            extents.y = Mathf.Abs(axisX.y) + Mathf.Abs(axisY.y) + Mathf.Abs(axisZ.y);
+            extents.z = Mathf.Abs(axisX.z) + Mathf.Abs(axisY.z) + Mathf.Abs(axisZ.z);
+
+            return new Bounds(center, extents * 2f);
+        }
+
         GameObject hoveredObject;
         Dictionary<GameObject, Material> originalMaterials = new Dictionary<GameObject, Material>();
 
@@ -54,7 +142,23 @@ namespace UltraEditor.Classes
             if (!camera)
                 camera = GetComponent<Camera>();
 
+            ghostMaterial = CreateGhostMaterial(new Color(0.25f, 0.25f, 1f));
+
             ModeButton.UpdateButtons();
+        }
+
+        Material CreateGhostMaterial(Color color)
+        {
+            var shader = BundlesManager.editorBundle.LoadAsset<Shader>("GhostDottedOutline");
+            var mat = new Material(shader);
+
+            mat.SetColor("_Color", color);
+            mat.SetFloat("_Thickness", 0.02f);
+            mat.SetFloat("_DotScale", 30f);
+            mat.SetFloat("_DotCutoff", 0f);
+            mat.SetFloat("_Offset", 0f);
+
+            return mat;
         }
 
         public void Update()
@@ -78,6 +182,50 @@ namespace UltraEditor.Classes
                 if (selectionMode != SelectionMode.Cursor)
                     DeleteArrows();
                 selectionMode = SelectionMode.Cursor;
+            }
+
+            if (selectedObject != null)
+            {
+                if (objectActive != selectedObject.activeInHierarchy)
+                {
+                    objectActive = selectedObject.activeInHierarchy;
+                    CacheMeshes();
+                }
+            }
+        }
+
+        float timeToUpdate = 0.1f;
+        public void LateUpdate()
+        {
+            if (selectedObject == null) return;
+
+            Matrix4x4 rootMatrix = selectedObject.transform.localToWorldMatrix;
+
+            ghostMaterial.SetFloat("_Offset", ghostMaterial.GetFloat("_Offset") + Time.unscaledDeltaTime);
+            timeToUpdate -= Time.unscaledDeltaTime;
+            if (timeToUpdate <= 0)
+            {
+                timeToUpdate = 0.1f;
+                CacheMeshes();
+            }
+
+            foreach (var e in meshes)
+            {
+                if (e.mesh == null) continue;
+
+                Matrix4x4 worldMatrix = rootMatrix * e.localToRoot;
+
+                Bounds worldBounds = TransformBounds(e.mesh.bounds, worldMatrix);
+
+                if (worldBounds.Contains(camera.transform.position))
+                    continue;
+
+                Graphics.DrawMesh(
+                    e.mesh,
+                    worldMatrix,
+                    ghostMaterial,
+                    0
+                );
             }
         }
 
@@ -104,7 +252,7 @@ namespace UltraEditor.Classes
                     {
                         hoveredObject = hitObj;
                         var renderer = hitObj.GetComponent<Renderer>();
-                        if (renderer)
+                        if (renderer && (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.Instance.advancedInspector))
                         {
                             if (!originalMaterials.ContainsKey(hitObj))
                                 originalMaterials[hitObj] = renderer.material;
@@ -117,7 +265,8 @@ namespace UltraEditor.Classes
                         if (Input.GetKey(Plugin.altKey))
                             EditorManager.Instance.SelectObject(hitObj);
                         else
-                            SelectObject(hitObj);
+                            if (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.Instance.advancedInspector)
+                                SelectObject(hitObj);
                 }
             }
         }
@@ -293,6 +442,7 @@ namespace UltraEditor.Classes
 
         public void SelectObject(GameObject obj)
         {
+
             if (selectedObject != null)
                 RestoreMaterial(selectedObject);
 
@@ -304,6 +454,8 @@ namespace UltraEditor.Classes
             if (moveArrows == null)
                 CreateMoveArrows();
             UpdateMoveArrows();
+
+            CacheMeshes();
         }
 
         void CreateMoveArrows()

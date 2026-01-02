@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using TMPro;
+using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
@@ -35,6 +36,7 @@ public class EmptySceneLoader : MonoBehaviour
     public static string pStyle = "";
     public static bool forceLevelCanOpenEditor = false;
     public static string forceLevelLayer = "CUSTOM LEVEL";
+    public static string forceLevelImage = "null";
 
     /// <summary> Forces the editor to set a scene name, only happens if forceSave is "?". </summary>
     public static string forceLevelName = "";
@@ -145,6 +147,8 @@ public class EmptySceneLoader : MonoBehaviour
                     StatsManager.Instance.killRanks[3 - i] = pk - (i * 5);
                 for (int i = 0; i < 4; i++)
                     StatsManager.Instance.styleRanks[3 - i] = ps - (i * 1000);
+
+                StockMapInfo.Instance.assets.LargeImage = forceLevelImage;
             }
             List<GameObject> secrets = [];
             int ind = 0;
@@ -159,7 +163,21 @@ public class EmptySceneLoader : MonoBehaviour
             StockMapInfo.Instance.levelName = levelName.ToUpper();
             StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", forceLevelLayer);
             StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
+            LevelInfoObject lio = FindObjectOfType<LevelInfoObject>();
+            if (lio != null)
+                StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = lio.tipOfTheDay };
+            else
+                StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = "Welcome!" };
+            ShopZone[] sz = FindObjectsOfType<ShopZone>(true);
+            foreach (var s in sz)
+            {
+                if (s.tipOfTheDay != null)
+                    s.tipOfTheDay.text = StockMapInfo.Instance.tipOfTheDay.tip;
+            }
+            StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
             LevelNamePopup.Instance.Invoke("Start", 0);
+            DiscordController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
+            SteamController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
         }
 
         ChallengeManager.Instance.challengePanel.transform.parent.Find("ChallengeText").GetComponent<TMP_Text>().text = "(NO CHALLENGE)";

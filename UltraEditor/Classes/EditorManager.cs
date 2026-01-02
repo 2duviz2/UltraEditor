@@ -37,7 +37,7 @@ namespace UltraEditor.Classes
         public GameObject blocker;
 
         bool mouseLocked = true;
-        bool advancedInspector = false;
+        public bool advancedInspector = false;
         public static bool logShit = false;
         public static bool canOpenEditor = false;
 
@@ -154,17 +154,20 @@ Floor
 
                 if (holdingObject != null && holdingTarget != null && holdingObject != holdingTarget)
                 {
-                    if (logShit)
-                        Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
-                    holdingObject.transform.SetParent(holdingTarget.transform);
-                    cameraSelector.selectedObject = holdingTarget;
-                    lastSelected = null;
-                    UpdateHierarchy();
-                    holdingObject = null;
-                    holdingTarget = null;
+                    if (IsObjectEditable(holdingTarget) || advancedInspector)
+                    {
+                        if (logShit)
+                            Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
+                        holdingObject.transform.SetParent(holdingTarget.transform);
+                        cameraSelector.selectedObject = holdingTarget;
+                        lastSelected = null;
+                        UpdateHierarchy();
+                        holdingObject = null;
+                        holdingTarget = null;
+                    }
                 }
 
-                else if (holdingObject == holdingTarget && holdingObject != null)
+                else if (holdingObject != holdingTarget && holdingObject != null)
                 {
                     if (logShit)
                         Plugin.LogInfo($"Released object: {holdingObject.name} from target");
@@ -362,6 +365,11 @@ Floor
                 SetAlert("Scene deleted!", "Info!");
             });
 
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                StartCoroutine(GoToBackupScene());
+            });
+
             // Edit
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
@@ -407,6 +415,11 @@ Floor
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createFloor(new Vector3(25, 10, 1));
+            });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                createCube(pos : Vector3.zero, layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
             });
 
             // View
@@ -574,6 +587,8 @@ Floor
             NewInspectorVariable("teleportPosition", typeof(NewTeleportObject));
             NewInspectorVariable("canBeReactivated", typeof(NewTeleportObject));
 
+            NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
+            NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
         }
@@ -608,7 +623,9 @@ Floor
             {
                 if (dir.StartsWith("Assets/Prefabs/Enemies/") && !isLoading)
                 {
-                    SetAlert("If you plan on making enemy waves, avoid spawning them active! Hold alt when spawning the enemy to disable it in order to avoid automatic gorezones in editor.", title: "Warning!");
+                    obj.SetActive(false);
+                    SetAlert("Enemies will always spawn disabled in the editor, they must be enabled with ActivateArena objects.", title: "Warning!");
+                    //SetAlert("If you plan on making enemy arenas, avoid spawning them active! Hold alt when spawning the enemy to disable it in order to avoid automatic gorezones in editor.", title: "Warning!");
                 }
             }
 
@@ -643,6 +660,7 @@ Floor
                 if (cameraSelector.selectedObject.transform.parent != null)
                     newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
 
+                newObj.transform.localScale = cameraSelector.selectedObject.transform.localScale;
                 newObj.transform.position = cameraSelector.selectedObject.transform.position;
                 newObj.transform.rotation = cameraSelector.selectedObject.transform.rotation;
 
@@ -677,12 +695,16 @@ Floor
             }
         }
 
-        void createCube(bool createRigidbody = false, bool useGravity = true)
+        void createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = objName;
             cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
+            if (pos != null)
+                cube.transform.position = (Vector3)pos;
+            cube.layer = LayerMask.NameToLayer(layer);
             cube.transform.localScale = Vector3.one;
-            CubeObject.Create(cube, MaterialChoser.materialTypes.MasterShader);
+            CubeObject.Create(cube, matType);
 
             if (createRigidbody)
                 cube.AddComponent<Rigidbody>().useGravity = useGravity;
@@ -960,7 +982,7 @@ Floor
         public bool IsObjectEditable(GameObject obj = null)
         {
             if (obj != null)
-                return obj.GetComponent<SavableObject>() != null || advancedInspector;
+                return (obj.GetComponent<SavableObject>() != null || advancedInspector);
             if (advancedInspector) return true;
             if (cameraSelector.selectedObject == null) return false;
             return cameraSelector.selectedObject.GetComponent<SavableObject>() != null;
@@ -1851,7 +1873,6 @@ Floor
             eventTrigger.triggers[0].callback.AddListener((data) =>
             {
                 if (obj == null) return;
-                if (!IsObjectEditable(obj)) return;
                 holdingObject = obj;
                 if (logShit)
                     Plugin.LogInfo($"Holding object: {holdingObject.name}");
@@ -1859,6 +1880,7 @@ Floor
             
             eventTrigger.triggers[2].callback.AddListener((data) =>
             {
+                if (obj == null) return;
                 if (obj != null && logShit)
                     Plugin.LogInfo($"Entered object: {obj.name}");
                 if (holdingObject != null && holdingObject != obj)
@@ -1872,6 +1894,7 @@ Floor
             
             eventTrigger.triggers[3].callback.AddListener((data) =>
             {
+                if (obj == null) return;
                 holdingTarget = null;
             });
         }
@@ -2141,6 +2164,10 @@ Floor
                 text += obj.ambientColor + "\n";
                 text += "? PASS ?\n";
                 text += obj.intensityMultiplier + "\n";
+                text += "? PASS ?\n";
+                text += obj.changeLighting + "\n";
+                text += "? PASS ?\n";
+                text += obj.tipOfTheDay + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2614,6 +2641,10 @@ Floor
                             workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseVector3(line);
                         else if (phase == 1)
                             workingObject.GetComponent<LevelInfoObject>().intensityMultiplier = float.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<LevelInfoObject>().changeLighting = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
                 }
 
                 lineIndex++;
@@ -2674,7 +2705,9 @@ Floor
             GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
             alert.GetComponent<Animator>().speed = 0.4f;
             if (title == "Info!")
-            alert.GetComponent<Animator>().speed = 1.2f;
+                alert.GetComponent<Animator>().speed = 0.8f;
+            if (title == "Warning!")
+                alert.GetComponent<Animator>().speed = 0.8f;
             alert.SetActive(false);
             alert.SetActive(true);
 
