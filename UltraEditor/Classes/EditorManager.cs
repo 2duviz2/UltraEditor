@@ -2252,6 +2252,7 @@ Floor
             foreach (var obj in GameObject.FindObjectsOfType<Light>(true))
             {
                 if (obj.GetComponent<SavableObject>() == null) continue;
+                if (obj.GetComponent<PrefabObject>() != null) continue;
                 text += "? Light ?";
                 text += "\n";
                 text += addShit(obj.gameObject.AddComponent<SavableObject>());
