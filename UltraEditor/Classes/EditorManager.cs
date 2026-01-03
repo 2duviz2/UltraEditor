@@ -565,6 +565,7 @@ Floor
 
             NewInspectorVariable("matType", typeof(CubeObject));
             NewInspectorVariable("matTiling", typeof(CubeObject));
+            NewInspectorVariable("isTrigger", typeof(CubeObject));
 
             // Enemies
             /*NewInspectorVariable("health", typeof(Zombie));
@@ -595,7 +596,8 @@ Floor
 
             //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
             NewInspectorVariable("rooms", typeof(CheckPoint));
-            NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
+            NewInspectorVariable("checkpointRooms", typeof(CheckpointObject));
+            //NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
 
             NewInspectorVariable("notInstakill", typeof(DeathZone));
             NewInspectorVariable("damage", typeof(DeathZone));
@@ -613,6 +615,7 @@ Floor
 
             NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
             NewInspectorVariable("levelLayer", typeof(LevelInfoObject));
+            NewInspectorVariable("playMusicOnDoorOpen", typeof(LevelInfoObject));
             NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
@@ -631,7 +634,8 @@ Floor
         {
             string realPath = dir;
             if (dir == "DuvizPlush") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
-            GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
+            GameObject obj = null;
+            obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
 
             if (createPrefabObject)
@@ -657,7 +661,7 @@ Floor
             }
 
             if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab" && !isLoading)
-                SetAlert("You need to assign at least one item in rooms for the checkpoint to work. Checkpoints cannot be modified when loaded from a save.", "Warning!");
+                SetAlert("You need to assign at least one item in rooms for the checkpoint to work.", "Warning!");
             if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
                 SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
@@ -670,7 +674,7 @@ Floor
                 if (realPath == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
                     blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
                 else if (realPath == "DuvizPlush")
-                    blahaj = BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlush");
+                    blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlush"));
                 blahaj.transform.SetParent(obj.transform);
                 blahaj.transform.localPosition = Vector3.zero;
                 blahaj.transform.localEulerAngles = Vector3.zero;
@@ -1143,6 +1147,8 @@ Floor
                                         {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
                                             SetAlert("Collider has been set to be a trigger.", "Info!", new Color(1, 0.5f, 0.25f));
+                                            if (c is SavableObject)
+                                                Destroy(cameraSelector.selectedObject.GetComponent<CubeObject>());
                                         }
                                     }
 
@@ -2104,6 +2110,8 @@ Floor
                 text += (int)obj.matType + "\n";
                 text += "? PASS ?\n";
                 text += obj.matTiling + "\n";
+                text += "? PASS ?\n";
+                text += obj._isTrigger + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2128,7 +2136,8 @@ Floor
                 obj.enemyIds.Clear();
                 foreach (var e in obj.GetComponent<ActivateArena>().enemies)
                 {
-                    obj.addId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addId(GetIdOfObj(e));
                 }
 
                 text += "? ArenaObject ?";
@@ -2151,12 +2160,14 @@ Floor
                 if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
                     {
-                        obj.addEnemyId(GetIdOfObj(e));
+                        if (e != null)
+                            obj.addEnemyId(GetIdOfObj(e));
                     }
                 if (obj.GetComponent<ActivateNextWave>().toActivate != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
                     {
-                        obj.addToActivateId(GetIdOfObj(e));
+                        if (e != null)
+                            obj.addToActivateId(GetIdOfObj(e));
                     }
 
                 text += "? NextArenaObject ?";
@@ -2183,11 +2194,13 @@ Floor
                 obj.toDeactivateIds.Clear();
                 foreach (var e in obj.toActivate)
                 {
-                    obj.addToActivateId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addToActivateId(GetIdOfObj(e));
                 }
                 foreach (var e in obj.toDeactivate)
                 {
-                    obj.addtoDeactivateId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addtoDeactivateId(GetIdOfObj(e));
                 }
 
                 text += "? ActivateObject ?";
@@ -2250,6 +2263,8 @@ Floor
                 text += obj.tipOfTheDay + "\n";
                 text += "? PASS ?\n";
                 text += obj.levelLayer + "\n";
+                text += "? PASS ?\n";
+                text += obj.playMusicOnDoorOpen + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2257,19 +2272,27 @@ Floor
             foreach (var obj in GameObject.FindObjectsOfType<CheckPoint>(true))
             {
                 while (obj.GetComponent<CheckpointObject>() != null)
+                {
+                    /*obj.rooms = obj.GetComponent<CheckpointObject>().checkpointRooms;
+                    obj.roomsToInherit = obj.GetComponent<CheckpointObject>().checkpointRoomsToInherit;*/
                     Destroy(obj.GetComponent<CheckpointObject>());
+                }
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
 
                 foreach (var e in obj.rooms)
                 {
-                    if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
-                        co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
-                    else
-                        co.addRoomId(GetIdOfObj(e));
+                    if (e != null)
+                    {
+                        if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
+                            co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
+                        else
+                            co.addRoomId(GetIdOfObj(e));
+                    }
                 }
                 foreach (var e in obj.roomsToInherit)
                 {
-                    co.addRoomToInheritId(GetIdOfObj(e));
+                    if (e != null)
+                        co.addRoomToInheritId(GetIdOfObj(e));
                 }
 
                 text += "? CheckpointObject ?";
@@ -2296,6 +2319,20 @@ Floor
             foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
             {
                 if (obj.transform.childCount != 0) continue;
+
+                obj.rooms = [];
+                foreach (var e in obj.checkpointRooms)
+                {
+                    if (e != null)
+                        obj.addRoomId(GetIdOfObj(e));
+                }
+
+                obj.roomsToInherit = [];
+                foreach (var e in obj.checkpointRoomsToInherit)
+                {
+                    if (e != null)
+                        obj.addRoomToInheritId(GetIdOfObj(e));
+                }
 
                 text += "? CheckpointObject ?";
                 text += "\n";
@@ -2556,7 +2593,7 @@ Floor
                 else if (isInScript)
                 {
                     if (logShit)
-                        Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
+                        Plugin.LogInfo($"Line {lineIndex} \"{line}\" type \"{scriptType}\" phase {phase}");
 
                     if (line == "? END ?")
                     {
@@ -2602,8 +2639,12 @@ Floor
                     if (lineIndex == 10 && scriptType == "CubeObject")
                         CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
                     if (lineIndex >= 10 && scriptType == "CubeObject")
+                    {
                         if (phase == 1)
                             workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
+                    }
 
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {
@@ -2730,6 +2771,8 @@ Floor
                             workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
                         else if (phase == 4)
                             workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
+                        else if (phase == 5)
+                            workingObject.GetComponent<LevelInfoObject>().playMusicOnDoorOpen = line.ToLower() == "true";
                 }
 
                 lineIndex++;

@@ -11,6 +11,19 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public float matTiling = 0.25f;
         MaterialChoser.materialTypes _matType;
         float _matTiling = 0.25f;
+        public bool _isTrigger = false;
+        public bool isTrigger
+        { get
+            {
+                return _isTrigger;
+            }
+            set
+            {
+                _isTrigger = value;
+                if (GetComponent<Collider>() != null)
+                    GetComponent<Collider>().isTrigger = _isTrigger;
+            }
+        }
 
         public static CubeObject Create(GameObject target, MaterialChoser.materialTypes materialType)
         {
@@ -23,6 +36,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void Tick()
         {
+            if (GetComponent<Collider>() != null)
+                _isTrigger = GetComponent<Collider>().isTrigger;
             if (matType != _matType || matTiling != _matTiling)
             {
                 if (matType != _matType)

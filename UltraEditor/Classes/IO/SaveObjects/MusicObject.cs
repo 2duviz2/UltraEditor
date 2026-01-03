@@ -34,17 +34,17 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void createMusic()
         {
-            if (!EditorManager.canOpenEditor)
-                DownloadMusic();
+            DownloadMusic();
+            if (EditorManager.canOpenEditor) { MusicManager.Instance.ForceStopMusic(); MusicManager.Instance.forcedOff = false; }
         }
 
         public void OnTriggerEnter(Collider other)
         {
-            if (EditorManager.canOpenEditor) return;
             if (used) return;
             used = true;
 
             DownloadMusic();
+
 
             CheckBothReady(true);
         }
@@ -56,6 +56,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             if (calmClip != null && battleClip != null && isWaiting)
             {
+                MusicManager.Instance.forcedOff = false;
                 MusicManager.Instance.StartMusic();
             }
         }

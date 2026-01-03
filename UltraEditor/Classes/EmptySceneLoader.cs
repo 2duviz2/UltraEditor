@@ -168,6 +168,7 @@ public class EmptySceneLoader : MonoBehaviour
             {
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = lio.tipOfTheDay };
                 StockMapInfo.Instance.layerName = lio.levelLayer;
+                GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = lio.playMusicOnDoorOpen;
             }
             else
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = "Welcome!" };

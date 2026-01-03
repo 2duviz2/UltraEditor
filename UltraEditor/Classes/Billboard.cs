@@ -21,6 +21,7 @@ namespace UltraEditor.Classes
         public static Sprite light = null;
         public static Sprite musicObject = null;
         public static Sprite teleportObject = null;
+        public static Sprite checkpoint = null;
 
         public static void DeleteAll()
         {
@@ -44,7 +45,7 @@ namespace UltraEditor.Classes
                 levelInfoObject = BundlesManager.editorBundle.LoadAsset<Sprite>("info");
                 light = BundlesManager.editorBundle.LoadAsset<Sprite>("light");
                 musicObject = BundlesManager.editorBundle.LoadAsset<Sprite>("music");
-                teleportObject = BundlesManager.editorBundle.LoadAsset<Sprite>("teleportObject");
+                checkpoint = BundlesManager.editorBundle.LoadAsset<Sprite>("checkpoint");
             }
 
             DeleteAll();
@@ -95,6 +96,10 @@ namespace UltraEditor.Classes
 
                     case TeleportObject to:
                         NewBillboard(teleportObject, t, c.gameObject);
+                        break;
+
+                    case CheckpointObject co:
+                        NewBillboard(checkpoint, t, c.gameObject);
                         break;
                 }
             }
@@ -151,8 +156,8 @@ namespace UltraEditor.Classes
             //bill.transform.localScale *= 2f;
             bill.transform.position = pos;
             //bill.transform.position = pos + new Vector3(0, bill.transform.localScale.y / 2f, 0);
-            bill.GetComponent<Billboard>().Update();
             bill.GetComponent<Billboard>().target = target;
+            bill.GetComponent<Billboard>().Update();
         }
 
         public GameObject target;
@@ -174,7 +179,7 @@ namespace UltraEditor.Classes
 
             Renderer renderer = GetComponent<Renderer>();
             Color color = renderer.material.color;
-            float alpha = Math.Clamp(Vector3.Distance(camera.transform.position, transform.position) - 1, 0, 5) / 5f;
+            float alpha = Math.Clamp(Vector3.Distance(camera.transform.position, transform.position) - 1, 0, 5) / (target.activeInHierarchy ? 5f : 20f);
             renderer.material.color = new Color(color.r, color.g, color.b, alpha);
 
             if (Input.GetMouseButtonDown(0) && EditorManager.Instance.cameraSelector.enabled && EditorManager.Instance.cameraSelector.selectionMode == CameraSelector.SelectionMode.Cursor)

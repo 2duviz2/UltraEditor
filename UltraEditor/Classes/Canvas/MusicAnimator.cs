@@ -15,6 +15,8 @@ namespace UltraEditor.Classes.Canvas
         {
             s1.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
             s2.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
+            s1.enabled = SceneHelper.CurrentScene == EditorManager.EditorSceneName;
+            s2.enabled = SceneHelper.CurrentScene == EditorManager.EditorSceneName;
         }
 
         public void Update()
