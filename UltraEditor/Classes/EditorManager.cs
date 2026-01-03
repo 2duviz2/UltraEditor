@@ -347,14 +347,8 @@ Floor
                 TryToSaveShit();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
-            {
-                string path = Application.persistentDataPath + "/ULTRAEDITOR";
-                path = path.Replace("/", "\\"); // make Windows happy
-                if (!Directory.Exists(path))
-                    Directory.CreateDirectory(path);
-                Process.Start("explorer.exe", $"\"{path}\"");
-            });
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() => 
+                Application.OpenURL("file://" + Path.Combine(Application.persistentDataPath, "ULTRAEDITOR")));
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
