@@ -177,7 +177,7 @@ namespace UltraEditor.Classes
             float alpha = Math.Clamp(Vector3.Distance(camera.transform.position, transform.position) - 1, 0, 5) / 5f;
             renderer.material.color = new Color(color.r, color.g, color.b, alpha);
 
-            if (Input.GetMouseButtonDown(0) && EditorManager.Instance.cameraSelector.enabled)
+            if (Input.GetMouseButtonDown(0) && EditorManager.Instance.cameraSelector.enabled && EditorManager.Instance.cameraSelector.selectionMode == CameraSelector.SelectionMode.Cursor)
             {
                 col.enabled = true;
                 Ray ray = camera.ScreenPointToRay(Input.mousePosition);

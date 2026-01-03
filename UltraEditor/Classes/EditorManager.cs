@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using HarmonyLib;
 using Newtonsoft.Json;
 using plog.Models;
 using System;
@@ -295,6 +296,11 @@ Floor
                 if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
                 {
                     tempScene = GetSceneJson();
+
+                    string path = Application.persistentDataPath + $"/ULTRAEDITOR/backups";
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
+                    File.WriteAllText(path + $"/{DateTime.Now.ToString("dd.MM.yyyy-HH.mm.ss")}.backup", tempScene);
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
@@ -437,7 +443,7 @@ Floor
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
             {
-                createCube(pos : Vector3.zero, layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
+                createCube(pos : new Vector3(0.00f, 90.00f, 4.25f), layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
             });
 
             // View
@@ -2783,7 +2789,7 @@ Floor
         public void SetAlert(string str, string title = "Error!", Color? col = null)
         {
             GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
-            alert.GetComponent<Animator>().speed = 0.3f;
+            alert.GetComponent<Animator>().speed = 1f;
             alert.SetActive(false);
             alert.SetActive(true);
 

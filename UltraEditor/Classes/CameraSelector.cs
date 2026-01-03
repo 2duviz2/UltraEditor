@@ -46,12 +46,17 @@ namespace UltraEditor.Classes
 
         List<MeshEntry> meshes = new List<MeshEntry>();
         public Material ghostMaterial;
+        public Material ghostMaterial2;
+        public Material currentMaterial;
         bool objectActive = false;
 
         void CacheMeshes()
         {
             meshes.Clear();
             if (selectedObject == null) return;
+
+            if (selectedObject.layer == LayerMask.NameToLayer("Invisible")) currentMaterial = ghostMaterial;
+            if (!selectedObject.activeSelf) currentMaterial = ghostMaterial2;
 
             CacheRecursive(selectedObject.transform, selectedObject.transform);
         }
@@ -65,7 +70,7 @@ namespace UltraEditor.Classes
 
             if (mf && mr && mf.sharedMesh)
             {
-                if (!t.gameObject.activeInHierarchy)
+                if (!t.gameObject.activeInHierarchy || t.gameObject.layer == LayerMask.NameToLayer("Invisible"))
                 {
                     float scaleFactor = 1f;
 
@@ -87,7 +92,7 @@ namespace UltraEditor.Classes
             var skinned = t.GetComponent<SkinnedMeshRenderer>();
             if (skinned && skinned.sharedMesh)
             {
-                if (!t.gameObject.activeInHierarchy)
+                if (!t.gameObject.activeInHierarchy || t.gameObject.layer == LayerMask.NameToLayer("Invisible"))
                 {
                     var baked = new Mesh();
                     skinned.BakeMesh(baked);
@@ -145,6 +150,7 @@ namespace UltraEditor.Classes
                 camera = GetComponent<Camera>();
 
             ghostMaterial = CreateGhostMaterial(new Color(0.25f, 0.25f, 1f));
+            ghostMaterial2 = CreateGhostMaterial(new Color(0.25f, 0.25f, 0.25f));
 
             ModeButton.UpdateButtons();
         }
@@ -200,10 +206,11 @@ namespace UltraEditor.Classes
         public void LateUpdate()
         {
             if (selectedObject == null) return;
+            if (currentMaterial == null) return;
 
             Matrix4x4 rootMatrix = selectedObject.transform.localToWorldMatrix;
 
-            ghostMaterial.SetFloat("_Offset", ghostMaterial.GetFloat("_Offset") + Time.unscaledDeltaTime);
+            currentMaterial.SetFloat("_Offset", currentMaterial.GetFloat("_Offset") + Time.unscaledDeltaTime);
             timeToUpdate -= Time.unscaledDeltaTime;
             if (timeToUpdate <= 0)
             {
@@ -225,7 +232,7 @@ namespace UltraEditor.Classes
                 Graphics.DrawMesh(
                     e.mesh,
                     worldMatrix,
-                    ghostMaterial,
+                    currentMaterial,
                     0
                 );
             }

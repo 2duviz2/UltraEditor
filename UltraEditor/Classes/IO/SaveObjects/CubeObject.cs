@@ -25,10 +25,13 @@ namespace UltraEditor.Classes.IO.SaveObjects
         {
             if (matType != _matType || matTiling != _matTiling)
             {
+                if (matType != _matType)
+                    EditorManager.Instance.SetAlert("Material changed!", "Info!", new Color(0.25f, 1f, 0.25f));
                 _matType = matType;
+                if (matTiling != _matTiling)
+                    EditorManager.Instance.SetAlert("Material edits related to tiling only update when reloading the editor.", "Info!");
                 _matTiling = matTiling;
                 GetComponent<MaterialChoser>()?.ProcessMaterial(matType, matTiling);
-                EditorManager.Instance.SetAlert("Material edits related to tiling only update when reloading the editor.", "Info!");
             }
         }
     }
