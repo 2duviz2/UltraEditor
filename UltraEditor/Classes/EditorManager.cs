@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using BepInEx;
+using HarmonyLib;
 using Newtonsoft.Json;
 using plog.Models;
 using System;
@@ -350,8 +351,15 @@ Floor
                 TryToSaveShit();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() => 
-                Application.OpenURL("file://" + Path.Combine(Application.persistentDataPath, "ULTRAEDITOR")));
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                string path = Path.Combine(Application.persistentDataPath, "ULTRAEDITOR");
+
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+
+                Application.OpenURL("file://" + path);
+            });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
