@@ -10,12 +10,13 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public MaterialChoser.materialTypes matType;
         public float matTiling = 0.25f;
         MaterialChoser.materialTypes _matType;
-        float _matTiling;
+        float _matTiling = 0.25f;
 
         public static CubeObject Create(GameObject target, MaterialChoser.materialTypes materialType)
         {
             CubeObject obj = target.AddComponent<CubeObject>();
             obj.matType = materialType;
+            obj._matType = materialType;
             MaterialChoser.Create(target, materialType);
             return obj;
         }

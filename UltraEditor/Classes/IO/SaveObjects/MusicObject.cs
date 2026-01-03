@@ -34,11 +34,13 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void createMusic()
         {
-            DownloadMusic();
+            if (!EditorManager.canOpenEditor)
+                DownloadMusic();
         }
 
         public void OnTriggerEnter(Collider other)
         {
+            if (EditorManager.canOpenEditor) return;
             if (used) return;
             used = true;
 

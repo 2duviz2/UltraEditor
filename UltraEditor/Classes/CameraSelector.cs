@@ -61,9 +61,11 @@ namespace UltraEditor.Classes
             var mf = t.GetComponent<MeshFilter>();
             var mr = t.GetComponent<MeshRenderer>();
 
+            if (t.GetComponent<PrefabObject>() != null && t.GetComponent<PrefabObject>().PrefabAsset.StartsWith("Assets/Prefabs/Enemies/")) return;
+
             if (mf && mr && mf.sharedMesh)
             {
-                if (!t.gameObject.activeInHierarchy && t.name != "Sphere")
+                if (!t.gameObject.activeInHierarchy)
                 {
                     float scaleFactor = 1f;
 
@@ -85,7 +87,7 @@ namespace UltraEditor.Classes
             var skinned = t.GetComponent<SkinnedMeshRenderer>();
             if (skinned && skinned.sharedMesh)
             {
-                if (!t.gameObject.activeInHierarchy && t.name != "Sphere")
+                if (!t.gameObject.activeInHierarchy)
                 {
                     var baked = new Mesh();
                     skinned.BakeMesh(baked);
@@ -305,6 +307,7 @@ namespace UltraEditor.Classes
             if (selectedObject)
                 RestoreMaterial(selectedObject);
             selectedObject = null;
+            EditorManager.PlayAudio(EditorManager.unselectObject);
 
             ClearHover();
             if (moveArrows != null)
@@ -370,6 +373,7 @@ namespace UltraEditor.Classes
                         savedMousePos = MouseController.GetMousePos();
                         realMousePos = mousePos;
                         Cursor.visible = false;
+                        Billboard.DeleteAll();
                     }
                 }
                 else
@@ -428,7 +432,6 @@ namespace UltraEditor.Classes
                             target = Snap(target, s);
                         selectedObject.transform.eulerAngles = target;
                     }
-
                 }
                 if (Input.GetMouseButtonUp(0))
                 {
@@ -436,13 +439,14 @@ namespace UltraEditor.Classes
                     draggingAxis = -1;
                     EditorManager.Instance.UpdateInspector();
                     Cursor.visible = true;
+                    Billboard.UpdateBillboards();
                 }
             }
         }
 
         public void SelectObject(GameObject obj)
         {
-
+            EditorManager.PlayAudio(EditorManager.selectObject);
             if (selectedObject != null)
                 RestoreMaterial(selectedObject);
 
