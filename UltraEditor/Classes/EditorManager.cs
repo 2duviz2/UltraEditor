@@ -361,10 +361,6 @@ Floor
                 TryToSaveShit();
             });
 
-<<<<<<< Updated upstream
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() => 
-                Application.OpenURL("file://" + Path.Combine(Application.persistentDataPath, "ULTRAEDITOR")));
-=======
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 string path = Application.persistentDataPath + "/ULTRAEDITOR";
@@ -373,7 +369,6 @@ Floor
                     Directory.CreateDirectory(path);
                 Application.OpenURL($"file://{path}");
             });
->>>>>>> Stashed changes
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
