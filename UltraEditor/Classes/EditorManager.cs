@@ -38,9 +38,12 @@ namespace UltraEditor.Classes
         public GameObject blocker;
 
         bool mouseLocked = true;
+        bool destroyedLastFrame = false;
         public bool advancedInspector = false;
         public static bool logShit = false;
         public static bool canOpenEditor = false;
+
+        float timeToUpdateBillboards = 0;
 
         static string tempScene = @"
 ? CubeObject ?
@@ -110,6 +113,12 @@ Floor
             if (editorCanvas.activeSelf)
             {
                 UpdateHierarchy();
+            }
+            
+            if (destroyedLastFrame)
+            {
+                destroyedLastFrame = false;
+                Billboard.UpdateBillboards();
             }
 
             if (!mouseLocked)
@@ -214,6 +223,7 @@ Floor
                         Destroy(obj);
                     }
                 }
+                Billboard.DeleteAll();
             }
         }
 
@@ -246,6 +256,7 @@ Floor
                 cameraSelector.ClearHover();
                 cameraSelector.UnselectObject();
                 cameraSelector.selectionMode = CameraSelector.SelectionMode.Cursor;
+                Billboard.DeleteAll();
 
                 if (mouseLocked)
                 {
@@ -285,6 +296,11 @@ Floor
                 if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
                 {
                     tempScene = GetSceneJson();
+
+                    string path = Application.persistentDataPath + $"/ULTRAEDITOR/backups";
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
+                    File.WriteAllText(path + $"/{DateTime.Now.ToString("dd.MM.yyyy-HH.mm.ss")}.backup", tempScene);
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
@@ -353,23 +369,29 @@ Floor
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
-                string path = Path.Combine(Application.persistentDataPath, "ULTRAEDITOR");
-
+                string path = Application.persistentDataPath + "/ULTRAEDITOR";
+                path = path.Replace("/", "\\"); // make Windows happy
                 if (!Directory.Exists(path))
                     Directory.CreateDirectory(path);
-
-                Application.OpenURL("file://" + path);
+                Application.OpenURL($"file://{path}");
             });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 DeleteScene(true);
-                SetAlert("Scene deleted!", "Info!");
+                SetAlert("Scene deleted!", "Info!", new Color(1, 0.5f, 0.25f));
             });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 StartCoroutine(GoToBackupScene());
+            });
+
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                SetAlert("Couldn't copy scene!");
+                GUIUtility.systemCopyBuffer = GetSceneJson();
+                SetAlert("Scene copied!", "Info!", col: new Color(0.25f, 1f, 0.25f));
             });
 
             // Edit
@@ -421,7 +443,7 @@ Floor
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
             {
-                createCube(pos : Vector3.zero, layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
+                createCube(pos : new Vector3(0.00f, 90.00f, 4.25f), layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
             });
 
             // View
@@ -543,6 +565,7 @@ Floor
 
             NewInspectorVariable("matType", typeof(CubeObject));
             NewInspectorVariable("matTiling", typeof(CubeObject));
+            NewInspectorVariable("isTrigger", typeof(CubeObject));
 
             // Enemies
             /*NewInspectorVariable("health", typeof(Zombie));
@@ -573,7 +596,8 @@ Floor
 
             //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
             NewInspectorVariable("rooms", typeof(CheckPoint));
-            NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
+            NewInspectorVariable("checkpointRooms", typeof(CheckpointObject));
+            //NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
 
             NewInspectorVariable("notInstakill", typeof(DeathZone));
             NewInspectorVariable("damage", typeof(DeathZone));
@@ -591,6 +615,7 @@ Floor
 
             NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
             NewInspectorVariable("levelLayer", typeof(LevelInfoObject));
+            NewInspectorVariable("playMusicOnDoorOpen", typeof(LevelInfoObject));
             NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
@@ -607,11 +632,14 @@ Floor
 
         public GameObject SpawnAsset(string dir, bool isLoading = false, bool createPrefabObject = true)
         {
-            GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
+            string realPath = dir;
+            if (dir == "DuvizPlush") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
+            GameObject obj = null;
+            obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
 
             if (createPrefabObject)
-                PrefabObject.Create(obj, dir);
+                PrefabObject.Create(obj, realPath);
 
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
@@ -633,19 +661,29 @@ Floor
             }
 
             if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab" && !isLoading)
-                SetAlert("You need to assign at least one item in rooms for the checkpoint to work. Checkpoints cannot be modified when loaded from a save.", "Warning!");
+                SetAlert("You need to assign at least one item in rooms for the checkpoint to work.", "Warning!");
             if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
                 SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
-            if (dir == "Bonus")
+            if (dir == "Bonus" || dir == "Assets/Prefabs/Levels/BonusDualWield Variant.prefab" || dir == "Assets/Prefabs/Levels/BonusSuperCharge.prefab")
                 obj.GetComponent<Bonus>().secretNumber = 100000;
 
             if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
             {
-                GameObject blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
+                GameObject blahaj = null;
+                if (realPath == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
+                    blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
+                else if (realPath == "DuvizPlush")
+                    blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlush"));
                 blahaj.transform.SetParent(obj.transform);
                 blahaj.transform.localPosition = Vector3.zero;
                 blahaj.transform.localEulerAngles = Vector3.zero;
+            }
+
+            if (!isLoading)
+            {
+                PlayAudio(spawnAsset);
+                Billboard.UpdateBillboards();
             }
 
             return obj;
@@ -661,6 +699,7 @@ Floor
                 newObj.name = newObj.name.Replace("(Clone)", "");
 
                 if (cameraSelector.selectedObject.transform.parent != null)
+                    newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
                     newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
 
                 newObj.transform.localScale = cameraSelector.selectedObject.transform.localScale;
@@ -686,6 +725,8 @@ Floor
                 Destroy(toDestroy);
                 if (toParent != null)
                     cameraSelector.SelectObject(toParent);
+                destroyedLastFrame = true;
+                PlayAudio(destroyObject);
             }
         }
 
@@ -695,6 +736,7 @@ Floor
             {
                 lastHierarchy = new GameObject[0];
                 cameraSelector.selectedObject.SetActive(!cameraSelector.selectedObject.activeSelf);
+                PlayAudio(cameraSelector.selectedObject.activeSelf ? activateObject : inactivateObject);
             }
         }
 
@@ -791,7 +833,7 @@ Floor
         }
 
         Component[] lastComponents = new Component[0];
-        GameObject[] lastHierarchy = new GameObject[0];
+        public GameObject[] lastHierarchy = new GameObject[0];
         GameObject lastSelected = null;
         GameObject holdingObject = null;
         GameObject holdingTarget = null;
@@ -810,7 +852,7 @@ Floor
                 bool same = true;
                 for (int i = 0; i < lastHierarchy.Length; i++)
                 {
-                    if (lastHierarchy[i] != rootObjects[i])
+                    if (lastHierarchy[i] != rootObjects[i] && rootObjects[i].GetComponent<Billboard>() == null)
                     {
                         same = false;
                         break;
@@ -876,6 +918,7 @@ Floor
             }
 
             UpdateInspector();
+            Billboard.UpdateBillboards();
         }
 
         public static List<Type> GetAllMonoBehaviourTypes(bool forceNormalOnes = false)
@@ -1021,7 +1064,7 @@ Floor
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null && cameraSelector.selectedObject.GetComponent<LevelInfoObject>() == null && cameraSelector.selectedObject.GetComponent<Light>() == null))
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null && cameraSelector.selectedObject.GetComponent<LevelInfoObject>() == null && cameraSelector.selectedObject.GetComponent<Light>() == null && cameraSelector.selectedObject.GetComponent<PrefabObject>() == null))
                 {
                     CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
@@ -1103,7 +1146,9 @@ Floor
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                            SetAlert("Collider has been set to be a trigger.", "Info!");
+                                            SetAlert("Collider has been set to be a trigger.", "Info!", new Color(1, 0.5f, 0.25f));
+                                            if (c is SavableObject)
+                                                Destroy(cameraSelector.selectedObject.GetComponent<CubeObject>());
                                         }
                                     }
 
@@ -1120,6 +1165,8 @@ Floor
                                     }
 
                                     UpdateInspector();
+                                    PlayAudio(addComponent);
+                                    Billboard.UpdateBillboards();
                                 }
                                 else
                                 {
@@ -1163,6 +1210,7 @@ Floor
                     {
                         CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
                         {
+                            PlayAudio(removeComponent);
                             Destroy(component);
                         });
                     }
@@ -1191,6 +1239,8 @@ Floor
                                         if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
                                             cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
                                     }
+                                    PlayAudio(removeComponent);
+                                    Billboard.UpdateBillboards();
                                 });
                     }
 
@@ -1827,6 +1877,7 @@ Floor
             {
                 if (goToParent)
                 {
+                    PlayAudio(unselectObject);
                     cameraSelector.selectedObject = cameraSelector.selectedObject.transform.parent != null ? cameraSelector.selectedObject.transform.parent.gameObject : null;
                     if (cameraSelector.selectedObject != null)
                     {
@@ -2019,9 +2070,11 @@ Floor
 
         public void SaveShit(string path)
         {
+            SetAlert("Couldn't save scene!", col : new Color(1, 0f, 0f));
             string text = GetSceneJson();
 
             File.WriteAllText(Application.persistentDataPath + $"/ULTRAEDITOR/{path}.uterus", text);
+            SetAlert("Scene saved!", "Info!", col: new Color(0.25f, 1f, 0.25f));
         }
 
         public string GetSceneJson()
@@ -2057,6 +2110,8 @@ Floor
                 text += (int)obj.matType + "\n";
                 text += "? PASS ?\n";
                 text += obj.matTiling + "\n";
+                text += "? PASS ?\n";
+                text += obj._isTrigger + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2081,7 +2136,8 @@ Floor
                 obj.enemyIds.Clear();
                 foreach (var e in obj.GetComponent<ActivateArena>().enemies)
                 {
-                    obj.addId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addId(GetIdOfObj(e));
                 }
 
                 text += "? ArenaObject ?";
@@ -2104,12 +2160,14 @@ Floor
                 if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
                     {
-                        obj.addEnemyId(GetIdOfObj(e));
+                        if (e != null)
+                            obj.addEnemyId(GetIdOfObj(e));
                     }
                 if (obj.GetComponent<ActivateNextWave>().toActivate != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
                     {
-                        obj.addToActivateId(GetIdOfObj(e));
+                        if (e != null)
+                            obj.addToActivateId(GetIdOfObj(e));
                     }
 
                 text += "? NextArenaObject ?";
@@ -2136,11 +2194,13 @@ Floor
                 obj.toDeactivateIds.Clear();
                 foreach (var e in obj.toActivate)
                 {
-                    obj.addToActivateId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addToActivateId(GetIdOfObj(e));
                 }
                 foreach (var e in obj.toDeactivate)
                 {
-                    obj.addtoDeactivateId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addtoDeactivateId(GetIdOfObj(e));
                 }
 
                 text += "? ActivateObject ?";
@@ -2203,6 +2263,8 @@ Floor
                 text += obj.tipOfTheDay + "\n";
                 text += "? PASS ?\n";
                 text += obj.levelLayer + "\n";
+                text += "? PASS ?\n";
+                text += obj.playMusicOnDoorOpen + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2210,19 +2272,27 @@ Floor
             foreach (var obj in GameObject.FindObjectsOfType<CheckPoint>(true))
             {
                 while (obj.GetComponent<CheckpointObject>() != null)
+                {
+                    /*obj.rooms = obj.GetComponent<CheckpointObject>().checkpointRooms;
+                    obj.roomsToInherit = obj.GetComponent<CheckpointObject>().checkpointRoomsToInherit;*/
                     Destroy(obj.GetComponent<CheckpointObject>());
+                }
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
 
                 foreach (var e in obj.rooms)
                 {
-                    if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
-                        co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
-                    else
-                        co.addRoomId(GetIdOfObj(e));
+                    if (e != null)
+                    {
+                        if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
+                            co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
+                        else
+                            co.addRoomId(GetIdOfObj(e));
+                    }
                 }
                 foreach (var e in obj.roomsToInherit)
                 {
-                    co.addRoomToInheritId(GetIdOfObj(e));
+                    if (e != null)
+                        co.addRoomToInheritId(GetIdOfObj(e));
                 }
 
                 text += "? CheckpointObject ?";
@@ -2249,6 +2319,20 @@ Floor
             foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
             {
                 if (obj.transform.childCount != 0) continue;
+
+                obj.rooms = [];
+                foreach (var e in obj.checkpointRooms)
+                {
+                    if (e != null)
+                        obj.addRoomId(GetIdOfObj(e));
+                }
+
+                obj.roomsToInherit = [];
+                foreach (var e in obj.checkpointRoomsToInherit)
+                {
+                    if (e != null)
+                        obj.addRoomToInheritId(GetIdOfObj(e));
+                }
 
                 text += "? CheckpointObject ?";
                 text += "\n";
@@ -2509,7 +2593,7 @@ Floor
                 else if (isInScript)
                 {
                     if (logShit)
-                        Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
+                        Plugin.LogInfo($"Line {lineIndex} \"{line}\" type \"{scriptType}\" phase {phase}");
 
                     if (line == "? END ?")
                     {
@@ -2555,8 +2639,12 @@ Floor
                     if (lineIndex == 10 && scriptType == "CubeObject")
                         CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
                     if (lineIndex >= 10 && scriptType == "CubeObject")
+                    {
                         if (phase == 1)
                             workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
+                    }
 
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {
@@ -2683,6 +2771,8 @@ Floor
                             workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
                         else if (phase == 4)
                             workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
+                        else if (phase == 5)
+                            workingObject.GetComponent<LevelInfoObject>().playMusicOnDoorOpen = line.ToLower() == "true";
                 }
 
                 lineIndex++;
@@ -2735,22 +2825,23 @@ Floor
             yield return new WaitForEndOfFrame();
             LoadSceneJson(tempScene);
             yield return new WaitForEndOfFrame();
-            SetAlert("Loaded scene backup", "Info!");
+            SetAlert("Loaded scene backup", "Info!", new Color(1, 0.5f, 0.25f));
+            Billboard.UpdateBillboards();
         }
 
-        public void SetAlert(string str, string title = "Error!")
+        public void SetAlert(string str, string title = "Error!", Color? col = null)
         {
             GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
-            alert.GetComponent<Animator>().speed = 0.4f;
-            if (title == "Info!")
-                alert.GetComponent<Animator>().speed = 0.8f;
-            if (title == "Warning!")
-                alert.GetComponent<Animator>().speed = 0.8f;
+            alert.GetComponent<Animator>().speed = 1f;
             alert.SetActive(false);
             alert.SetActive(true);
 
+            Color finalCol = col != null ? (Color)col : new Color(1, 0.25f, 0.25f);
+
             alert.transform.GetChild(0).GetComponent<TMP_Text>().text = title;
             alert.transform.GetChild(1).GetComponent<TMP_Text>().text = str;
+            alert.transform.GetComponent<Image>().color = finalCol;
+            PlayAudio(chord);
         }
 
         public void DisableAlert()
@@ -2762,6 +2853,24 @@ Floor
         public static void Log(string str)
         {
             Plugin.LogInfo(str);
+        }
+
+        public static AudioClip activateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech On");
+        public static AudioClip inactivateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech Sleep");
+        public static AudioClip selectObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Balloon");
+        public static AudioClip unselectObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Default");
+        public static AudioClip destroyObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Error");
+        public static AudioClip spawnAsset = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Exclamation");
+        public static AudioClip removeComponent = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Logoff Sound");
+        public static AudioClip addComponent = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Logon Sound");
+        public static AudioClip chord = BundlesManager.editorBundle.LoadAsset<AudioClip>("chord");
+        static AudioSource source = null;
+        public static void PlayAudio(AudioClip clip)
+        {
+            if (source == null)
+                source = new GameObject().AddComponent<AudioSource>();
+            source.clip = clip;
+            source.Play();
         }
     }
 }

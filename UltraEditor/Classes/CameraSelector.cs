@@ -42,10 +42,12 @@ namespace UltraEditor.Classes
         {
             public Mesh mesh;
             public Matrix4x4 localToRoot;
+            public Material mat;
         }
 
         List<MeshEntry> meshes = new List<MeshEntry>();
         public Material ghostMaterial;
+        public Material ghostMaterial2;
         bool objectActive = false;
 
         void CacheMeshes()
@@ -61,9 +63,15 @@ namespace UltraEditor.Classes
             var mf = t.GetComponent<MeshFilter>();
             var mr = t.GetComponent<MeshRenderer>();
 
+            Material currentMaterial = ghostMaterial;
+            if (t.gameObject.layer == LayerMask.NameToLayer("Invisible")) currentMaterial = ghostMaterial;
+            if (!t.gameObject.activeInHierarchy) currentMaterial = ghostMaterial2;
+
+            if (t.GetComponent<PrefabObject>() != null && t.GetComponent<PrefabObject>().PrefabAsset.StartsWith("Assets/Prefabs/Enemies/")) return;
+
             if (mf && mr && mf.sharedMesh)
             {
-                if (!t.gameObject.activeInHierarchy && t.name != "Sphere")
+                if (!t.gameObject.activeInHierarchy || t.gameObject.layer == LayerMask.NameToLayer("Invisible"))
                 {
                     float scaleFactor = 1f;
 
@@ -77,7 +85,8 @@ namespace UltraEditor.Classes
                     meshes.Add(new MeshEntry
                     {
                         mesh = mf.sharedMesh,
-                        localToRoot = root.worldToLocalMatrix * t.localToWorldMatrix * Matrix4x4.Scale(Vector3.one * scaleFactor)
+                        localToRoot = root.worldToLocalMatrix * t.localToWorldMatrix * Matrix4x4.Scale(Vector3.one * scaleFactor),
+                        mat = currentMaterial
                     });
                 }
             }
@@ -85,7 +94,7 @@ namespace UltraEditor.Classes
             var skinned = t.GetComponent<SkinnedMeshRenderer>();
             if (skinned && skinned.sharedMesh)
             {
-                if (!t.gameObject.activeInHierarchy && t.name != "Sphere")
+                if (!t.gameObject.activeInHierarchy || t.gameObject.layer == LayerMask.NameToLayer("Invisible"))
                 {
                     var baked = new Mesh();
                     skinned.BakeMesh(baked);
@@ -101,7 +110,8 @@ namespace UltraEditor.Classes
                     meshes.Add(new MeshEntry
                     {
                         mesh = baked,
-                        localToRoot = root.worldToLocalMatrix * t.localToWorldMatrix * Matrix4x4.Scale(Vector3.one * scaleFactor)
+                        localToRoot = root.worldToLocalMatrix * t.localToWorldMatrix * Matrix4x4.Scale(Vector3.one * scaleFactor),
+                        mat = currentMaterial
                     });
                 }
             }
@@ -142,19 +152,21 @@ namespace UltraEditor.Classes
             if (!camera)
                 camera = GetComponent<Camera>();
 
+            highlightMaterial = CreateGhostMaterial(new Color(1f, 1f, 1f));
             ghostMaterial = CreateGhostMaterial(new Color(0.25f, 0.25f, 1f));
+            ghostMaterial2 = CreateGhostMaterial(new Color(0.25f, 0.25f, 0.25f));
 
             ModeButton.UpdateButtons();
         }
 
-        Material CreateGhostMaterial(Color color)
+        Material CreateGhostMaterial(Color color, float thickness = 30f)
         {
             var shader = BundlesManager.editorBundle.LoadAsset<Shader>("GhostDottedOutline");
             var mat = new Material(shader);
 
             mat.SetColor("_Color", color);
             mat.SetFloat("_Thickness", 0.02f);
-            mat.SetFloat("_DotScale", 30f);
+            mat.SetFloat("_DotScale", thickness);
             mat.SetFloat("_DotCutoff", 0f);
             mat.SetFloat("_Offset", 0f);
 
@@ -197,11 +209,13 @@ namespace UltraEditor.Classes
         float timeToUpdate = 0.1f;
         public void LateUpdate()
         {
+            highlightMaterial.SetFloat("_Offset", highlightMaterial.GetFloat("_Offset") + Time.unscaledDeltaTime);
             if (selectedObject == null) return;
 
             Matrix4x4 rootMatrix = selectedObject.transform.localToWorldMatrix;
 
             ghostMaterial.SetFloat("_Offset", ghostMaterial.GetFloat("_Offset") + Time.unscaledDeltaTime);
+            ghostMaterial2.SetFloat("_Offset", ghostMaterial2.GetFloat("_Offset") + Time.unscaledDeltaTime);
             timeToUpdate -= Time.unscaledDeltaTime;
             if (timeToUpdate <= 0)
             {
@@ -223,7 +237,7 @@ namespace UltraEditor.Classes
                 Graphics.DrawMesh(
                     e.mesh,
                     worldMatrix,
-                    ghostMaterial,
+                    e.mat,
                     0
                 );
             }
@@ -305,6 +319,7 @@ namespace UltraEditor.Classes
             if (selectedObject)
                 RestoreMaterial(selectedObject);
             selectedObject = null;
+            EditorManager.PlayAudio(EditorManager.unselectObject);
 
             ClearHover();
             if (moveArrows != null)
@@ -370,6 +385,7 @@ namespace UltraEditor.Classes
                         savedMousePos = MouseController.GetMousePos();
                         realMousePos = mousePos;
                         Cursor.visible = false;
+                        Billboard.DeleteAll();
                     }
                 }
                 else
@@ -428,7 +444,6 @@ namespace UltraEditor.Classes
                             target = Snap(target, s);
                         selectedObject.transform.eulerAngles = target;
                     }
-
                 }
                 if (Input.GetMouseButtonUp(0))
                 {
@@ -436,13 +451,14 @@ namespace UltraEditor.Classes
                     draggingAxis = -1;
                     EditorManager.Instance.UpdateInspector();
                     Cursor.visible = true;
+                    Billboard.UpdateBillboards();
                 }
             }
         }
 
         public void SelectObject(GameObject obj)
         {
-
+            EditorManager.PlayAudio(EditorManager.selectObject);
             if (selectedObject != null)
                 RestoreMaterial(selectedObject);
 
