@@ -8,7 +8,8 @@
 		<Version>0.0.7</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
-		<NoWarn>CS0649</NoWarn>
+		<NoWarn>CS0649, CS0414</NoWarn>
+		<DebugType>embedded</DebugType>
 
 		<!-- Resources so nuget can fucking find BepInEx and Unity. -->
 		<RestoreAdditionalProjectSources>
