@@ -20,5 +20,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public HUDMessageObject hudObject = null;
         public TeleportObject teleportObject = null;
         public LevelInfoObject levelInfoObject = null;
+        public CubeTilingAnimator cubeTilingAnimator = null;
+        public MovingPlatformAnimator movingPlatform = null;
     }
 }

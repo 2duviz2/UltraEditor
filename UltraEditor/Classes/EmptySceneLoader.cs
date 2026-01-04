@@ -164,6 +164,7 @@ public class EmptySceneLoader : MonoBehaviour
             StockMapInfo.Instance.levelName = levelName.ToUpper();
             StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", forceLevelLayer);
             StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
+            string[] tips = ["Welcome!", "Hi!", $"Welcome to {levelName}", "I'm tired.", "Hi! I'm a terminal", "I despise you", "I don't like you", "Entertain me", "Get away", "Disappear", "Get out of my sight", "Entry 17"];
             if (lio != null)
             {
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = lio.tipOfTheDay };
@@ -171,7 +172,7 @@ public class EmptySceneLoader : MonoBehaviour
                 GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = lio.playMusicOnDoorOpen;
             }
             else
-                StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = "Welcome!" };
+                StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = tips[UnityEngine.Random.Range(0, tips.Length)] };
             ShopZone[] sz = FindObjectsOfType<ShopZone>(true);
             foreach (var s in sz)
             {

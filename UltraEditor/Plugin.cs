@@ -15,7 +15,7 @@ namespace UltraEditor
     {
         public const string GUID = "duviz.ultrakill.ultraeditor";
         public const string Name = "UltraEditor";
-        public const string Version = "0.0.7";
+        public const string Version = "0.0.8";
 
         public static Plugin instance;
         public plog.Logger Log;

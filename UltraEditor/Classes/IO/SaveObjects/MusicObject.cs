@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -25,6 +27,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public AudioClip calmClip = null;
         public AudioClip battleClip = null;
 
+        public static List<(string, AudioClip)> cachedClips = [];
+
         public void Start()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
@@ -40,7 +44,9 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void OnTriggerEnter(Collider other)
         {
+            if (other.tag != "Player") return;
             if (used) return;
+            if (FindObjectsOfType<MusicObject>().Length > 1) { MusicManager.Instance.ForceStopMusic(); MusicManager.Instance.forcedOff = false; }
             used = true;
 
             DownloadMusic();
@@ -56,8 +62,12 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             if (calmClip != null && battleClip != null && isWaiting)
             {
-                MusicManager.Instance.forcedOff = false;
-                MusicManager.Instance.StartMusic();
+                MusicManager musicManager = MusicManager.Instance;
+                musicManager.cleanTheme.clip = calmClip;
+                musicManager.battleTheme.clip = battleClip;
+                musicManager.bossTheme.clip = battleClip;
+                musicManager.forcedOff = false;
+                musicManager.StartMusic();
             }
         }
 
@@ -90,6 +100,14 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         IEnumerator GetAudio(string url, Action<AudioClip> callback)
         {
+            (string, AudioClip) cached = cachedClips.FirstOrDefault(x => x.Item1 == url);
+
+            if (cached.Item2 != null)
+            {
+                callback(cached.Item2);
+                yield break;
+            }
+
             AudioType audType = url[(url.LastIndexOf('.') + 1)..].ToLower() switch
             {
                 "wav" => AudioType.WAV,
@@ -111,6 +129,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             {
                 AudioClip clip = DownloadHandlerAudioClip.GetContent(www);
                 clip.name = Path.GetFileNameWithoutExtension(url);
+                cachedClips.Add((url, clip));
                 callback(clip);
             }
         }

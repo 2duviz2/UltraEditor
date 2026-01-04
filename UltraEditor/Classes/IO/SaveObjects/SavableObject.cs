@@ -18,6 +18,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
             Scale = transform.lossyScale;
 
             GetComponent<CubeObject>()?.Tick();
+            GetComponent<CubeTilingAnimator>()?.Tick();
+            GetComponent<MovingPlatformAnimator>()?.Tick();
         }
     }
 }

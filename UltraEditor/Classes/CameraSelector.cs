@@ -152,7 +152,9 @@ namespace UltraEditor.Classes
             if (!camera)
                 camera = GetComponent<Camera>();
 
-            highlightMaterial = CreateGhostMaterial(new Color(1f, 1f, 1f));
+            highlightMaterial = //CreateGhostMaterial(new Color(1f, 1f, 1f));
+                new Material(DefaultReferenceManager.Instance.blankMaterial);
+            highlightMaterial.color = new Color(0.5f, 0.5f, 1f);
             ghostMaterial = CreateGhostMaterial(new Color(0.25f, 0.25f, 1f));
             ghostMaterial2 = CreateGhostMaterial(new Color(0.25f, 0.25f, 0.25f));
 

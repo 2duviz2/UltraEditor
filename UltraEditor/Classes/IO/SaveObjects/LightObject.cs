@@ -11,6 +11,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
     {
         public float intensity = 1f;
         public float range = 10f;
+        public Vector3 color = Vector3.one * 255;
         public LightType type = LightType.Point;
 
         public static LightObject Create(GameObject target, SpawnedObject spawnedObject = null)
@@ -31,6 +32,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             light.intensity = intensity;
             light.range = range;
             light.type = type;
+            light.color = new Color(color.x / 255f, color.y / 255f, color.z / 255f);
         }
     }
 }

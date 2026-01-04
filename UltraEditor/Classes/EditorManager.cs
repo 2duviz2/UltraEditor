@@ -40,6 +40,7 @@ namespace UltraEditor.Classes
         bool mouseLocked = true;
         bool destroyedLastFrame = false;
         public bool advancedInspector = false;
+        static public bool friendlyAdvancedInspector = false;
         public static bool logShit = false;
         public static bool canOpenEditor = false;
 
@@ -134,21 +135,21 @@ Floor
                 cameraSelector.ClearHover();
             }
 
-            if (Input.GetKeyDown(Plugin.deleteObjectKey))
+            if (Input.GetKeyDown(Plugin.deleteObjectKey) && editorCanvas.activeSelf)
             {
-                if (Input.GetKey(Plugin.ctrlKey))
+                if (Input.GetKey(Plugin.ctrlKey) && Input.GetKey(Plugin.shiftKey) && friendlyAdvancedInspector)
                     DeleteScene(true);
                 else if (IsObjectEditable())
                     deleteObject();
             }
 
-            if (Plugin.isToggleEnabledKeyPressed() && IsObjectEditable())
+            if (Plugin.isToggleEnabledKeyPressed() && IsObjectEditable() && editorCanvas.activeSelf)
                 toggleObject();
 
-            if (Plugin.isDuplicateKeyPressed() && IsObjectEditable())
+            if (Plugin.isDuplicateKeyPressed() && IsObjectEditable() && editorCanvas.activeSelf)
                 duplicateObject();
 
-            if (Input.GetKey(Plugin.createCubeKey))
+            if (Input.GetKey(Plugin.createCubeKey) && editorCanvas.activeSelf)
             {
                 createCube(true, false);
             }
@@ -190,7 +191,7 @@ Floor
                 }
             }
 
-            if (Plugin.isSelectPressed() && cameraSelector.selectedObject != null)
+            if (Plugin.isSelectPressed() && cameraSelector.selectedObject != null && editorCanvas.activeSelf)
             {
                 SelectObject(cameraSelector.selectedObject);
             }
@@ -300,7 +301,7 @@ Floor
                     string path = Application.persistentDataPath + $"/ULTRAEDITOR/backups";
                     if (!Directory.Exists(path))
                         Directory.CreateDirectory(path);
-                    File.WriteAllText(path + $"/{DateTime.Now.ToString("dd.MM.yyyy-HH.mm.ss")}.backup", tempScene);
+                    File.WriteAllText(path + $"/{DateTime.Now.ToString("dd.MM.yyyy-HH.mm.ss")}.uterus", tempScene);
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
@@ -446,6 +447,11 @@ Floor
                 createCube(pos : new Vector3(0.00f, 90.00f, 4.25f), layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
             });
 
+            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(7).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                TryToGroupName();
+            });
+
             // View
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
@@ -459,15 +465,18 @@ Floor
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
-                advancedInspector = true;
-                SetAlert("Advanced inspector will remove some autoamtic features of the editor! It's recommended to use this option as a testing resource instead of level making.", "Warning!");
+                friendlyAdvancedInspector = true;
+                SetAlert("Advanced inspector is meant for people who have gotten used to the editor and know what they are doing.", "Warning!");
+                //SetAlert("Advanced inspector will remove some autoamtic features of the editor! It's recommended to use this option as a testing resource instead of level making.", "Warning!");
                 UpdateInspector();
+                lastHierarchy = [];
             });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
-                advancedInspector = false;
+                friendlyAdvancedInspector = false;
                 UpdateInspector();
+                lastHierarchy = [];
             });
 
             editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
@@ -593,6 +602,7 @@ Floor
             NewInspectorVariable("intensity", typeof(Light));
             NewInspectorVariable("range", typeof(Light));
             NewInspectorVariable("type", typeof(Light));
+            NewInspectorVariable("color", typeof(Light));
 
             //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
             NewInspectorVariable("rooms", typeof(CheckPoint));
@@ -619,6 +629,15 @@ Floor
             NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
+
+            NewInspectorVariable("scrolling", typeof(CubeTilingAnimator));
+            NewInspectorVariable("affectedCubes", typeof(CubeTilingAnimator));
+
+            NewInspectorVariable("affectedCubes", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("points", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("speed", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("movesWithThePlayer", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("mode", typeof(MovingPlatformAnimator));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -634,6 +653,7 @@ Floor
         {
             string realPath = dir;
             if (dir == "DuvizPlush") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
+            if (dir == "DuvizPlushFixed") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
             GameObject obj = null;
             obj = Instantiate(Plugin.Ass<GameObject>(dir));
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
@@ -675,9 +695,16 @@ Floor
                     blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
                 else if (realPath == "DuvizPlush")
                     blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlush"));
+                else if (realPath == "DuvizPlushFixed")
+                    blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlushFixed"));
+                obj.transform.localEulerAngles = Vector3.zero;
                 blahaj.transform.SetParent(obj.transform);
                 blahaj.transform.localPosition = Vector3.zero;
                 blahaj.transform.localEulerAngles = Vector3.zero;
+                if (dir == realPath)
+                    obj.name = "Blahaj";
+                else
+                    obj.name = realPath;
             }
 
             if (!isLoading)
@@ -740,7 +767,7 @@ Floor
             }
         }
 
-        void createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
+        GameObject createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = objName;
@@ -764,6 +791,8 @@ Floor
                 cameraSelector.SelectObject(cube);
 
             if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
+
+            return cube;
         }
 
         void createFloor(Vector3 scale)
@@ -936,6 +965,8 @@ Floor
                 list.Add(typeof(DeathZone));
                 list.Add(typeof(Light));
                 list.Add(typeof(MusicObject));
+                list.Add(typeof(CubeTilingAnimator));
+                list.Add(typeof(MovingPlatformAnimator));
 
                 return list;
             }
@@ -1141,12 +1172,13 @@ Floor
                                         
                                     }
 
-                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
+                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is CubeTilingAnimator || c is MovingPlatformAnimator)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                            SetAlert("Collider has been set to be a trigger.", "Info!", new Color(1, 0.5f, 0.25f));
+                                            cameraSelector.selectedObject.layer = LayerMask.NameToLayer("Invisible");
+                                            SetAlert("Collider has been set to be a trigger and layer to Invisible.", "Info!", new Color(1, 0.5f, 0.25f));
                                             if (c is SavableObject)
                                                 Destroy(cameraSelector.selectedObject.GetComponent<CubeObject>());
                                         }
@@ -1329,7 +1361,8 @@ Floor
                     typeof(bool),
                     typeof(Vector3),
                     typeof(Vector2),
-                    typeof(Vector4)
+                    typeof(Vector4),
+                    typeof(Color),
                 };
 
         Type choosing_type = null;
@@ -1344,6 +1377,8 @@ Floor
         void CreateInspectorVariable(string fieldName, object value, Type type, object field, Component comp, GameObject obj)
         {
             string valueStr = value != null ? value.ToString() : "null";
+            if (type == typeof(Color))
+                valueStr = value != null ? (new Vector3(((Color)value).r * 255f, ((Color)value).g * 255f, ((Color)value).b * 255f)).ToString() : "null";
             if (type == typeof(bool))
             {
                 CreateInspectorItem(fieldName, inspectorItemType.Button, valueStr, value).AddListener(() =>
@@ -1381,6 +1416,11 @@ Floor
 
                 else if (type == typeof(Vector4))
                     SetMemberValue(field, comp, ParseVector4(lastFieldText));
+
+                else if (type == typeof(Color)) {
+                    Vector3 c = ParseVector3(lastFieldText);
+                    SetMemberValue(field, comp, new Color(c.x / 255f, c.y / 255f, c.z / 255f));
+                }
 
                 else
                     Plugin.LogInfo($"Unsupported field type: {type}");
@@ -2077,11 +2117,18 @@ Floor
             SetAlert("Scene saved!", "Info!", col: new Color(0.25f, 1f, 0.25f));
         }
 
+        public static T[] ReverseArray<T>(T[] array)
+        {
+            if (array == null) return null;
+            System.Array.Reverse(array);
+            return array;
+        }
+
         public string GetSceneJson()
         {
             string text = "";
 
-            foreach (var obj in GameObject.FindObjectsOfType<CubeObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
             {
                 if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
                 {
@@ -2099,7 +2146,7 @@ Floor
                     continue;
                 }
 
-                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
+                if (obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
                 {
                     continue;
                 }
@@ -2116,7 +2163,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<PrefabObject>(true)))
             {
                 if (obj.GetComponent<CheckPoint>() != null) continue;
                 if (obj.transform.parent != null && obj.transform.parent.name == "Automated Gore Zone") continue;
@@ -2130,7 +2177,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<ArenaObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ArenaObject>(true)))
             {
                 if (obj.GetComponent<ActivateArena>() == null) continue;
                 obj.enemyIds.Clear();
@@ -2152,7 +2199,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<NextArenaObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NextArenaObject>(true)))
             {
                 if (obj.GetComponent<ActivateNextWave>() == null) continue;
                 obj.enemyIds.Clear();
@@ -2188,7 +2235,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<ActivateObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ActivateObject>(true)))
             {
                 obj.toActivateIds.Clear();
                 obj.toDeactivateIds.Clear();
@@ -2225,7 +2272,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<HUDMessageObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<HUDMessageObject>(true)))
             {
                 text += "? HUDMessageObject ?";
                 text += "\n";
@@ -2237,7 +2284,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<NewTeleportObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NewTeleportObject>(true)))
             {
                 text += "? TeleportObject ?";
                 text += "\n";
@@ -2249,7 +2296,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<LevelInfoObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<LevelInfoObject>(true)))
             {
                 text += "? LevelInfoObject ?";
                 text += "\n";
@@ -2269,7 +2316,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<CheckPoint>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
             {
                 while (obj.GetComponent<CheckpointObject>() != null)
                 {
@@ -2316,7 +2363,7 @@ Floor
                 Destroy(obj.GetComponent<CheckpointObject>());
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
             {
                 if (obj.transform.childCount != 0) continue;
 
@@ -2350,7 +2397,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<DeathZone>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<DeathZone>(true)))
             {
                 if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
                 text += "? DeathZone ?";
@@ -2368,7 +2415,7 @@ Floor
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<Light>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<Light>(true)))
             {
                 if (obj.GetComponent<SavableObject>() == null) continue;
                 if (obj.GetComponent<PrefabObject>() != null) continue;
@@ -2383,11 +2430,14 @@ Floor
                 text += "? PASS ?\n";
                 text += (int)obj.type;
                 text += "\n";
+                text += "? PASS ?\n";
+                text += (new Vector3(obj.color.r * 255f, obj.color.g * 255f, obj.color.b * 255f)).ToString();
+                text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<MusicObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MusicObject>(true)))
             {
                 if (obj.GetComponent<SavableObject>() == null) continue;
                 text += "? MusicObject ?";
@@ -2397,6 +2447,55 @@ Floor
                 text += "\n";
                 text += "? PASS ?\n";
                 text += obj.battleThemePath;
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                obj.affectedCubesIds = [];
+                obj.pointsIds = [];
+                foreach (var e in obj.affectedCubes)
+                    if (e != null)
+                        obj.addAffectedCubeId(GetIdOfObj(e));
+                foreach (var e in obj.points)
+                    if (e != null)
+                        obj.addPointId(GetIdOfObj(e));
+                text += "? MovingPlatformAnimator ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.affectedCubesIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.pointsIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                text += $"{obj.speed}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.movesWithThePlayer}\n";
+                text += "? PASS ?\n";
+                text += $"{(int)obj.mode}\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeTilingAnimator>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                obj.affectedCubesIds = [];
+                foreach (var e in obj.affectedCubes)
+                    if (e != null)
+                        obj.addId(GetIdOfObj(e));
+                text += "? CubeTilingAnimator ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.affectedCubesIds)
+                    text += e + "\n";
+                text += "\n";
+                text += "? PASS ?\n";
+                text += obj.scrolling.ToString();
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -2458,12 +2557,12 @@ Floor
 
             addButton.onClick.AddListener(() =>
             {
-                loadScenePopup.SetActive(false);
                 if (sceneResults.Count > 0)
                 {
                     string sceneName = sceneResults[0].Item1;
                     if (sceneName != null)
                     {
+                        loadScenePopup.SetActive(false);
                         canOpenEditor = false;
                         EmptySceneLoader.forceSave = sceneName;
                         EmptySceneLoader.forceEditor = false;
@@ -2471,6 +2570,54 @@ Floor
                         EmptySceneLoader.Instance.LoadLevel();
                     }
                 }
+            });
+        }
+
+        public void GroupName(string n)
+        {
+            List<GameObject> objects = [];
+
+            foreach (var o in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList())
+            {
+                if (o.GetComponent<SavableObject>() != null)
+                    if (o.name == n || (n.StartsWith("*") && o.name.Contains(n.Replace("*", ""))))
+                        objects.Add(o);
+            }
+
+            GameObject group = createCube(pos: new Vector3(0.00f, 90.00f, 4.25f), layer: "Invisible", objName: $"Group of {n}", matType: MaterialChoser.materialTypes.NoCollision);
+            foreach (var o in objects)
+            {
+                o.transform.SetParent(group.transform, true);
+            }
+
+            SetAlert("Group made!", "Info!", col: new Color(0.25f, 1f, 0.25f));
+        }
+
+        public void TryToGroupName()
+        {
+            GameObject loadScenePopup = editorCanvas.transform.GetChild(0).GetChild(18).gameObject;
+            TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+            TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
+            Button addButton = loadScenePopup.transform.GetChild(4).GetComponent<Button>();
+
+            loadScenePopup.SetActive(true);
+
+            field.Select();
+
+            if (cameraSelector.selectedObject != null)
+                field.text = cameraSelector.selectedObject.name;
+
+            field.onValueChanged.RemoveAllListeners();
+            addButton.onClick.RemoveAllListeners();
+            field.onValueChanged.AddListener((string val) =>
+            {
+
+            });
+
+            addButton.onClick.AddListener(() =>
+            {
+                loadScenePopup.SetActive(false);
+                GroupName(field.text);
             });
         }
 
@@ -2535,10 +2682,20 @@ Floor
                     string sceneName = sceneResults[0].Item1;
                     if (sceneName != null)
                     {
-                        LoadShit(sceneName);
+                        StartCoroutine(LoadScene(sceneName));
                     }
                 }
             });
+        }
+
+        public IEnumerator LoadScene(string sceneName)
+        {
+            DeleteScene(true);
+            yield return new WaitForEndOfFrame();
+            LoadShit(sceneName);
+            yield return new WaitForEndOfFrame();
+            SetAlert("Scene loaded!", "Info!", new Color(1, 0.5f, 0.25f));
+            Billboard.UpdateBillboards();
         }
 
         public void LoadShit(string sceneName)
@@ -2733,6 +2890,8 @@ Floor
                             workingObject.GetComponent<LightObject>().range = float.Parse(line);
                         else if (phase == 2)
                             workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
+                        else if (phase == 3)
+                            workingObject.GetComponent<LightObject>().color = ParseVector3(line);
 
                     if (scriptType == "MusicObject" && workingObject.GetComponent<MusicObject>() == null)
                         MusicObject.Create(workingObject);
@@ -2741,6 +2900,28 @@ Floor
                             workingObject.GetComponent<MusicObject>().calmThemePath = line;
                         else if (phase == 1)
                             workingObject.GetComponent<MusicObject>().battleThemePath = line;
+
+                    if (scriptType == "MovingPlatformAnimator" && workingObject.GetComponent<MovingPlatformAnimator>() == null)
+                        MovingPlatformAnimator.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "MovingPlatformAnimator")
+                        if (phase == 0)
+                            workingObject.GetComponent<MovingPlatformAnimator>().addAffectedCubeId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<MovingPlatformAnimator>().addPointId(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<MovingPlatformAnimator>().speed = float.Parse(line);
+                        else if (phase == 3)
+                            workingObject.GetComponent<MovingPlatformAnimator>().movesWithThePlayer = line.ToLower() == "true";
+                        else if (phase == 4)
+                            workingObject.GetComponent<MovingPlatformAnimator>().mode = (MovingPlatformAnimator.platformMode)Enum.GetValues(typeof(MovingPlatformAnimator.platformMode)).GetValue(int.Parse(line));
+
+                    if (scriptType == "CubeTilingAnimator" && workingObject.GetComponent<CubeTilingAnimator>() == null)
+                        CubeTilingAnimator.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "CubeTilingAnimator")
+                        if (phase == 0)
+                            workingObject.GetComponent<CubeTilingAnimator>().addId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<CubeTilingAnimator>().scrolling = ParseVector2(line);
 
                     if (scriptType == "HUDMessageObject" && workingObject.GetComponent<HUDMessageObject>() == null)
                         HUDMessageObject.Create(workingObject);
@@ -2802,6 +2983,7 @@ Floor
             foreach (var obj in allObjs)
             {
                 obj.GetComponent<ArenaObject>()?.createArena();
+                obj.GetComponent<ArenaObject>()?.createArena();
                 obj.GetComponent<NextArenaObject>()?.createArena();
                 obj.GetComponent<ActivateObject>()?.createActivator();
                 obj.GetComponent<CheckpointObject>()?.createCheckpoint();
@@ -2811,6 +2993,8 @@ Floor
                 obj.GetComponent<HUDMessageObject>()?.createHudMessage();
                 obj.GetComponent<NewTeleportObject>()?.createTeleporter();
                 obj.GetComponent<LevelInfoObject>()?.createLevelInfo();
+                obj.GetComponent<CubeTilingAnimator>()?.createAnimator();
+                obj.GetComponent<MovingPlatformAnimator>()?.createAnimator();
             }
 
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");

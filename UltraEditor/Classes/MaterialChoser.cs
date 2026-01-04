@@ -121,6 +121,14 @@ namespace UltraEditor.Classes
             mesh = null;
         }
 
+        public void UpdateOffset()
+        {
+            var renderer = GetComponent<Renderer>();
+            if (!renderer) return;
+
+            renderer.material.SetTextureOffset("_MainTex", offset);
+        }
+
         public void Update()
         {
             if (mesh == null)
@@ -135,6 +143,8 @@ namespace UltraEditor.Classes
                 UpdateUVs();
                 lastScale = transform.lossyScale;
             }
+
+            UpdateOffset();
         }
 
         void UpdateUVs()

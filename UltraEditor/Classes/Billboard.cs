@@ -22,12 +22,15 @@ namespace UltraEditor.Classes
         public static Sprite musicObject = null;
         public static Sprite teleportObject = null;
         public static Sprite checkpoint = null;
+        public static Sprite cubeTilingAnimator = null;
+        public static Sprite animator = null;
 
         public static void DeleteAll()
         {
-            for (int i = billboards.Count - 1; i >= 0; i--)
+            foreach(var billboard in billboards.ToList())
             {
-                Destroy(billboards[i].gameObject);
+                if (billboard != null)
+                    Destroy(billboard.gameObject);
             }
             billboards.Clear();
         }
@@ -46,6 +49,8 @@ namespace UltraEditor.Classes
                 light = BundlesManager.editorBundle.LoadAsset<Sprite>("light");
                 musicObject = BundlesManager.editorBundle.LoadAsset<Sprite>("music");
                 checkpoint = BundlesManager.editorBundle.LoadAsset<Sprite>("checkpoint");
+                cubeTilingAnimator = BundlesManager.editorBundle.LoadAsset<Sprite>("cubeTilingAnimator");
+                animator = BundlesManager.editorBundle.LoadAsset<Sprite>("animator");
             }
 
             DeleteAll();
@@ -86,7 +91,7 @@ namespace UltraEditor.Classes
                         NewBillboard(levelInfoObject, t, c.gameObject);
                         break;
 
-                    case Light l when l.GetComponent<SavableObject>() != null:
+                    case Light l when l.GetComponent<SavableObject>() != null && l.GetComponent<PrefabObject>() == null:
                         NewBillboard(light, t, c.gameObject);
                         break;
 
@@ -100,6 +105,14 @@ namespace UltraEditor.Classes
 
                     case CheckpointObject co:
                         NewBillboard(checkpoint, t, c.gameObject);
+                        break;
+
+                    case CubeTilingAnimator cta:
+                        NewBillboard(cubeTilingAnimator, t, c.gameObject);
+                        break;
+
+                    case MovingPlatformAnimator mpa:
+                        NewBillboard(animator, t, c.gameObject);
                         break;
                 }
             }
@@ -184,7 +197,6 @@ namespace UltraEditor.Classes
 
             if (Input.GetMouseButtonDown(0) && EditorManager.Instance.cameraSelector.enabled && EditorManager.Instance.cameraSelector.selectionMode == CameraSelector.SelectionMode.Cursor)
             {
-                col.enabled = true;
                 Ray ray = camera.ScreenPointToRay(Input.mousePosition);
 
                 if (Physics.Raycast(ray, out RaycastHit hit))
@@ -195,8 +207,6 @@ namespace UltraEditor.Classes
                         EditorManager.Instance.lastHierarchy = [];
                     }
                 }
-
-                col.enabled = false;
             }
         }
     }
