@@ -1,6 +1,7 @@
 ﻿namespace UltraEditor.Classes.UI;
 
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,6 +21,17 @@ public static class Builder
 
         return ComponentT;
     }
+
+    /// <summary> Creates some Text and stuff idk what im meant to tell you :P </summary>
+    public static TextMeshProUGUI Text(string name, string text, Transform parent, Rect rect, float size = 27f, TextAlignmentOptions alignment = TextAlignmentOptions.Left, Color? col = null) =>
+        Manufacture<TextMeshProUGUI>(name, parent, rect, textGui =>
+        {
+            textGui.alignment = alignment;
+            textGui.color = col ?? Color.white;
+            textGui.font = Sprites.VCROSDMONO;
+            textGui.fontSize = size;
+            textGui.text = text;
+        });
 
     /// <summary> Creates an Image with the given sprite and color. </summary>
     public static Image Image(string name, Transform parent, Rect rect, Sprite sprite = null, Color? col = null) =>
