@@ -18,7 +18,7 @@ public static class Sprites
     public static ColorBlock FillColor, BorderColor;
 
     /// <summary> Used for getting any sprite specific values such as ColorBlock's or PixelPerUnit. </summary>
-    public static Dictionary<Sprite, (float ppu, ColorBlock cb)> SpriteColors = [];
+    public static Dictionary<Sprite, (float ppu, ColorBlock cb)> SpriteVals = [];
 
     /// <summary> Loads all the sprites and color blocks. </summary>
     public static void Load()
@@ -45,7 +45,7 @@ public static class Sprites
 
     /// <summary> Registers different sprite specific values. </summary>
     public static void RegisterValues(float pixelsPerUnit, ColorBlock colorBlock, params List<Sprite> sprites) =>
-        sprites.ForEach(s => SpriteColors.Add(s, (pixelsPerUnit, colorBlock)));
+        sprites.ForEach(s => SpriteVals.Add(s, (pixelsPerUnit, colorBlock)));
 
     /// <summary> Just loads a sprite from UI addressables synchronized. </summary>
     public static Sprite LoadSprite(string key) =>
