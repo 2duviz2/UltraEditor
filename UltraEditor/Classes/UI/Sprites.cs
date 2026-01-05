@@ -17,8 +17,8 @@ public static class Sprites
     /// <summary> ColorBlock's Used For Buttons And The Such. </summary>
     public static ColorBlock FillColor, BorderColor;
 
-    /// <summary> Gets the colorblock for a specific sprite as different sprites use different colors. </summary>
-    public static Dictionary<Sprite, ColorBlock> SpriteColors = [];
+    /// <summary> Used for getting any sprite specific values such as ColorBlock's or PixelPerUnit. </summary>
+    public static Dictionary<Sprite, (float ppu, ColorBlock cb)> SpriteColors = [];
 
     /// <summary> Loads all the sprites and color blocks. </summary>
     public static void Load()
@@ -36,14 +36,16 @@ public static class Sprites
         SmallBorder = LoadSprite("Round_BorderSmall");
         SmallFill = LoadSprite("Round_FillSmall");
 
-        // Load which colorblocks correspond to which sprites
-        AddColor(BorderColor, Border, BorderBlack, SmallBorder);
-        AddColor(FillColor, Fill, SmallFill);
+        // Load sprite specific values
+        RegisterValues(4.05f, BorderColor, Border, BorderBlack);
+        RegisterValues(4.05f, FillColor, Fill);
+        RegisterValues(5.4f, BorderColor, SmallBorder);
+        RegisterValues(5.4f, FillColor, SmallFill);
     }
 
-    /// <summary> Adds a ColorBlock for a sprite since different sprites have different colors. </summary>
-    public static void AddColor(ColorBlock cb, params List<Sprite> sprites) =>
-        sprites.ForEach(s => SpriteColors.Add(s, cb));
+    /// <summary> Registers different sprite specific values. </summary>
+    public static void RegisterValues(float pixelsPerUnit, ColorBlock colorBlock, params List<Sprite> sprites) =>
+        sprites.ForEach(s => SpriteColors.Add(s, (pixelsPerUnit, colorBlock)));
 
     /// <summary> Just loads a sprite from UI addressables synchronized. </summary>
     public static Sprite LoadSprite(string key) =>
