@@ -29,7 +29,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public static MovingPlatformAnimator Create(GameObject target, SpawnedObject spawnedObject = null)
         {
             MovingPlatformAnimator obj = target.AddComponent<MovingPlatformAnimator>();
-            if (spawnedObject != null) spawnedObject.movingPlatform = obj;
+            spawnedObject?.movingPlatform = obj;
             return obj;
         }
 
@@ -98,8 +98,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     obj.transform.position += delta;
                     obj.transform.rotation = deltaRot * obj.transform.rotation;
 
-                    if (obj.GetComponent<MoveWithPlayer>() != null)
-                        obj.GetComponent<MoveWithPlayer>().delta = delta;
+                    obj.GetComponent<MoveWithPlayer>()?.delta = delta;
                 }
             }
         }
@@ -172,13 +171,13 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     }
             }
 
-            foreach (var obj in affectedCubes)
+            if (movesWithThePlayer)
             {
-                if (movesWithThePlayer)
+                foreach (var obj in affectedCubes)
                 {
                     obj.tag = "Moving";
-                    obj.AddComponent<Rigidbody>();
-                    obj.GetComponent<Rigidbody>().isKinematic = true;
+                    obj.AddComponent<Rigidbody>().isKinematic = true;
+                    obj.AddComponent<MoveWithPlayer>();
                 }
             }
         }
