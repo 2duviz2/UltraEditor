@@ -13,6 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using TMPro;
+using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
@@ -574,6 +575,7 @@ Floor
 
             NewInspectorVariable("matType", typeof(CubeObject));
             NewInspectorVariable("matTiling", typeof(CubeObject));
+            NewInspectorVariable("shape", typeof(CubeObject));
             NewInspectorVariable("isTrigger", typeof(CubeObject));
 
             // Enemies
@@ -616,6 +618,13 @@ Floor
             NewInspectorVariable("calmThemePath", typeof(MusicObject));
             NewInspectorVariable("battleThemePath", typeof(MusicObject));
 
+            NewInspectorVariable("url", typeof(SFXObject));
+            NewInspectorVariable("disableAfterPlaying", typeof(SFXObject));
+            NewInspectorVariable("playOnAwake", typeof(SFXObject));
+            NewInspectorVariable("loop", typeof(SFXObject));
+            NewInspectorVariable("range", typeof(SFXObject));
+            NewInspectorVariable("volume", typeof(SFXObject));
+
 
             NewInspectorVariable("message", typeof(HUDMessageObject));
             NewInspectorVariable("disableAfterShowing", typeof(HUDMessageObject));
@@ -625,6 +634,7 @@ Floor
 
             NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
             NewInspectorVariable("levelLayer", typeof(LevelInfoObject));
+            NewInspectorVariable("levelName", typeof(LevelInfoObject));
             NewInspectorVariable("playMusicOnDoorOpen", typeof(LevelInfoObject));
             NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
@@ -767,7 +777,7 @@ Floor
             }
         }
 
-        GameObject createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
+        public GameObject createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
             cube.name = objName;
@@ -965,6 +975,7 @@ Floor
                 list.Add(typeof(DeathZone));
                 list.Add(typeof(Light));
                 list.Add(typeof(MusicObject));
+                list.Add(typeof(SFXObject));
                 list.Add(typeof(CubeTilingAnimator));
                 list.Add(typeof(MovingPlatformAnimator));
 
@@ -1172,7 +1183,7 @@ Floor
                                         
                                     }
 
-                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is CubeTilingAnimator || c is MovingPlatformAnimator)
+                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is SFXObject || c is CubeTilingAnimator || c is MovingPlatformAnimator)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
@@ -1913,6 +1924,11 @@ Floor
             newItem.transform.GetChild(1).GetComponent<TMP_Text>().text = backupDescription;
             Button button = newItem.GetComponent<Button>();
             button.onClick.RemoveAllListeners();
+            if (goToParent)
+            {
+                ClickableWithKey c = newItem.AddComponent<ClickableWithKey>();
+                c.button = button;
+            }
             button.onClick.AddListener(() =>
             {
                 if (goToParent)
@@ -2126,6 +2142,7 @@ Floor
 
         public string GetSceneJson()
         {
+            List<GameObject> iterated = [];
             string text = "";
 
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
@@ -2134,7 +2151,8 @@ Floor
                 {
                     GameObject ob = obj.gameObject;
                     Destroy(obj.GetComponent<CubeObject>());
-                    ArenaObject o = ArenaObject.Create(ob);
+                    if (obj.GetComponent<ArenaObject>() == null)
+                        ArenaObject.Create(ob);
                     continue;
                 }
 
@@ -2146,10 +2164,8 @@ Floor
                     continue;
                 }
 
-                if (obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
-                {
+                if (obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<SFXObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
                     continue;
-                }
 
                 text += "? CubeObject ?";
                 text += "\n";
@@ -2159,6 +2175,8 @@ Floor
                 text += obj.matTiling + "\n";
                 text += "? PASS ?\n";
                 text += obj._isTrigger + "\n";
+                text += "? PASS ?\n";
+                text += (int)obj.shape + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2177,26 +2195,26 @@ Floor
                 text += "\n";
             }
 
+            iterated = [];
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ArenaObject>(true)))
             {
+                if (iterated.Contains(obj.gameObject)) continue;
                 if (obj.GetComponent<ActivateArena>() == null) continue;
                 obj.enemyIds.Clear();
-                foreach (var e in obj.GetComponent<ActivateArena>().enemies)
-                {
-                    if (e != null)
-                        obj.addId(GetIdOfObj(e));
-                }
+                if (obj.GetComponent<ActivateArena>().enemies != null)
+                    foreach (var e in obj.GetComponent<ActivateArena>().enemies)
+                        if (e != null)
+                            obj.addId(GetIdOfObj(e));
 
                 text += "? ArenaObject ?";
                 text += "\n";
                 text += addShit(obj);
                 text += obj.GetComponent<ActivateArena>().onlyWave + "\n";
                 foreach (var e in obj.enemyIds)
-                {
                     text += e + "\n";
-                }
                 text += "? END ?";
                 text += "\n";
+                iterated.Add(obj.gameObject);
             }
 
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NextArenaObject>(true)))
@@ -2206,16 +2224,12 @@ Floor
                 obj.toActivateIds.Clear();
                 if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
-                    {
                         if (e != null)
                             obj.addEnemyId(GetIdOfObj(e));
-                    }
                 if (obj.GetComponent<ActivateNextWave>().toActivate != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
-                    {
                         if (e != null)
                             obj.addToActivateId(GetIdOfObj(e));
-                    }
 
                 text += "? NextArenaObject ?";
                 text += "\n";
@@ -2223,14 +2237,10 @@ Floor
                 text += obj.GetComponent<ActivateNextWave>().lastWave + "\n";
                 text += obj.GetComponent<ActivateNextWave>().enemyCount + "\n";
                 foreach (var e in obj.enemyIds)
-                {
                     text += e + "\n";
-                }
                 text += "? PASS ?\n";
                 foreach (var e in obj.toActivateIds)
-                {
                     text += e + "\n";
-                }
                 text += "? END ?";
                 text += "\n";
             }
@@ -2312,6 +2322,8 @@ Floor
                 text += obj.levelLayer + "\n";
                 text += "? PASS ?\n";
                 text += obj.playMusicOnDoorOpen + "\n";
+                text += "? PASS ?\n";
+                text += obj.levelName + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2448,6 +2460,27 @@ Floor
                 text += "? PASS ?\n";
                 text += obj.battleThemePath;
                 text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SFXObject>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                text += "? SFXObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += $"{obj.url}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.disableAfterPlaying}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.playOnAwake}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.loop}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.range}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.volume}\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2801,6 +2834,8 @@ Floor
                             workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
                         else if (phase == 2)
                             workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<CubeObject>().shape = (MaterialChoser.shapes)Enum.GetValues(typeof(MaterialChoser.shapes)).GetValue(int.Parse(line));
                     }
 
                     if (lineIndex == 10 && scriptType == "PrefabObject")
@@ -2901,6 +2936,22 @@ Floor
                         else if (phase == 1)
                             workingObject.GetComponent<MusicObject>().battleThemePath = line;
 
+                    if (scriptType == "SFXObject" && workingObject.GetComponent<SFXObject>() == null)
+                        SFXObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "SFXObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<SFXObject>().url = line;
+                        else if (phase == 1)
+                            workingObject.GetComponent<SFXObject>().disableAfterPlaying = line.ToLower() == "true";
+                        else if (phase == 2)
+                            workingObject.GetComponent<SFXObject>().playOnAwake = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<SFXObject>().loop = line.ToLower() == "true";
+                        else if (phase == 4)
+                            workingObject.GetComponent<SFXObject>().range = float.Parse(line);
+                        else if (phase == 5)
+                            workingObject.GetComponent<SFXObject>().volume = float.Parse(line);
+
                     if (scriptType == "MovingPlatformAnimator" && workingObject.GetComponent<MovingPlatformAnimator>() == null)
                         MovingPlatformAnimator.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "MovingPlatformAnimator")
@@ -2954,6 +3005,8 @@ Floor
                             workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
                         else if (phase == 5)
                             workingObject.GetComponent<LevelInfoObject>().playMusicOnDoorOpen = line.ToLower() == "true";
+                        else if (phase == 6)
+                            workingObject.GetComponent<LevelInfoObject>().levelName = line;
                 }
 
                 lineIndex++;
@@ -2990,6 +3043,7 @@ Floor
                 obj.GetComponent<DeathZoneObject>()?.createDeathzone();
                 obj.GetComponent<LightObject>()?.createLight();
                 obj.GetComponent<MusicObject>()?.createMusic();
+                obj.GetComponent<SFXObject>()?.createSFX();
                 obj.GetComponent<HUDMessageObject>()?.createHudMessage();
                 obj.GetComponent<NewTeleportObject>()?.createTeleporter();
                 obj.GetComponent<LevelInfoObject>()?.createLevelInfo();

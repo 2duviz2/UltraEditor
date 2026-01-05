@@ -32,6 +32,15 @@ namespace UltraEditor.Classes.IO.SaveObjects
             toActivateIds.Add(id);
         }
 
+        bool addedGoreZone = false;
+        public void Tick()
+        {
+            if (Time.timeScale == 0) return;
+            if (!addedGoreZone)
+                gameObject.AddComponent<GoreZone>();
+            addedGoreZone = true;
+        }
+
         public void createArena()
         {
             ActivateNextWave activateNextWave = gameObject.AddComponent<ActivateNextWave>();

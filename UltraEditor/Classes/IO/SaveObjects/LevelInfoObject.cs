@@ -11,6 +11,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
     {
         public string tipOfTheDay = "Hi!";
         public string levelLayer = "ULTRAEDITOR /// CUSTOM LEVEL";
+        public string levelName = "%SAVE%";
         public bool playMusicOnDoorOpen = true;
         public bool changeLighting = false;
         public Vector3 ambientColor = new Vector3(255, 255, 255);

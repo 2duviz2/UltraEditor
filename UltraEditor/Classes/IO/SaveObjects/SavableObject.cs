@@ -20,6 +20,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
             GetComponent<CubeObject>()?.Tick();
             GetComponent<CubeTilingAnimator>()?.Tick();
             GetComponent<MovingPlatformAnimator>()?.Tick();
+            GetComponent<NextArenaObject>()?.Tick();
+            GetComponent<SFXObject>()?.Tick();
         }
     }
 }

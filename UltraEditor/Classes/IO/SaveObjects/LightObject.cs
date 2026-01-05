@@ -10,7 +10,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
     public class LightObject : SavableObject
     {
         public float intensity = 1f;
-        public float range = 10f;
+        public float range = 50f;
         public Vector3 color = Vector3.one * 255;
         public LightType type = LightType.Point;
 

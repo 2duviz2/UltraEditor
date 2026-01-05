@@ -26,13 +26,14 @@ namespace UltraEditor.Classes.IO.SaveObjects
             gameObject.GetComponent<Collider>().isTrigger = true;
         }
 
+        bool used = false;
         public void OnTriggerEnter(Collider other)
         {
             if (other.gameObject.CompareTag("Player"))
             {
-                if (!enabled) return;
+                if (used) return;
                 HudMessageReceiver.Instance.SendHudMessage(message);
-                if (disableAfterShowing) enabled = false;
+                if (disableAfterShowing) used = true;
             }
         }
     }

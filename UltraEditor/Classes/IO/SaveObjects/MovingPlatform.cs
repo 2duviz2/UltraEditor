@@ -43,13 +43,16 @@ namespace UltraEditor.Classes.IO.SaveObjects
             affectedCubesIds.Add(id);
         }
 
+        float time = 0;
         public void Tick()
         {
+            time += Time.deltaTime;
+
             if (points == null || points.Length < 2 || affectedCubes == null || affectedCubes.Length == 0)
                 return;
 
             int count = points.Length;
-            float total = Time.time * speed / 10;
+            float total = time * speed / 10;
 
             int aIndex = Mathf.FloorToInt(total) % count;
             int bIndex = (aIndex + 1) % count;
@@ -78,9 +81,13 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             Vector3 from = points[aIndex].transform.position;
             Vector3 to = points[bIndex].transform.position;
+            Quaternion fromRot = points[aIndex].transform.rotation;
+            Quaternion toRot = points[bIndex].transform.rotation;
 
             Vector3 targetPos = Vector3.Lerp(from, to, t);
+            Quaternion targetRot = Quaternion.Lerp(fromRot, toRot, t);
             Vector3 delta = targetPos - transform.position;
+            Quaternion deltaRot = targetRot * Quaternion.Inverse(transform.rotation);
 
             transform.position = targetPos;
 
@@ -89,6 +96,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 if (obj != null)
                 {
                     obj.transform.position += delta;
+                    obj.transform.rotation = deltaRot * obj.transform.rotation;
+
                     if (obj.GetComponent<MoveWithPlayer>() != null)
                         obj.GetComponent<MoveWithPlayer>().delta = delta;
                 }
@@ -103,6 +112,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             affectedCubes = [];
             points = [];
+
+            time = 0;
 
             foreach (var e in affectedCubesIds)
             {
@@ -165,7 +176,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             {
                 if (movesWithThePlayer)
                 {
-                    obj.AddComponent<MoveWithPlayer>();
+                    obj.tag = "Moving";
                     obj.AddComponent<Rigidbody>();
                     obj.GetComponent<Rigidbody>().isKinematic = true;
                 }

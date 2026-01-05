@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UltraEditor.Classes.IO.SaveObjects;
+using Unity.AI.Navigation;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
@@ -24,13 +25,16 @@ namespace UltraEditor.Classes
         public static Sprite checkpoint = null;
         public static Sprite cubeTilingAnimator = null;
         public static Sprite animator = null;
+        public static Sprite sfxObject = null;
 
         public static void DeleteAll()
         {
             foreach(var billboard in billboards.ToList())
             {
                 if (billboard != null)
-                    Destroy(billboard.gameObject);
+                {
+                    DestroyImmediate(billboard.gameObject);
+                }
             }
             billboards.Clear();
         }
@@ -51,6 +55,7 @@ namespace UltraEditor.Classes
                 checkpoint = BundlesManager.editorBundle.LoadAsset<Sprite>("checkpoint");
                 cubeTilingAnimator = BundlesManager.editorBundle.LoadAsset<Sprite>("cubeTilingAnimator");
                 animator = BundlesManager.editorBundle.LoadAsset<Sprite>("animator");
+                sfxObject = BundlesManager.editorBundle.LoadAsset<Sprite>("sfxObject");
             }
 
             DeleteAll();
@@ -113,6 +118,10 @@ namespace UltraEditor.Classes
 
                     case MovingPlatformAnimator mpa:
                         NewBillboard(animator, t, c.gameObject);
+                        break;
+
+                    case SFXObject so:
+                        NewBillboard(sfxObject, t, c.gameObject);
                         break;
                 }
             }
@@ -185,7 +194,8 @@ namespace UltraEditor.Classes
 
         public void Update()
         {
-            if (EditorManager.Instance == null) return;
+            if (EditorManager.Instance == null) DeleteAll();
+            if (!EditorManager.Instance.editorCanvas.activeInHierarchy) DeleteAll();
 
             Camera camera = EditorManager.Instance.editorCamera;
             transform.LookAt(camera.transform);

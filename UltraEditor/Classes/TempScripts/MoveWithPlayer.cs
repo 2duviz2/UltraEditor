@@ -9,20 +9,30 @@ namespace UltraEditor.Classes.TempScripts
     public class MoveWithPlayer : MonoBehaviour
     {
         public Vector3 delta;
-        public void OnCollisionStay(Collision collision)
+        public GameObject ghost = null;
+        public void Start()
+        {
+            ghost = new GameObject("Ghost");
+            ghost.transform.localScale = Vector3.one;
+        }
+
+        public void FixedUpdate()
+        {
+            ghost.transform.position = transform.position;
+        }
+
+        public void OnCollisionEnter(Collision collision)
         {
             if (!collision.collider.CompareTag("Player")) return;
 
-            foreach (var c in collision.contacts)
-            {
-                if (c.normal.y > 0.5f)
-                {
-                    var rb = NewMovement.Instance;
-                    if (rb != null)
-                        rb.pushForce += delta;
-                    break;
-                }
-            }
+            PlayerMovementParenting.Instance.AttachPlayer(ghost.transform);
+        }
+
+        public void OnCollisionExit(Collision collision)
+        {
+            if (!collision.collider.CompareTag("Player")) return;
+
+            PlayerMovementParenting.Instance.DetachPlayer(ghost.transform);
         }
     }
 }

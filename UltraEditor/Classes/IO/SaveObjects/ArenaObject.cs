@@ -26,6 +26,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void createArena()
         {
+            if (gameObject.GetComponent<ActivateArena>() != null) { return; }
             ActivateArena activateArena = gameObject.AddComponent<ActivateArena>();
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;
@@ -61,6 +62,22 @@ namespace UltraEditor.Classes.IO.SaveObjects
                         }
                     }
             }
+
+            bool enemiesHaveParent = true;
+            foreach (var enemy in activateArena.enemies)
+            {
+                if (enemy.transform.parent == null || (enemy.transform.parent.GetComponent<CubeObject>() == null && enemy.transform.parent.GetComponent<ActivateNextWave>() == null)) enemiesHaveParent = false;
+            }
+            if (!enemiesHaveParent)
+            {
+                GameObject group = EditorManager.Instance.createCube(layer : "Invisible", objName : "EnemyWave", pos : activateArena.enemies[0].transform.position, matType: MaterialChoser.materialTypes.NoCollision);
+                foreach (var enemy in activateArena.enemies)
+                {
+                    enemy.transform.SetParent(group.transform, true);
+                }
+            }
+            if (activateArena.enemies.Length > 0)
+                activateArena.enemies[0].transform.parent.gameObject.AddComponent<GoreZone>();
         }
     }
 }

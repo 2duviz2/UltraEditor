@@ -169,6 +169,8 @@ public class EmptySceneLoader : MonoBehaviour
             {
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = lio.tipOfTheDay };
                 StockMapInfo.Instance.layerName = lio.levelLayer;
+                if (lio.levelName != "%SAVE%")
+                    StockMapInfo.Instance.levelName = lio.levelName;
                 GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = lio.playMusicOnDoorOpen;
             }
             else
@@ -179,7 +181,7 @@ public class EmptySceneLoader : MonoBehaviour
                 if (s.tipOfTheDay != null)
                     s.tipOfTheDay.text = StockMapInfo.Instance.tipOfTheDay.tip;
             }
-            StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
+            StockMapInfo.Instance.assets.LargeText = StockMapInfo.Instance.levelName.ToUpper();
             LevelNamePopup.Instance.Invoke("Start", 0);
             DiscordController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
             SteamController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);

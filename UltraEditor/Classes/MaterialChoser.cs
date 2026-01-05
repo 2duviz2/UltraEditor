@@ -40,6 +40,16 @@ namespace UltraEditor.Classes
             WarningStripes,
             WhiteWood,
             UnbreakableGlass,
+            LightGlow,
+        }
+
+        public enum shapes
+        {
+            Cube,
+            Pyramid,
+            /*Sphere,
+            Capsule,
+            Plane,*/
         }
 
         public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -49,7 +59,8 @@ namespace UltraEditor.Classes
             return obj;
         }
 
-        public void ProcessMaterial(materialTypes type, float tiling = 0.25f)
+        shapes lastShape = shapes.Cube;
+        public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null)
         {
             var renderer = GetComponent<Renderer>();
             if (!renderer) return;
@@ -58,6 +69,31 @@ namespace UltraEditor.Classes
             if (collider) collider.enabled = true;
 
             Material newMat = null;
+            lastScale = Vector3.zero;
+
+            if (shape != null)
+            if ((shapes)shape != lastShape)
+            {
+                lastShape = (shapes)shape;
+                GameObject tempObj = GameObject.CreatePrimitive(
+                      (shapes)shape == shapes.Cube ? PrimitiveType.Cube
+                    /*: (shapes)shape == shapes.Sphere ? PrimitiveType.Sphere
+                    : (shapes)shape == shapes.Capsule ? PrimitiveType.Capsule
+                    : (shapes)shape == shapes.Plane ? PrimitiveType.Plane*/
+                    : PrimitiveType.Cube);
+                Mesh mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
+                Destroy(tempObj);
+                if ((shapes)shape == shapes.Pyramid)
+                {
+                    tempObj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("PyramidMesh"));
+                    mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
+                    Destroy(tempObj);
+                }
+                GetComponent<MeshFilter>().mesh = mesh2;
+
+                mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
+                GetComponent<MeshFilter>().mesh = mesh;
+            }
 
             if (type == materialTypes.Default)
                 newMat = GetSandboxMaterial("Procedural Cube");
@@ -112,6 +148,8 @@ namespace UltraEditor.Classes
             }
             else if (type == materialTypes.UnbreakableGlass)
                 newMat = GetPathMaterial("GlassUnbreakable");
+            else if (type == materialTypes.LightGlow)
+                newMat = GetPathMaterial("LightPillar 3");
 
             if (newMat == null) return;
             renderer.material = newMat;
@@ -136,6 +174,10 @@ namespace UltraEditor.Classes
                 mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
                 GetComponent<MeshFilter>().mesh = mesh;
                 return;
+            }
+            else
+            {
+                GetComponent<MeshFilter>().mesh = mesh;
             }
             
             if (transform.lossyScale != lastScale)
