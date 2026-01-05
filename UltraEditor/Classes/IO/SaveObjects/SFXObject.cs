@@ -59,6 +59,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         {
             if (EditorManager.canOpenEditor) // update while in editor
             {
+                if (source == null) createSFX();
                 source.spatialize = range <= 0 ? false : true;
                 source.maxDistance = range;
                 source.minDistance = 0;
@@ -69,6 +70,11 @@ namespace UltraEditor.Classes.IO.SaveObjects
             {
                 CheckReady(true);
             }
+        }
+
+        public void OnDisable()
+        {
+            started = false;
         }
 
         public void OnTriggerEnter(Collider other)

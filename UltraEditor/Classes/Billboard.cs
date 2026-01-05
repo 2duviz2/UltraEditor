@@ -26,6 +26,7 @@ namespace UltraEditor.Classes
         public static Sprite cubeTilingAnimator = null;
         public static Sprite animator = null;
         public static Sprite sfxObject = null;
+        public static Sprite skullTrigger = null;
 
         public static void DeleteAll()
         {
@@ -56,6 +57,7 @@ namespace UltraEditor.Classes
                 cubeTilingAnimator = BundlesManager.editorBundle.LoadAsset<Sprite>("cubeTilingAnimator");
                 animator = BundlesManager.editorBundle.LoadAsset<Sprite>("animator");
                 sfxObject = BundlesManager.editorBundle.LoadAsset<Sprite>("sfxObject");
+                skullTrigger = BundlesManager.editorBundle.LoadAsset<Sprite>("skullTrigger");
             }
 
             DeleteAll();
@@ -122,6 +124,10 @@ namespace UltraEditor.Classes
 
                     case SFXObject so:
                         NewBillboard(sfxObject, t, c.gameObject);
+                        break;
+
+                    case SkullActivatorObject st:
+                        NewBillboard(skullTrigger, t, c.gameObject);
                         break;
                 }
             }

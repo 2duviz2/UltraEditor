@@ -30,7 +30,7 @@ namespace UltraEditor.Classes
         bool destroyedLastFrame = false;
         public bool advancedInspector = false;
         static public bool friendlyAdvancedInspector = false;
-        public static bool logShit = false;
+        public static bool logShit = true;
         public static bool canOpenEditor = false;
 
         static string tempScene = @"
@@ -363,8 +363,7 @@ Floor
 
             fileB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
-                string path = Application.persistentDataPath + "/ULTRAEDITOR";
-                path = path.Replace("/", "\\"); // make Windows happy
+                string path = $"{Application.persistentDataPath}/ULTRAEDITOR";
                 if (!Directory.Exists(path))
                     Directory.CreateDirectory(path);
                 Application.OpenURL($"file://{path}");
@@ -459,7 +458,7 @@ Floor
             viewB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 friendlyAdvancedInspector = true;
-                SetAlert("Advanced inspector is meant for people who have gotten used to the editor and know what they are doing.", "Warning!");
+                SetAlert("Advanced inspector will enable more options and is meant for people who have gotten used to the editor.", "Warning!");
                 UpdateInspector();
                 lastHierarchy = [];
             });
@@ -500,13 +499,6 @@ Floor
 
             if (navMeshSurface != null)
             {
-                if (Input.GetKey(KeyCode.A))
-                    navMeshSurface.collectObjects = CollectObjects.All;
-                if (Input.GetKey(KeyCode.V))
-                    navMeshSurface.collectObjects = CollectObjects.Volume;
-                if (Input.GetKey(KeyCode.M))
-                    navMeshSurface.collectObjects = CollectObjects.MarkedWithModifier;
-
                 navMeshSurface.BuildNavMesh();
                 EditorVisualizers.RebuildNavMeshVis(navMeshSurface);
                 if (logShit)
@@ -590,6 +582,11 @@ Floor
             NewInspectorVariable("speed", typeof(MovingPlatformAnimator));
             NewInspectorVariable("movesWithThePlayer", typeof(MovingPlatformAnimator));
             NewInspectorVariable("mode", typeof(MovingPlatformAnimator));
+
+            //NewInspectorVariable("acceptedItemType", typeof(SkullActivatorObject));
+            NewInspectorVariable("triggerAltars", typeof(SkullActivatorObject));
+            NewInspectorVariable("toActivate", typeof(SkullActivatorObject));
+            NewInspectorVariable("toDeactivate", typeof(SkullActivatorObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -607,20 +604,46 @@ Floor
             if (dir == "DuvizPlush") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
             if (dir == "DuvizPlushFixed") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
             GameObject obj = null;
-            obj = Instantiate(Plugin.Ass<GameObject>(dir));
+
+            // exclusive exceptions
+            if (dir == "ImCloudingIt")
+            {
+                obj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("Cloud"));
+            }
+            else if (dir == "AltarBlueOff")
+            {
+                obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
+                //            |Cube       |SkullBlue
+                obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+                obj.name += " (Off)";
+            }
+            else if (dir == "AltarRedOff")
+            {
+                obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
+                //            |Cube       |SkullBlue
+                obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+                obj.name += " (Off)";
+            }
+            else
+            {
+                //spawn the object like normal
+                obj = Instantiate(Plugin.Ass<GameObject>(dir));
+            }
+
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
-
             if (createPrefabObject)
+            {
                 PrefabObject.Create(obj, realPath);
-
+            }
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
                 obj.transform.SetParent(cameraSelector.selectedObject.transform);
                 lastSelected = null;
             }
             else
+            {
                 cameraSelector.SelectObject(obj);
-
+            }
             if (Input.GetKey(Plugin.altKey)) obj.SetActive(false);
             else
             {
@@ -628,7 +651,6 @@ Floor
                 {
                     obj.SetActive(false);
                     SetAlert("Enemies will always spawn disabled in the editor, they must be enabled with ActivateArena objects.", title: "Warning!");
-                    //SetAlert("If you plan on making enemy arenas, avoid spawning them active! Hold alt when spawning the enemy to disable it in order to avoid automatic gorezones in editor.", title: "Warning!");
                 }
             }
 
@@ -640,6 +662,7 @@ Floor
             if (dir == "Bonus" || dir == "Assets/Prefabs/Levels/BonusDualWield Variant.prefab" || dir == "Assets/Prefabs/Levels/BonusSuperCharge.prefab")
                 obj.GetComponent<Bonus>().secretNumber = 100000;
 
+            // Manage the blahaj and plushies
             if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
             {
                 GameObject blahaj = null;
@@ -754,6 +777,7 @@ Floor
             cube.transform.localScale = scale;
             cube.layer = LayerMask.NameToLayer("Outdoors");
             cube.tag = "Floor";
+            cube.name = scale.y > 1 ? "Wall" : "Floor";
 
             CubeObject.Create(cube, MaterialChoser.materialTypes.Default);
 
@@ -920,6 +944,7 @@ Floor
                 list.Add(typeof(SFXObject));
                 list.Add(typeof(CubeTilingAnimator));
                 list.Add(typeof(MovingPlatformAnimator));
+                list.Add(typeof(SkullActivatorObject));
 
                 return list;
             }
@@ -1125,7 +1150,7 @@ Floor
                                         
                                     }
 
-                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is SFXObject || c is CubeTilingAnimator || c is MovingPlatformAnimator)
+                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is SFXObject || c is CubeTilingAnimator || c is MovingPlatformAnimator || c is SkullActivatorObject)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
@@ -2106,7 +2131,7 @@ Floor
                     continue;
                 }
 
-                if (obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<SFXObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
+                if (obj.GetComponent<SkullActivatorObject>() != null || obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<SFXObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
                     continue;
 
                 text += "? CubeObject ?";
@@ -2454,6 +2479,38 @@ Floor
                 text += $"{obj.movesWithThePlayer}\n";
                 text += "? PASS ?\n";
                 text += $"{(int)obj.mode}\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SkullActivatorObject>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                obj.triggerAltarsIds = [];
+                obj.toActivateIds = [];
+                obj.toDeactivateIds = [];
+                foreach (var e in obj.toActivate)
+                    if (e != null)
+                        obj.addToActivateId(GetIdOfObj(e));
+                foreach (var e in obj.toDeactivate)
+                    if (e != null)
+                        obj.addToDeactivateId(GetIdOfObj(e));
+                foreach (var e in obj.triggerAltars)
+                    if (e != null)
+                        obj.addTriggerAltarId(GetIdOfObj(e));
+                text += "? SkullActivatorObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += $"{(int)obj.acceptedItemType}\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.toActivateIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.toDeactivateIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.triggerAltarsIds)
+                    text += e + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2910,6 +2967,18 @@ Floor
                         else if (phase == 4)
                             workingObject.GetComponent<MovingPlatformAnimator>().mode = (MovingPlatformAnimator.platformMode)Enum.GetValues(typeof(MovingPlatformAnimator.platformMode)).GetValue(int.Parse(line));
 
+                    if (scriptType == "SkullActivatorObject" && workingObject.GetComponent<SkullActivatorObject>() == null)
+                        SkullActivatorObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "SkullActivatorObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<SkullActivatorObject>().acceptedItemType = (SkullActivatorObject.skullType)Enum.GetValues(typeof(SkullActivatorObject.skullType)).GetValue(int.Parse(line));
+                        else if (phase == 1)
+                            workingObject.GetComponent<SkullActivatorObject>().addToActivateId(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<SkullActivatorObject>().addToDeactivateId(line);
+                        else if (phase == 3)
+                            workingObject.GetComponent<SkullActivatorObject>().addTriggerAltarId(line);
+
                     if (scriptType == "CubeTilingAnimator" && workingObject.GetComponent<CubeTilingAnimator>() == null)
                         CubeTilingAnimator.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "CubeTilingAnimator")
@@ -2995,6 +3064,7 @@ Floor
                 obj.GetComponent<LevelInfoObject>()?.createLevelInfo();
                 obj.GetComponent<CubeTilingAnimator>()?.createAnimator();
                 obj.GetComponent<MovingPlatformAnimator>()?.createAnimator();
+                obj.GetComponent<SkullActivatorObject>()?.createActivator();
             }
 
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");

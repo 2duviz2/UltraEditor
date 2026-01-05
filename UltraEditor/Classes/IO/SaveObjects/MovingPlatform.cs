@@ -112,6 +112,11 @@ namespace UltraEditor.Classes.IO.SaveObjects
             }
         }
 
+        public void OnEnable()
+        {
+            time = 0;
+        }
+
         public void createAnimator()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
