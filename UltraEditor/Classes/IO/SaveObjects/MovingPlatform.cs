@@ -43,12 +43,24 @@ namespace UltraEditor.Classes.IO.SaveObjects
         }
 
         float time = 0;
+        float timeToSpawnPopup = 5;
         public void Tick()
         {
             time += Time.deltaTime;
 
             if (points == null || points.Length < 2 || affectedCubes == null || affectedCubes.Length == 0)
                 return;
+
+            if (transform.childCount > 0)
+            {
+                timeToSpawnPopup += Time.unscaledDeltaTime;
+                if (timeToSpawnPopup > 5)
+                {
+                    timeToSpawnPopup = 0;
+                    EditorManager.Instance.SetAlert("MovingPlatformAnimator cannot have children!");
+                }
+                return;
+            }
 
             int count = points.Length;
             float total = time * speed / 10;

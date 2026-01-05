@@ -1,29 +1,17 @@
-﻿using BepInEx;
-using HarmonyLib;
-using Newtonsoft.Json;
-using plog.Models;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using TMPro;
 using UltraEditor.Classes.Canvas;
-using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using UnityEngine.Networking;
 using UnityEngine.UI;
-using static UnityEngine.ExpressionEvaluator;
 using Component = UnityEngine.Component;
 using NewTeleportObject = UltraEditor.Classes.IO.SaveObjects.TeleportObject;
 
@@ -44,8 +32,6 @@ namespace UltraEditor.Classes
         static public bool friendlyAdvancedInspector = false;
         public static bool logShit = false;
         public static bool canOpenEditor = false;
-
-        float timeToUpdateBillboards = 0;
 
         static string tempScene = @"
 ? CubeObject ?
@@ -358,18 +344,24 @@ Floor
 
         void SetupButtons()
         {
+            Transform buttons = editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1);
+            Transform fileB = buttons.GetChild(0).GetChild(3);
+            Transform editB = buttons.GetChild(1).GetChild(3);
+            Transform addB = buttons.GetChild(2).GetChild(3);
+            Transform viewB = buttons.GetChild(3).GetChild(3);
+            Transform helpB = buttons.GetChild(4).GetChild(3);
             // File
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 TryToLoadShit();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 TryToSaveShit();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 string path = Application.persistentDataPath + "/ULTRAEDITOR";
                 path = path.Replace("/", "\\"); // make Windows happy
@@ -378,18 +370,18 @@ Floor
                 Application.OpenURL($"file://{path}");
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 DeleteScene(true);
                 SetAlert("Scene deleted!", "Info!", new Color(1, 0.5f, 0.25f));
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 StartCoroutine(GoToBackupScene());
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
             {
                 SetAlert("Couldn't copy scene!");
                 GUIUtility.systemCopyBuffer = GetSceneJson();
@@ -397,95 +389,94 @@ Floor
             });
 
             // Edit
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 toggleObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 deleteObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 duplicateObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 RebuildNavmesh(true);
             });
 
             // Add
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube(true);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube(true, false);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createFloor(new Vector3(25, 1, 25));
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createFloor(new Vector3(25, 10, 1));
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube(pos : new Vector3(0.00f, 90.00f, 4.25f), layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(7).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(7).GetComponent<Button>().onClick.AddListener(() =>
             {
                 TryToGroupName();
             });
 
             // View
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeCameraCullingLayers(-1);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeCameraCullingLayers(defaultCullingMask);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 friendlyAdvancedInspector = true;
                 SetAlert("Advanced inspector is meant for people who have gotten used to the editor and know what they are doing.", "Warning!");
-                //SetAlert("Advanced inspector will remove some autoamtic features of the editor! It's recommended to use this option as a testing resource instead of level making.", "Warning!");
                 UpdateInspector();
                 lastHierarchy = [];
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 friendlyAdvancedInspector = false;
                 UpdateInspector();
                 lastHierarchy = [];
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeLighting(0);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeLighting(1);
             });
@@ -535,58 +526,10 @@ Floor
             NewInspectorVariable("localEulerAngles", typeof(Transform));
             NewInspectorVariable("localScale", typeof(Transform));
 
-            /*NewInspectorVariable("castShadows", typeof(MeshRenderer));
-            NewInspectorVariable("receiveShadows", typeof(MeshRenderer));*/
-
-            //NewInspectorVariable("center", typeof(BoxCollider));
-            /*NewInspectorVariable("size", typeof(BoxCollider));
-            NewInspectorVariable("isTrigger", typeof(BoxCollider));*/
-
-            //NewInspectorVariable("center", typeof(CapsuleCollider));
-            /*NewInspectorVariable("radius", typeof(CapsuleCollider));
-            NewInspectorVariable("height", typeof(CapsuleCollider));
-            NewInspectorVariable("isTrigger", typeof(CapsuleCollider));*/
-
-            /*NewInspectorVariable("drag", typeof(Rigidbody));
-            NewInspectorVariable("angularDrag", typeof(Rigidbody));
-            NewInspectorVariable("mass", typeof(Rigidbody));
-            NewInspectorVariable("useGravity", typeof(Rigidbody));
-            NewInspectorVariable("isKinematic", typeof(Rigidbody));*/
-
-            /*NewInspectorVariable("speed", typeof(NavMeshAgent));
-            NewInspectorVariable("angularSpeed", typeof(NavMeshAgent));
-            NewInspectorVariable("acceleration", typeof(NavMeshAgent));*/
-
-            /*NewInspectorVariable("volume", typeof(AudioSource));
-            NewInspectorVariable("pitch", typeof(AudioSource));
-            NewInspectorVariable("loop", typeof(AudioSource));
-            NewInspectorVariable("spatialize", typeof(AudioSource));
-            NewInspectorVariable("spatialBlend", typeof(AudioSource));
-            NewInspectorVariable("panStereo", typeof(AudioSource));
-            NewInspectorVariable("reverbZoneMix", typeof(AudioSource));
-            NewInspectorVariable("dopplerLevel", typeof(AudioSource));
-            NewInspectorVariable("priority", typeof(AudioSource));
-            NewInspectorVariable("minDistance", typeof(AudioSource));
-            NewInspectorVariable("maxDistance", typeof(AudioSource));*/
-
-            /*NewInspectorVariable("speed", typeof(Animator));*/
-
-            /*NewInspectorVariable("ignoreFromBuild", typeof(NavMeshModifier));*/
-
             NewInspectorVariable("matType", typeof(CubeObject));
             NewInspectorVariable("matTiling", typeof(CubeObject));
             NewInspectorVariable("shape", typeof(CubeObject));
             NewInspectorVariable("isTrigger", typeof(CubeObject));
-
-            // Enemies
-            /*NewInspectorVariable("health", typeof(Zombie));
-            NewInspectorVariable("health", typeof(Statue));
-            NewInspectorVariable("originalHealth", typeof(Statue));*/
-
-            // Triggers
-            /*NewInspectorVariable("timed", typeof(HudMessage));
-            NewInspectorVariable("message", typeof(HudMessage));
-            NewInspectorVariable("timerTime", typeof(HudMessage));*/
 
             NewInspectorVariable("enemies", typeof(ActivateArena));
             NewInspectorVariable("onlyWave", typeof(ActivateArena));
@@ -606,10 +549,8 @@ Floor
             NewInspectorVariable("type", typeof(Light));
             NewInspectorVariable("color", typeof(Light));
 
-            //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
             NewInspectorVariable("rooms", typeof(CheckPoint));
             NewInspectorVariable("checkpointRooms", typeof(CheckpointObject));
-            //NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
 
             NewInspectorVariable("notInstakill", typeof(DeathZone));
             NewInspectorVariable("damage", typeof(DeathZone));
@@ -631,6 +572,7 @@ Floor
 
             NewInspectorVariable("teleportPosition", typeof(NewTeleportObject));
             NewInspectorVariable("canBeReactivated", typeof(NewTeleportObject));
+            NewInspectorVariable("slowdown", typeof(NewTeleportObject));
 
             NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
             NewInspectorVariable("levelLayer", typeof(LevelInfoObject));
@@ -2302,6 +2244,8 @@ Floor
                 text += obj.teleportPosition + "\n";
                 text += "? PASS ?\n";
                 text += obj.canBeReactivated + "\n";
+                text += "? PASS ?\n";
+                text += obj.slowdown + "\n";
                 text += "? END ?";
                 text += "\n";
             }
@@ -2989,6 +2933,8 @@ Floor
                             workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseVector3(line);
                         else if (phase == 1)
                             workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
+                        else if (phase == 2)
+                            workingObject.GetComponent<NewTeleportObject>().slowdown = line.ToLower() == "true";
 
                     if (scriptType == "LevelInfoObject" && workingObject.GetComponent<LevelInfoObject>() == null)
                         LevelInfoObject.Create(workingObject);

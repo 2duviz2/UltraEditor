@@ -106,11 +106,6 @@ public class EmptySceneLoader : MonoBehaviour
 
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
 
-        /*GameObject statsManager = new GameObject("StatsManager", typeof(StatsManager));
-        GameObject levelInfo = new GameObject("LevelInfo", typeof(StockMapInfo));
-
-        GameObject firstRoom = Instantiate(Plugin.Ass<GameObject>("FirstRoom"));*/
-
         if (forceEditor)
         {
             EditorManager.canOpenEditor = false;
