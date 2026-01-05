@@ -1,6 +1,6 @@
 ﻿namespace UltraEditor.Classes.UI;
 
-public static class Builder
+public static class Sprites
 {
 
 }
