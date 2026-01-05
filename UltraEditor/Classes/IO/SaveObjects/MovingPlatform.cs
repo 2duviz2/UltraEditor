@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UltraEditor.Classes.TempScripts;
 using Unity.AI.Navigation;
 using UnityEngine;
 
