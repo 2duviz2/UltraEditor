@@ -1,6 +1,7 @@
 ﻿namespace UltraEditor.Classes.UI;
 
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.UI;
@@ -14,15 +15,21 @@ public static class Sprites
     /// <summary> Small Octagonal/Cut Corner UI Sprites. </summary>
     public static Sprite SmallBorder, SmallFill;
 
+    /// <summary> Ultrakill's font. </summary>
+    public static TMP_FontAsset VCROSDMONO;
+
     /// <summary> ColorBlock's Used For Buttons And The Such. </summary>
     public static ColorBlock FillColor, BorderColor;
 
     /// <summary> Used for getting any sprite specific values such as ColorBlock's or PixelPerUnit. </summary>
     public static Dictionary<Sprite, (float ppu, ColorBlock cb)> SpriteVals = [];
 
-    /// <summary> Loads all the sprites and color blocks. </summary>
+    /// <summary> Loads all the UI things. </summary>
     public static void Load()
     {
+        // Load Font
+        VCROSDMONO = Addressables.LoadAssetAsync<TMP_FontAsset>("Assets/Fonts/VCR_OSD_MONO_UI.asset").WaitForCompletion();
+
         // Create ColorBlocks
         FillColor = BorderColor = ColorBlock.defaultColorBlock;
         BorderColor.highlightedColor = BorderColor.selectedColor = new(.5f, .5f, .5f, 1f);
