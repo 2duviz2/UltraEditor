@@ -41,6 +41,22 @@ namespace UltraEditor.Classes
             WhiteWood,
             UnbreakableGlass,
             LightGlow,
+            Bush,
+            Dirt,
+            LimboGlass1,
+            LimboGlass2,
+            LimboGlass3,
+            LimboGlass4,
+            StoneMossy,
+            Mulch,
+            Metal1,
+            Metal2,
+            Metal3,
+            Metal4,
+            Metal5,
+            Metal6,
+            Metal7,
+            Metal8,
         }
 
         public enum shapes
@@ -150,6 +166,38 @@ namespace UltraEditor.Classes
                 newMat = GetPathMaterial("GlassUnbreakable");
             else if (type == materialTypes.LightGlow)
                 newMat = GetPathMaterial("LightPillar 3");
+            else if (type == materialTypes.Bush)
+                newMat = GetPathMaterial("Environment/Layer 1/Bush");
+            else if (type == materialTypes.Dirt)
+                newMat = GetPathMaterial("Environment/Layer 1/Dirt");
+            else if (type == materialTypes.LimboGlass1)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassBig");
+            else if (type == materialTypes.LimboGlass2)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassBlue");
+            else if (type == materialTypes.LimboGlass3)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassGabriel1");
+            else if (type == materialTypes.LimboGlass4)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassRed");
+            else if (type == materialTypes.StoneMossy)
+                newMat = GetPathMaterial("Environment/Layer 1/StoneMossy");
+            else if (type == materialTypes.Mulch)
+                newMat = GetPathMaterial("Environment/Metal/Mulch");
+            else if (type == materialTypes.Metal1)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 1");
+            else if (type == materialTypes.Metal2)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 2");
+            else if (type == materialTypes.Metal3)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 3");
+            else if (type == materialTypes.Metal4)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 4");
+            else if (type == materialTypes.Metal5)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 5");
+            else if (type == materialTypes.Metal6)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 6");
+            else if (type == materialTypes.Metal7)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 7");
+            else if (type == materialTypes.Metal8)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 8");
 
             if (newMat == null) return;
             renderer.material = newMat;

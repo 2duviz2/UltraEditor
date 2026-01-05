@@ -49,6 +49,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             activateNextWave.doors = [];
             activateNextWave.nextEnemies = [];
             activateNextWave.toActivate = [];
+            activateNextWave.noActivationDelay = true;
             Destroy(gameObject.GetComponent<Collider>());
             activateNextWave.lastWave = lastWave;
             activateNextWave.enemyCount = enemyCount;

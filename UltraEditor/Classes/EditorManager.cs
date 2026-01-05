@@ -1166,6 +1166,7 @@ Floor
                                     if (c is ActivateNextWave)
                                     {
                                         SetAlert("ActivateNextWave will remove any material from the object when saved, as it's meant to be in empty objects and make every enemy be in the child of this object.", "Advice!");
+                                        ((ActivateNextWave)c).noActivationDelay = true;
                                     }
 
                                     if (c is HudMessage)

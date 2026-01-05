@@ -55,6 +55,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         bool state = false; // off / on
         bool tried = false;
+        bool started = false;
         List<GameObject> tempObjects = [];
         public void Tick()
         {
@@ -72,12 +73,29 @@ namespace UltraEditor.Classes.IO.SaveObjects
                         {
                             GameObject to = new GameObject($"{obj.name} listener");
                             to.SetActive(false);
-                            List<GameObject> aos = ipz.activateOnSuccess.ToList();
+                            List<GameObject> aos = [..ipz.activateOnSuccess];
                             aos.Add(to);
-                            ipz.activateOnSuccess = aos.ToArray();
+                            ipz.activateOnSuccess = [..aos];
                             tempObjects.Add(to);
                         }
                     }
+                }
+
+                if (tempObjects.Count == 1)
+                {
+                    ItemPlaceZone ipz = triggerAltars[0].transform.GetChild(0).GetComponent<ItemPlaceZone>();
+                    foreach (var obj in toActivate)
+                    {
+                        Door d = obj.GetComponent<Door>();
+                        if (d != null)
+                        {
+                            List<Door> drs = [.. ipz.doors];
+                            drs.Add(d);
+                            ipz.doors = [.. drs];
+                        }
+                    }
+                    ipz.Invoke("Awake", 0);
+                    ipz.Invoke("Start", 0);
                 }
             }
 
@@ -87,10 +105,11 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 if (!obj.activeSelf) activated = false;
             }
 
-            if (activated != state)
+            if (activated != state || !started)
             {
                 TriggerActivator(activated);
                 state = activated;
+                started = true;
             }
         }
 
@@ -98,7 +117,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
         {
             foreach (var obj in toActivate)
                 if  (obj != null)
-                    obj.SetActive(a);
+                    if (obj.GetComponent<Door>() == null || triggerAltars.Length > 1)
+                        obj.SetActive(a);
             foreach (var obj in toDeactivate)
                 if (obj != null)
                     obj.SetActive(!a);
