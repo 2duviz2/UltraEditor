@@ -30,7 +30,7 @@ namespace UltraEditor.Classes
         bool destroyedLastFrame = false;
         public bool advancedInspector = false;
         static public bool friendlyAdvancedInspector = false;
-        public static bool logShit = true;
+        public static bool logShit = false;
         public static bool canOpenEditor = false;
 
         static string tempScene = @"
