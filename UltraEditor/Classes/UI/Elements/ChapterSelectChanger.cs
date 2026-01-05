@@ -6,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UltraEditor.Classes
+namespace UltraEditor.Classes.UI.Elements
 {
     public class ChapterSelectChanger : MonoBehaviour
     {
