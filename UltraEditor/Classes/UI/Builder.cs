@@ -63,4 +63,25 @@ public static class Builder
 
         return button;
     }
+
+    /// <summary>  </summary>
+    public static TMP_InputField InputField(string name, string placeholder, Transform parent, Rect rect, Sprite sprite = null, Color? col = null, float size = 27f, TextAlignmentOptions alignment = TextAlignmentOptions.Left, Action<string> onEndEdit = null)
+    {
+        Image img = Image(name, parent, rect, sprite, col);
+        TMP_InputField field = img.gameObject.AddComponent<TMP_InputField>();
+        TextMeshProUGUI placeholderComp = Text("Placeholder", placeholder, img.transform, rect, size, alignment, col);
+        TextMeshProUGUI textComp = Text("Text", "", img.transform, rect, size, alignment, col);
+
+        field.textComponent = textComp;
+        field.placeholder = placeholderComp;
+        if (onEndEdit != null) 
+            field.onEndEdit.AddListener(txt => onEndEdit(txt));
+
+        if (Sprites.SpriteVals.TryGetValue(sprite ?? Sprites.Fill, out var val))
+            field.colors = val.cb;
+        else
+            field.colors = Sprites.FillColor;
+
+        return field;
+    }
 }
