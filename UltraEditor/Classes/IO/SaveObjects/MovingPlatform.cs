@@ -97,8 +97,6 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 {
                     obj.transform.position += delta;
                     obj.transform.rotation = deltaRot * obj.transform.rotation;
-
-                    obj.GetComponent<MoveWithPlayer>()?.delta = delta;
                 }
             }
         }
@@ -177,7 +175,6 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 {
                     obj.tag = "Moving";
                     obj.AddComponent<Rigidbody>().isKinematic = true;
-                    obj.AddComponent<MoveWithPlayer>();
                 }
             }
         }
