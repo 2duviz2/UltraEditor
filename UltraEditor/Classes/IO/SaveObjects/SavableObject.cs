@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
     public class SavableObject : MonoBehaviour
     {
@@ -18,6 +18,11 @@ namespace UltraEditor.Classes.Saving
             Scale = transform.lossyScale;
 
             GetComponent<CubeObject>()?.Tick();
+            GetComponent<CubeTilingAnimator>()?.Tick();
+            GetComponent<MovingPlatformAnimator>()?.Tick();
+            GetComponent<NextArenaObject>()?.Tick();
+            GetComponent<SFXObject>()?.Tick();
+            GetComponent<SkullActivatorObject>()?.Tick();
         }
     }
 }

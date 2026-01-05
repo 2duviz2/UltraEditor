@@ -1,22 +1,19 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using TMPro;
-using UltraEditor.Classes.Saving;
+using UltraEditor.Classes.Canvas;
+using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Component = UnityEngine.Component;
+using NewTeleportObject = UltraEditor.Classes.IO.SaveObjects.TeleportObject;
 
 namespace UltraEditor.Classes
 {
@@ -30,10 +27,38 @@ namespace UltraEditor.Classes
         public GameObject blocker;
 
         bool mouseLocked = true;
-        bool advancedInspector = false;
+        bool destroyedLastFrame = false;
+        public bool advancedInspector = false;
+        static public bool friendlyAdvancedInspector = false;
         public static bool logShit = false;
+        public static bool canOpenEditor = false;
 
-        static string tempScene;
+        static string tempScene = @"
+? CubeObject ?
+Wall(-10.00, 98.75, 20.00)(0.00, 0.00, 90.00)(20.00, 0.25, 40.00)
+Wall
+24
+Wall
+(-10.00, 98.75, 20.00)
+(0.00, 0.00, 90.00)
+(20.00, 0.25, 40.00)
+1
+
+0
+
+? END ?
+? CubeObject ?
+Floor(0.00, 89.25, 20.00)(0.00, 0.00, 0.00)(20.00, 1.00, 40.00)
+Floor
+24
+Floor
+(0.00, 89.25, 20.00)
+(0.00, 0.00, 0.00)
+(20.00, 1.00, 40.00)
+1
+
+0
+";
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
 
@@ -73,6 +98,17 @@ namespace UltraEditor.Classes
 
         public void Update()
         {
+            if (editorCanvas.activeSelf)
+            {
+                UpdateHierarchy();
+            }
+            
+            if (destroyedLastFrame)
+            {
+                destroyedLastFrame = false;
+                Billboard.UpdateBillboards();
+            }
+
             if (!mouseLocked)
             {
                 Cursor.lockState = CursorLockMode.None;
@@ -86,31 +122,26 @@ namespace UltraEditor.Classes
                 cameraSelector.ClearHover();
             }
 
-            if (Input.GetKeyDown(Plugin.deleteObjectKey))
+            if (Input.GetKeyDown(Plugin.deleteObjectKey) && editorCanvas.activeSelf)
             {
-                if (Input.GetKey(Plugin.ctrlKey))
+                if (Input.GetKey(Plugin.ctrlKey) && Input.GetKey(Plugin.shiftKey) && friendlyAdvancedInspector)
                     DeleteScene(true);
-                else
+                else if (IsObjectEditable())
                     deleteObject();
             }
 
-            if (Plugin.isToggleEnabledKeyPressed())
+            if (Plugin.isToggleEnabledKeyPressed() && IsObjectEditable() && editorCanvas.activeSelf)
                 toggleObject();
 
-            if (Plugin.isDuplicateKeyPressed())
+            if (Plugin.isDuplicateKeyPressed() && IsObjectEditable() && editorCanvas.activeSelf)
                 duplicateObject();
 
-            if (Input.GetKey(Plugin.createCubeKey))
+            if (Input.GetKey(Plugin.createCubeKey) && editorCanvas.activeSelf)
             {
                 createCube(true, false);
             }
 
             cameraSelector.enabled = (!blocker.activeSelf || cameraSelector.dragging) && editorCamera.gameObject.activeSelf;
-
-            if (editorCanvas.activeSelf)
-            {
-                UpdateHierarchy();
-            }
 
             if (Input.GetMouseButtonUp(0))
             {
@@ -121,17 +152,20 @@ namespace UltraEditor.Classes
 
                 if (holdingObject != null && holdingTarget != null && holdingObject != holdingTarget)
                 {
-                    if (logShit)
-                        Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
-                    holdingObject.transform.SetParent(holdingTarget.transform);
-                    cameraSelector.selectedObject = holdingTarget;
-                    lastSelected = null;
-                    UpdateHierarchy();
-                    holdingObject = null;
-                    holdingTarget = null;
+                    if (IsObjectEditable(holdingTarget) || advancedInspector)
+                    {
+                        if (logShit)
+                            Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
+                        holdingObject.transform.SetParent(holdingTarget.transform);
+                        cameraSelector.selectedObject = holdingTarget;
+                        lastSelected = null;
+                        UpdateHierarchy();
+                        holdingObject = null;
+                        holdingTarget = null;
+                    }
                 }
 
-                else if (holdingObject == holdingTarget && holdingObject != null)
+                else if (holdingObject != holdingTarget && holdingObject != null)
                 {
                     if (logShit)
                         Plugin.LogInfo($"Released object: {holdingObject.name} from target");
@@ -144,10 +178,13 @@ namespace UltraEditor.Classes
                 }
             }
 
-            if (Plugin.isSelectPressed() && cameraSelector.selectedObject != null)
+            if (Plugin.isSelectPressed() && cameraSelector.selectedObject != null && editorCanvas.activeSelf)
             {
                 SelectObject(cameraSelector.selectedObject);
             }
+
+            if (FinalRank.Instance != null)
+                FinalRank.Instance.targetLevelName = "Main Menu";
         }
 
         public void LateUpdate()
@@ -155,71 +192,26 @@ namespace UltraEditor.Classes
             
         }
 
-        static TMP_Text MissionNameText = null;
+        public static TMP_Text MissionNameText = null;
+        public static string EditorSceneName = "UltraEditor";
         static NavMeshSurface navMeshSurface;
-        static string deleteLevel = "Endless";
-        static string[] doNotDelete = new string[] { "MapLoader", "Level Info", "FirstRoom", "OnLevelStart", "StatsManager", "Canvas", "GameController", "Player", "EventSystem(Clone)", "CheatBinds", "PlatformerController(Clone)", "CheckPointsController" };
         public static void DeleteScene(bool force = false)
         {
-            if (force || ((SceneHelper.CurrentScene == deleteLevel || StatsManager.Instance.endlessMode) && !StatsManager.Instance.timer))
+            if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)))
             {
-                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList())
                 {
+                    if (obj == null) continue;
                     if (logShit)
                         Plugin.LogInfo($"Trying to detroy {obj.name}");
-                    if (!doNotDelete.Contains(obj.name) && !obj.name.StartsWith("MoveArrow_") && (Instance != null ? (obj != Instance.editorCamera.gameObject && obj != Instance.editorCanvas.gameObject && obj != Instance.gameObject && obj != navMeshSurface.gameObject) : true))
+                    if (obj.GetComponent<SavableObject>() != null || obj.name == "Automated Gore Zone")
                     {
                         if (logShit)
                             Plugin.LogInfo($"Destroyed {obj.name}");
                         Destroy(obj);
                     }
                 }
-
-                if (navMeshSurface == null)
-                {
-                    GameObject navMeshObj = new GameObject("NavMeshSurface");
-                    navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
-                    navMeshSurface.collectObjects = CollectObjects.All;
-                    navMeshSurface.BuildNavMesh();
-                    if (logShit)
-                        Plugin.LogInfo("NavMeshSurface created.");
-
-                    StatsManager.Instance.levelNumber = 0;
-                    StatsManager.Instance.endlessMode = false;
-
-                    StockMapInfo.Instance.layerName = "ULTRAEDITOR";
-                    StockMapInfo.Instance.layerName = "CUSTOM LEVEL";
-                    StockMapInfo.Instance.nextSceneName = "Main Menu";
-
-                    GameObject finalRankPanel = Plugin.Ass<GameObject>("Assets/Prefabs/Player/Player.prefab").transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).GetChild(0).gameObject;
-                    GameObject finishCanvas = NewMovement.Instance.transform.GetChild(4).GetChild(1).GetChild(0).GetChild(1).gameObject;
-
-                    Destroy(finishCanvas.transform.GetChild(0).gameObject);
-                    GameObject spawnedRank = Instantiate(finalRankPanel, finishCanvas.transform);
-                    StatsManager.Instance.fr = spawnedRank.GetComponent<FinalRank>();
-                    spawnedRank.GetComponent<FinalRank>().targetLevelName = "Main Menu";
-                    spawnedRank.SetActive(false);
-                    finishCanvas.SetActive(true);
-                    MissionNameText = spawnedRank.transform.GetChild(0).GetChild(0).GetComponent<TMP_Text>();
-
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startMusic = false;
-                    GameObject.FindObjectOfType<FinalDoorOpener>(true).startTimer = true;
-
-                    StatsManager.Instance.timeRanks[0] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[1] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[2] = int.MaxValue;
-                    StatsManager.Instance.timeRanks[3] = int.MaxValue;
-
-                    StatsManager.Instance.killRanks[0] = int.MaxValue;
-                    StatsManager.Instance.killRanks[1] = int.MaxValue;
-                    StatsManager.Instance.killRanks[2] = int.MaxValue;
-                    StatsManager.Instance.killRanks[3] = int.MaxValue;
-
-                    StatsManager.Instance.styleRanks[0] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[1] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[2] = int.MaxValue;
-                    StatsManager.Instance.styleRanks[3] = int.MaxValue;
-                }
+                Billboard.DeleteAll();
             }
         }
 
@@ -252,6 +244,7 @@ namespace UltraEditor.Classes
                 cameraSelector.ClearHover();
                 cameraSelector.UnselectObject();
                 cameraSelector.selectionMode = CameraSelector.SelectionMode.Cursor;
+                Billboard.DeleteAll();
 
                 if (mouseLocked)
                 {
@@ -267,8 +260,6 @@ namespace UltraEditor.Classes
                         NewMovement.Instance.transform.rotation = editorCamera.transform.rotation;
                     }
 
-                    if (SceneHelper.CurrentScene == deleteLevel)
-                        RebuildNavmesh(Input.GetKey(KeyCode.N));
 
                     foreach (var item in FindObjectsOfType<Door>())
                     {
@@ -276,8 +267,9 @@ namespace UltraEditor.Classes
                             BindingFlags.Instance | BindingFlags.NonPublic);
 
                         m.Invoke(item, null);
-
                     }
+
+                    RebuildNavmesh(false);
                 }
                 else
                 {
@@ -285,13 +277,18 @@ namespace UltraEditor.Classes
                     editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
                 }
 
-                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
+                if (!mouseLocked && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
                 {
                     StartCoroutine(GoToBackupScene());
                 }
-                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == deleteLevel)
+                if (mouseLocked && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
                 {
                     tempScene = GetSceneJson();
+
+                    string path = Application.persistentDataPath + $"/ULTRAEDITOR/backups";
+                    if (!Directory.Exists(path))
+                        Directory.CreateDirectory(path);
+                    File.WriteAllText(path + $"/{DateTime.Now.ToString("dd.MM.yyyy-HH.mm.ss")}.uterus", tempScene);
                 }
 
                 Time.timeScale = mouseLocked ? 1f : 0f;
@@ -339,7 +336,7 @@ namespace UltraEditor.Classes
             if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
                 EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
 
-            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == deleteLevel) // load backup level after restart
+            if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor) // load backup level after restart
             {
                 StartCoroutine(GoToBackupScene());
             }
@@ -347,107 +344,138 @@ namespace UltraEditor.Classes
 
         void SetupButtons()
         {
+            Transform buttons = editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1);
+            Transform fileB = buttons.GetChild(0).GetChild(3);
+            Transform editB = buttons.GetChild(1).GetChild(3);
+            Transform addB = buttons.GetChild(2).GetChild(3);
+            Transform viewB = buttons.GetChild(3).GetChild(3);
+            Transform helpB = buttons.GetChild(4).GetChild(3);
             // File
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 TryToLoadShit();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 TryToSaveShit();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
-                string path = Application.persistentDataPath;
-                path = path.Replace("/", "\\"); // make Windows happy
-                Process.Start("explorer.exe", $"\"{path}\"");
+                string path = $"{Application.persistentDataPath}/ULTRAEDITOR";
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                Application.OpenURL($"file://{path}");
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(0).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            fileB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 DeleteScene(true);
-                SetAlert("Scene deleted!", "Info!");
+                SetAlert("Scene deleted!", "Info!", new Color(1, 0.5f, 0.25f));
+            });
+
+            fileB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                StartCoroutine(GoToBackupScene());
+            });
+
+            fileB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                SetAlert("Couldn't copy scene!");
+                GUIUtility.systemCopyBuffer = GetSceneJson();
+                SetAlert("Scene copied!", "Info!", col: new Color(0.25f, 1f, 0.25f));
             });
 
             // Edit
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 toggleObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 deleteObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 duplicateObject();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(1).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            editB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 RebuildNavmesh(true);
             });
 
             // Add
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube();
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube(true);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createCube(true, false);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createFloor(new Vector3(25, 1, 25));
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(2).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            addB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 createFloor(new Vector3(25, 10, 1));
             });
 
+            addB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                createCube(pos : new Vector3(0.00f, 90.00f, 4.25f), layer : "Invisible", objName : "Invisible cube", matType : MaterialChoser.materialTypes.NoCollision);
+            });
+
+            addB.GetChild(7).GetComponent<Button>().onClick.AddListener(() =>
+            {
+                TryToGroupName();
+            });
+
             // View
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeCameraCullingLayers(-1);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeCameraCullingLayers(defaultCullingMask);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
             {
-                advancedInspector = true;
-                SetAlert("Advanced inspector will remove some autoamtic features of the editor! It's recommended to use this option as a testing resource instead of level making.", "Warning!");
+                friendlyAdvancedInspector = true;
+                SetAlert("Advanced inspector will enable more options and is meant for people who have gotten used to the editor.", "Warning!");
                 UpdateInspector();
+                lastHierarchy = [];
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
             {
-                advancedInspector = false;
+                friendlyAdvancedInspector = false;
                 UpdateInspector();
+                lastHierarchy = [];
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeLighting(0);
             });
 
-            editorCanvas.transform.GetChild(0).GetChild(4).GetChild(1).GetChild(3).GetChild(3).GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
+            viewB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
             {
                 ChangeLighting(1);
             });
@@ -455,20 +483,22 @@ namespace UltraEditor.Classes
 
         void RebuildNavmesh(bool forceFindNavmesh)
         {
-            if (navMeshSurface == null && forceFindNavmesh)
+            if (navMeshSurface == null)
             {
                 navMeshSurface = FindObjectOfType<NavMeshSurface>();
             }
 
+            if (navMeshSurface == null)
+            {
+                GameObject navMeshObj = new("NavMeshSurface");
+                navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
+                navMeshSurface.collectObjects = CollectObjects.All;
+                navMeshSurface.BuildNavMesh();
+                if (logShit) Plugin.LogInfo("NavMeshSurface created.");
+            }
+
             if (navMeshSurface != null)
             {
-                if (Input.GetKey(KeyCode.A))
-                    navMeshSurface.collectObjects = CollectObjects.All;
-                if (Input.GetKey(KeyCode.V))
-                    navMeshSurface.collectObjects = CollectObjects.Volume;
-                if (Input.GetKey(KeyCode.M))
-                    navMeshSurface.collectObjects = CollectObjects.MarkedWithModifier;
-
                 navMeshSurface.BuildNavMesh();
                 EditorVisualizers.RebuildNavMeshVis(navMeshSurface);
                 if (logShit)
@@ -488,55 +518,10 @@ namespace UltraEditor.Classes
             NewInspectorVariable("localEulerAngles", typeof(Transform));
             NewInspectorVariable("localScale", typeof(Transform));
 
-            /*NewInspectorVariable("castShadows", typeof(MeshRenderer));
-            NewInspectorVariable("receiveShadows", typeof(MeshRenderer));*/
-
-            //NewInspectorVariable("center", typeof(BoxCollider));
-            /*NewInspectorVariable("size", typeof(BoxCollider));
-            NewInspectorVariable("isTrigger", typeof(BoxCollider));*/
-
-            //NewInspectorVariable("center", typeof(CapsuleCollider));
-            /*NewInspectorVariable("radius", typeof(CapsuleCollider));
-            NewInspectorVariable("height", typeof(CapsuleCollider));
-            NewInspectorVariable("isTrigger", typeof(CapsuleCollider));*/
-
-            /*NewInspectorVariable("drag", typeof(Rigidbody));
-            NewInspectorVariable("angularDrag", typeof(Rigidbody));
-            NewInspectorVariable("mass", typeof(Rigidbody));
-            NewInspectorVariable("useGravity", typeof(Rigidbody));
-            NewInspectorVariable("isKinematic", typeof(Rigidbody));*/
-
-            /*NewInspectorVariable("speed", typeof(NavMeshAgent));
-            NewInspectorVariable("angularSpeed", typeof(NavMeshAgent));
-            NewInspectorVariable("acceleration", typeof(NavMeshAgent));*/
-
-            /*NewInspectorVariable("volume", typeof(AudioSource));
-            NewInspectorVariable("pitch", typeof(AudioSource));
-            NewInspectorVariable("loop", typeof(AudioSource));
-            NewInspectorVariable("spatialize", typeof(AudioSource));
-            NewInspectorVariable("spatialBlend", typeof(AudioSource));
-            NewInspectorVariable("panStereo", typeof(AudioSource));
-            NewInspectorVariable("reverbZoneMix", typeof(AudioSource));
-            NewInspectorVariable("dopplerLevel", typeof(AudioSource));
-            NewInspectorVariable("priority", typeof(AudioSource));
-            NewInspectorVariable("minDistance", typeof(AudioSource));
-            NewInspectorVariable("maxDistance", typeof(AudioSource));*/
-
-            /*NewInspectorVariable("speed", typeof(Animator));*/
-
-            /*NewInspectorVariable("ignoreFromBuild", typeof(NavMeshModifier));*/
-
             NewInspectorVariable("matType", typeof(CubeObject));
-
-            // Enemies
-            /*NewInspectorVariable("health", typeof(Zombie));
-            NewInspectorVariable("health", typeof(Statue));
-            NewInspectorVariable("originalHealth", typeof(Statue));*/
-
-            // Triggers
-            /*NewInspectorVariable("timed", typeof(HudMessage));
-            NewInspectorVariable("message", typeof(HudMessage));
-            NewInspectorVariable("timerTime", typeof(HudMessage));*/
+            NewInspectorVariable("matTiling", typeof(CubeObject));
+            NewInspectorVariable("shape", typeof(CubeObject));
+            NewInspectorVariable("isTrigger", typeof(CubeObject));
 
             NewInspectorVariable("enemies", typeof(ActivateArena));
             NewInspectorVariable("onlyWave", typeof(ActivateArena));
@@ -549,21 +534,59 @@ namespace UltraEditor.Classes
             NewInspectorVariable("toActivate", typeof(ActivateObject));
             NewInspectorVariable("toDeactivate", typeof(ActivateObject));
             NewInspectorVariable("canBeReactivated", typeof(ActivateObject));
+            NewInspectorVariable("delay", typeof(ActivateObject));
 
             NewInspectorVariable("intensity", typeof(Light));
             NewInspectorVariable("range", typeof(Light));
             NewInspectorVariable("type", typeof(Light));
+            NewInspectorVariable("color", typeof(Light));
 
-            //NewInspectorVariable("toActivate", typeof(CheckPoint)); i dont think levels will use this as navmesh is client-side baked, but it will be added
             NewInspectorVariable("rooms", typeof(CheckPoint));
-            NewInspectorVariable("roomsToInherit", typeof(CheckPoint));
+            NewInspectorVariable("checkpointRooms", typeof(CheckpointObject));
 
             NewInspectorVariable("notInstakill", typeof(DeathZone));
             NewInspectorVariable("damage", typeof(DeathZone));
             NewInspectorVariable("affected", typeof(DeathZone));
 
-            NewInspectorVariable("calmThemeUrl", typeof(MusicObject));
-            NewInspectorVariable("battleThemeUrl", typeof(MusicObject));
+            NewInspectorVariable("calmThemePath", typeof(MusicObject));
+            NewInspectorVariable("battleThemePath", typeof(MusicObject));
+
+            NewInspectorVariable("url", typeof(SFXObject));
+            NewInspectorVariable("disableAfterPlaying", typeof(SFXObject));
+            NewInspectorVariable("playOnAwake", typeof(SFXObject));
+            NewInspectorVariable("loop", typeof(SFXObject));
+            NewInspectorVariable("range", typeof(SFXObject));
+            NewInspectorVariable("volume", typeof(SFXObject));
+
+
+            NewInspectorVariable("message", typeof(HUDMessageObject));
+            NewInspectorVariable("disableAfterShowing", typeof(HUDMessageObject));
+
+            NewInspectorVariable("teleportPosition", typeof(NewTeleportObject));
+            NewInspectorVariable("canBeReactivated", typeof(NewTeleportObject));
+            NewInspectorVariable("slowdown", typeof(NewTeleportObject));
+
+            NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject));
+            NewInspectorVariable("levelLayer", typeof(LevelInfoObject));
+            NewInspectorVariable("levelName", typeof(LevelInfoObject));
+            NewInspectorVariable("playMusicOnDoorOpen", typeof(LevelInfoObject));
+            NewInspectorVariable("changeLighting", typeof(LevelInfoObject));
+            NewInspectorVariable("ambientColor", typeof(LevelInfoObject));
+            NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject));
+
+            NewInspectorVariable("scrolling", typeof(CubeTilingAnimator));
+            NewInspectorVariable("affectedCubes", typeof(CubeTilingAnimator));
+
+            NewInspectorVariable("affectedCubes", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("points", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("speed", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("movesWithThePlayer", typeof(MovingPlatformAnimator));
+            NewInspectorVariable("mode", typeof(MovingPlatformAnimator));
+
+            //NewInspectorVariable("acceptedItemType", typeof(SkullActivatorObject));
+            NewInspectorVariable("triggerAltars", typeof(SkullActivatorObject));
+            NewInspectorVariable("toActivate", typeof(SkullActivatorObject));
+            NewInspectorVariable("toDeactivate", typeof(SkullActivatorObject));
         }
 
         void NewInspectorVariable(string varName, Type parentComponent)
@@ -577,43 +600,92 @@ namespace UltraEditor.Classes
 
         public GameObject SpawnAsset(string dir, bool isLoading = false, bool createPrefabObject = true)
         {
-            GameObject obj = Instantiate(Plugin.Ass<GameObject>(dir));
+            string realPath = dir;
+            if (dir == "DuvizPlush") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
+            if (dir == "DuvizPlushFixed") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
+            GameObject obj = null;
+
+            // exclusive exceptions
+            if (dir == "ImCloudingIt")
+            {
+                obj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("Cloud"));
+            }
+            else if (dir == "AltarBlueOff")
+            {
+                obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
+                //            |Cube       |SkullBlue
+                obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+                obj.name += " (Off)";
+            }
+            else if (dir == "AltarRedOff")
+            {
+                obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
+                //            |Cube       |SkullBlue
+                obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+                obj.name += " (Off)";
+            }
+            else
+            {
+                //spawn the object like normal
+                obj = Instantiate(Plugin.Ass<GameObject>(dir));
+            }
+
             obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
-
             if (createPrefabObject)
-                PrefabObject.Create(obj, dir);
-
+            {
+                PrefabObject.Create(obj, realPath);
+            }
             if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
             {
                 obj.transform.SetParent(cameraSelector.selectedObject.transform);
                 lastSelected = null;
             }
             else
+            {
                 cameraSelector.SelectObject(obj);
-
+            }
             if (Input.GetKey(Plugin.altKey)) obj.SetActive(false);
             else
             {
                 if (dir.StartsWith("Assets/Prefabs/Enemies/") && !isLoading)
                 {
-                    SetAlert("If you plan on making enemy waves, avoid spawning them active! Hold alt when spawning the enemy to disable it in order to avoid automatic gorezones in editor.", title: "Warning!");
+                    obj.SetActive(false);
+                    SetAlert("Enemies will always spawn disabled in the editor, they must be enabled with ActivateArena objects.", title: "Warning!");
                 }
             }
 
             if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab" && !isLoading)
-                SetAlert("You need to assign at least one item in rooms for the checkpoint to work. Checkpoints cannot be modified when loaded from a save.", "Warning!");
+                SetAlert("You need to assign at least one item in rooms for the checkpoint to work.", "Warning!");
             if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
                 SetAlert("FinalDoor/FinalDoorOpener must be activated to open the door, it must be activated with a trigger and in this version completing the level will result in an infinite stats screen.", "Warning!");
 
-            if (dir == "Bonus")
+            if (dir == "Bonus" || dir == "Assets/Prefabs/Levels/BonusDualWield Variant.prefab" || dir == "Assets/Prefabs/Levels/BonusSuperCharge.prefab")
                 obj.GetComponent<Bonus>().secretNumber = 100000;
 
+            // Manage the blahaj and plushies
             if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
             {
-                GameObject blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
+                GameObject blahaj = null;
+                if (realPath == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
+                    blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
+                else if (realPath == "DuvizPlush")
+                    blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlush"));
+                else if (realPath == "DuvizPlushFixed")
+                    blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlushFixed"));
+                obj.transform.localEulerAngles = Vector3.zero;
                 blahaj.transform.SetParent(obj.transform);
                 blahaj.transform.localPosition = Vector3.zero;
                 blahaj.transform.localEulerAngles = Vector3.zero;
+                if (dir == realPath)
+                    obj.name = "Blahaj";
+                else
+                    obj.name = realPath;
+            }
+
+            if (!isLoading)
+            {
+                PlayAudio(spawnAsset);
+                Billboard.UpdateBillboards();
             }
 
             return obj;
@@ -630,7 +702,9 @@ namespace UltraEditor.Classes
 
                 if (cameraSelector.selectedObject.transform.parent != null)
                     newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
+                    newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
 
+                newObj.transform.localScale = cameraSelector.selectedObject.transform.localScale;
                 newObj.transform.position = cameraSelector.selectedObject.transform.position;
                 newObj.transform.rotation = cameraSelector.selectedObject.transform.rotation;
 
@@ -644,8 +718,17 @@ namespace UltraEditor.Classes
         {
             if (cameraSelector.selectedObject != null)
             {
-                Destroy(cameraSelector.selectedObject);
-                cameraSelector.UnselectObject();
+                GameObject toDestroy = cameraSelector.selectedObject;
+                GameObject toParent = null;
+                if (cameraSelector.selectedObject.transform.parent != null)
+                    toParent = cameraSelector.selectedObject.transform.parent.gameObject;
+                else
+                    cameraSelector.UnselectObject();
+                Destroy(toDestroy);
+                if (toParent != null)
+                    cameraSelector.SelectObject(toParent);
+                destroyedLastFrame = true;
+                PlayAudio(destroyObject);
             }
         }
 
@@ -655,15 +738,20 @@ namespace UltraEditor.Classes
             {
                 lastHierarchy = new GameObject[0];
                 cameraSelector.selectedObject.SetActive(!cameraSelector.selectedObject.activeSelf);
+                PlayAudio(cameraSelector.selectedObject.activeSelf ? activateObject : inactivateObject);
             }
         }
 
-        void createCube(bool createRigidbody = false, bool useGravity = true)
+        public GameObject createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
         {
             GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cube.name = objName;
             cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
+            if (pos != null)
+                cube.transform.position = (Vector3)pos;
+            cube.layer = LayerMask.NameToLayer(layer);
             cube.transform.localScale = Vector3.one;
-            CubeObject.Create(cube, MaterialChoser.materialTypes.MasterShader);
+            CubeObject.Create(cube, matType);
 
             if (createRigidbody)
                 cube.AddComponent<Rigidbody>().useGravity = useGravity;
@@ -678,6 +766,8 @@ namespace UltraEditor.Classes
                 cameraSelector.SelectObject(cube);
 
             if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
+
+            return cube;
         }
 
         void createFloor(Vector3 scale)
@@ -687,6 +777,7 @@ namespace UltraEditor.Classes
             cube.transform.localScale = scale;
             cube.layer = LayerMask.NameToLayer("Outdoors");
             cube.tag = "Floor";
+            cube.name = scale.y > 1 ? "Wall" : "Floor";
 
             CubeObject.Create(cube, MaterialChoser.materialTypes.Default);
 
@@ -747,7 +838,7 @@ namespace UltraEditor.Classes
         }
 
         Component[] lastComponents = new Component[0];
-        GameObject[] lastHierarchy = new GameObject[0];
+        public GameObject[] lastHierarchy = new GameObject[0];
         GameObject lastSelected = null;
         GameObject holdingObject = null;
         GameObject holdingTarget = null;
@@ -766,7 +857,7 @@ namespace UltraEditor.Classes
                 bool same = true;
                 for (int i = 0; i < lastHierarchy.Length; i++)
                 {
-                    if (lastHierarchy[i] != rootObjects[i])
+                    if (lastHierarchy[i] != rootObjects[i] && rootObjects[i].GetComponent<Billboard>() == null)
                     {
                         same = false;
                         break;
@@ -820,7 +911,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == deleteLevel && navMeshSurface != null)
+                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == EditorSceneName)
                 {
                     if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                         continue;
@@ -832,20 +923,28 @@ namespace UltraEditor.Classes
             }
 
             UpdateInspector();
+            Billboard.UpdateBillboards();
         }
 
-        public static List<Type> GetAllMonoBehaviourTypes()
+        public static List<Type> GetAllMonoBehaviourTypes(bool forceNormalOnes = false)
         {
-            if (Instance != null && !Instance.advancedInspector)
+            if ((Instance != null && !Instance.advancedInspector) || forceNormalOnes)
             {
                 List<Type> list = new List<Type>();
 
                 list.Add(typeof(ActivateArena));
                 list.Add(typeof(ActivateNextWave));
                 list.Add(typeof(ActivateObject));
+                list.Add(typeof(HUDMessageObject));
+                list.Add(typeof(NewTeleportObject));
+                list.Add(typeof(LevelInfoObject));
                 list.Add(typeof(DeathZone));
                 list.Add(typeof(Light));
                 list.Add(typeof(MusicObject));
+                list.Add(typeof(SFXObject));
+                list.Add(typeof(CubeTilingAnimator));
+                list.Add(typeof(MovingPlatformAnimator));
+                list.Add(typeof(SkullActivatorObject));
 
                 return list;
             }
@@ -935,13 +1034,22 @@ namespace UltraEditor.Classes
             }
         }
 
+        public bool IsObjectEditable(GameObject obj = null)
+        {
+            if (obj != null)
+                return (obj.GetComponent<SavableObject>() != null || advancedInspector);
+            if (advancedInspector) return true;
+            if (cameraSelector.selectedObject == null) return false;
+            return cameraSelector.selectedObject.GetComponent<SavableObject>() != null;
+        }
+
         string lastFieldText = "";
         Enum lastEnum = null;
         Type lastEnumType = null;
         object coppiedValue = null;
         Type lastCoppiedType = null;
         List<(string, Type, float)> searchResults = new List<(string, Type, float)>();
-        List<(string, float)> sceneResults = new List<(string, float)>();
+        static List<(string, float)> sceneResults = new List<(string, float)>();
         Type arrayType = null;
         public void UpdateInspector()
         {
@@ -960,12 +1068,12 @@ namespace UltraEditor.Classes
 
             if (cameraSelector.selectedObject != null)
             {
-                if (!advancedInspector && cameraSelector.selectedObject.GetComponent<SavableObject>() == null)
+                if (!IsObjectEditable())
                 {
                     lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                     return;
                 }
-                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null))
+                if (advancedInspector || (cameraSelector.selectedObject.GetComponent<ActivateArena>() == null && cameraSelector.selectedObject.GetComponent<ActivateNextWave>() == null && cameraSelector.selectedObject.GetComponent<ActivateObject>() == null && cameraSelector.selectedObject.GetComponent<DeathZone>() == null && cameraSelector.selectedObject.GetComponent<HUDMessageObject>() == null && cameraSelector.selectedObject.GetComponent<NewTeleportObject>() == null && cameraSelector.selectedObject.GetComponent<LevelInfoObject>() == null && cameraSelector.selectedObject.GetComponent<Light>() == null && cameraSelector.selectedObject.GetComponent<PrefabObject>() == null))
                 {
                     CreateInspectorItem("Add component", inspectorItemType.Button, "Add").AddListener(() =>
                     {
@@ -1042,12 +1150,15 @@ namespace UltraEditor.Classes
                                         
                                     }
 
-                                    if (c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject)
+                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is SFXObject || c is CubeTilingAnimator || c is MovingPlatformAnimator || c is SkullActivatorObject)
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
                                             cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
-                                            SetAlert("Collider has been set to be a trigger.", "Info!");
+                                            cameraSelector.selectedObject.layer = LayerMask.NameToLayer("Invisible");
+                                            SetAlert("Collider has been set to be a trigger and layer to Invisible.", "Info!", new Color(1, 0.5f, 0.25f));
+                                            if (c is SavableObject)
+                                                Destroy(cameraSelector.selectedObject.GetComponent<CubeObject>());
                                         }
                                     }
 
@@ -1055,6 +1166,7 @@ namespace UltraEditor.Classes
                                     if (c is ActivateNextWave)
                                     {
                                         SetAlert("ActivateNextWave will remove any material from the object when saved, as it's meant to be in empty objects and make every enemy be in the child of this object.", "Advice!");
+                                        ((ActivateNextWave)c).noActivationDelay = true;
                                     }
 
                                     if (c is HudMessage)
@@ -1064,6 +1176,8 @@ namespace UltraEditor.Classes
                                     }
 
                                     UpdateInspector();
+                                    PlayAudio(addComponent);
+                                    Billboard.UpdateBillboards();
                                 }
                                 else
                                 {
@@ -1107,12 +1221,38 @@ namespace UltraEditor.Classes
                     {
                         CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
                         {
+                            PlayAudio(removeComponent);
                             Destroy(component);
                         });
                     }
                     else
                     {
-                        CreateInspectorItem(compName, inspectorItemType.None);
+                        if (GetAllMonoBehaviourTypes(true).Contains(component.GetType()))
+                            if (component is PrefabObject || component is CubeObject || (component is Light && cameraSelector.selectedObject.GetComponent<PrefabObject>() != null))
+                                CreateInspectorItem(compName, inspectorItemType.None);
+                            else
+                                CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
+                                {
+                                    Destroy(component);
+                                    if (cameraSelector.selectedObject.GetComponent<CubeObject>() != null)
+                                    {
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = false;
+                                        if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
+                                            cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
+                                    }
+                                    else if (cameraSelector.selectedObject.GetComponent<CubeObject>() == null)
+                                    {
+                                        CubeObject.Create(cameraSelector.selectedObject, MaterialChoser.materialTypes.Default);
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() == null) cameraSelector.selectedObject.AddComponent<BoxCollider>();
+                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
+                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = false;
+                                        if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
+                                            cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
+                                    }
+                                    PlayAudio(removeComponent);
+                                    Billboard.UpdateBillboards();
+                                });
                     }
 
                         var type = component.GetType();
@@ -1200,7 +1340,8 @@ namespace UltraEditor.Classes
                     typeof(bool),
                     typeof(Vector3),
                     typeof(Vector2),
-                    typeof(Vector4)
+                    typeof(Vector4),
+                    typeof(Color),
                 };
 
         Type choosing_type = null;
@@ -1215,6 +1356,8 @@ namespace UltraEditor.Classes
         void CreateInspectorVariable(string fieldName, object value, Type type, object field, Component comp, GameObject obj)
         {
             string valueStr = value != null ? value.ToString() : "null";
+            if (type == typeof(Color))
+                valueStr = value != null ? (new Vector3(((Color)value).r * 255f, ((Color)value).g * 255f, ((Color)value).b * 255f)).ToString() : "null";
             if (type == typeof(bool))
             {
                 CreateInspectorItem(fieldName, inspectorItemType.Button, valueStr, value).AddListener(() =>
@@ -1252,6 +1395,11 @@ namespace UltraEditor.Classes
 
                 else if (type == typeof(Vector4))
                     SetMemberValue(field, comp, ParseVector4(lastFieldText));
+
+                else if (type == typeof(Color)) {
+                    Vector3 c = ParseVector3(lastFieldText);
+                    SetMemberValue(field, comp, new Color(c.x / 255f, c.y / 255f, c.z / 255f));
+                }
 
                 else
                     Plugin.LogInfo($"Unsupported field type: {type}");
@@ -1334,6 +1482,12 @@ namespace UltraEditor.Classes
                         }
                         else if (lastFieldText == "remove")
                         {
+                            if (choosing_field == field && choosing_comp == comp)
+                            {
+                                SetMessageText("");
+                                choosing = false;
+                            }
+
                             if (logShit)
                                 Plugin.LogInfo($"value: {(value == null ? "null" : value.GetType().FullName)}");
 
@@ -1541,7 +1695,7 @@ namespace UltraEditor.Classes
             );
         }
 
-        Vector3 ParseVector3(string input)
+        public static Vector3 ParseVector3(string input)
         {
             input = input.Trim('(', ')', ' ');
             var parts = input.Split(',');
@@ -1556,7 +1710,7 @@ namespace UltraEditor.Classes
             );
         }
 
-        Vector2 ParseVector2(string input)
+        public static Vector2 ParseVector2(string input)
         {
             input = input.Trim('(', ')', ' ');
             var parts = input.Split(',');
@@ -1738,10 +1892,16 @@ namespace UltraEditor.Classes
             newItem.transform.GetChild(1).GetComponent<TMP_Text>().text = backupDescription;
             Button button = newItem.GetComponent<Button>();
             button.onClick.RemoveAllListeners();
+            if (goToParent)
+            {
+                ClickableWithKey c = newItem.AddComponent<ClickableWithKey>();
+                c.button = button;
+            }
             button.onClick.AddListener(() =>
             {
                 if (goToParent)
                 {
+                    PlayAudio(unselectObject);
                     cameraSelector.selectedObject = cameraSelector.selectedObject.transform.parent != null ? cameraSelector.selectedObject.transform.parent.gameObject : null;
                     if (cameraSelector.selectedObject != null)
                     {
@@ -1826,6 +1986,7 @@ namespace UltraEditor.Classes
             
             eventTrigger.triggers[2].callback.AddListener((data) =>
             {
+                if (obj == null) return;
                 if (obj != null && logShit)
                     Plugin.LogInfo($"Entered object: {obj.name}");
                 if (holdingObject != null && holdingObject != obj)
@@ -1839,12 +2000,14 @@ namespace UltraEditor.Classes
             
             eventTrigger.triggers[3].callback.AddListener((data) =>
             {
+                if (obj == null) return;
                 holdingTarget = null;
             });
         }
 
         public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
         {
+            if (obj == null) return "";
             return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
         }
 
@@ -1875,9 +2038,16 @@ namespace UltraEditor.Classes
             return text;
         }
 
-        public List<string> GetAllScenes()
+        public static List<string> GetAllScenes()
         {
-            string path = Application.persistentDataPath;
+            string appPath = Application.persistentDataPath;
+
+            string path = appPath + "\\ULTRAEDITOR";
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+
             List<string> fileNames = new List<string>();
 
             foreach (var item in Directory.GetFiles(path))
@@ -1924,22 +2094,33 @@ namespace UltraEditor.Classes
 
         public void SaveShit(string path)
         {
+            SetAlert("Couldn't save scene!", col : new Color(1, 0f, 0f));
             string text = GetSceneJson();
 
-            File.WriteAllText(Application.persistentDataPath + $"/{path}.uterus", text);
+            File.WriteAllText(Application.persistentDataPath + $"/ULTRAEDITOR/{path}.uterus", text);
+            SetAlert("Scene saved!", "Info!", col: new Color(0.25f, 1f, 0.25f));
+        }
+
+        public static T[] ReverseArray<T>(T[] array)
+        {
+            if (array == null) return null;
+            System.Array.Reverse(array);
+            return array;
         }
 
         public string GetSceneJson()
         {
+            List<GameObject> iterated = [];
             string text = "";
 
-            foreach (var obj in GameObject.FindObjectsOfType<CubeObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
             {
                 if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
                 {
                     GameObject ob = obj.gameObject;
                     Destroy(obj.GetComponent<CubeObject>());
-                    ArenaObject o = ArenaObject.Create(ob);
+                    if (obj.GetComponent<ArenaObject>() == null)
+                        ArenaObject.Create(ob);
                     continue;
                 }
 
@@ -1951,23 +2132,27 @@ namespace UltraEditor.Classes
                     continue;
                 }
 
-                if (obj.GetComponent<MusicObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null)
-                {
+                if (obj.GetComponent<SkullActivatorObject>() != null || obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<SFXObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
                     continue;
-                }
 
                 text += "? CubeObject ?";
                 text += "\n";
                 text += addShit(obj);
                 text += (int)obj.matType + "\n";
-                text += "\n";
+                text += "? PASS ?\n";
+                text += obj.matTiling + "\n";
+                text += "? PASS ?\n";
+                text += obj._isTrigger + "\n";
+                text += "? PASS ?\n";
+                text += (int)obj.shape + "\n";
                 text += "? END ?";
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<PrefabObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<PrefabObject>(true)))
             {
                 if (obj.GetComponent<CheckPoint>() != null) continue;
+                if (obj.transform.parent != null && obj.transform.parent.name == "Automated Gore Zone") continue;
                 if (obj.GetComponent<ItemIdentifier>() != null && obj.GetComponent<ItemIdentifier>().pickedUp) continue;
                 text += "? PrefabObject ?";
                 text += "\n";
@@ -1978,40 +2163,41 @@ namespace UltraEditor.Classes
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<ArenaObject>(true))
+            iterated = [];
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ArenaObject>(true)))
             {
+                if (iterated.Contains(obj.gameObject)) continue;
+                if (obj.GetComponent<ActivateArena>() == null) continue;
                 obj.enemyIds.Clear();
-                foreach (var e in obj.GetComponent<ActivateArena>().enemies)
-                {
-                    obj.addId(GetIdOfObj(e));
-                }
+                if (obj.GetComponent<ActivateArena>().enemies != null)
+                    foreach (var e in obj.GetComponent<ActivateArena>().enemies)
+                        if (e != null)
+                            obj.addId(GetIdOfObj(e));
 
                 text += "? ArenaObject ?";
                 text += "\n";
                 text += addShit(obj);
                 text += obj.GetComponent<ActivateArena>().onlyWave + "\n";
                 foreach (var e in obj.enemyIds)
-                {
                     text += e + "\n";
-                }
                 text += "? END ?";
                 text += "\n";
+                iterated.Add(obj.gameObject);
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<NextArenaObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NextArenaObject>(true)))
             {
+                if (obj.GetComponent<ActivateNextWave>() == null) continue;
                 obj.enemyIds.Clear();
                 obj.toActivateIds.Clear();
                 if (obj.GetComponent<ActivateNextWave>().nextEnemies != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().nextEnemies)
-                    {
-                        obj.addEnemyId(GetIdOfObj(e));
-                    }
+                        if (e != null)
+                            obj.addEnemyId(GetIdOfObj(e));
                 if (obj.GetComponent<ActivateNextWave>().toActivate != null)
                     foreach (var e in obj.GetComponent<ActivateNextWave>().toActivate)
-                    {
-                        obj.addToActivateId(GetIdOfObj(e));
-                    }
+                        if (e != null)
+                            obj.addToActivateId(GetIdOfObj(e));
 
                 text += "? NextArenaObject ?";
                 text += "\n";
@@ -2019,29 +2205,27 @@ namespace UltraEditor.Classes
                 text += obj.GetComponent<ActivateNextWave>().lastWave + "\n";
                 text += obj.GetComponent<ActivateNextWave>().enemyCount + "\n";
                 foreach (var e in obj.enemyIds)
-                {
                     text += e + "\n";
-                }
                 text += "? PASS ?\n";
                 foreach (var e in obj.toActivateIds)
-                {
                     text += e + "\n";
-                }
                 text += "? END ?";
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<ActivateObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ActivateObject>(true)))
             {
                 obj.toActivateIds.Clear();
                 obj.toDeactivateIds.Clear();
                 foreach (var e in obj.toActivate)
                 {
-                    obj.addToActivateId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addToActivateId(GetIdOfObj(e));
                 }
                 foreach (var e in obj.toDeactivate)
                 {
-                    obj.addtoDeactivateId(GetIdOfObj(e));
+                    if (e != null)
+                        obj.addtoDeactivateId(GetIdOfObj(e));
                 }
 
                 text += "? ActivateObject ?";
@@ -2059,26 +2243,85 @@ namespace UltraEditor.Classes
                 text += "? PASS ?\n";
                 text += obj.canBeReactivated.ToString();
                 text += "\n";
+                text += "? PASS ?\n";
+                text += obj.delay.ToString();
+                text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<CheckPoint>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<HUDMessageObject>(true)))
+            {
+                text += "? HUDMessageObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.message + "\n";
+                text += "? PASS ?\n";
+                text += obj.disableAfterShowing + "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NewTeleportObject>(true)))
+            {
+                text += "? TeleportObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.teleportPosition + "\n";
+                text += "? PASS ?\n";
+                text += obj.canBeReactivated + "\n";
+                text += "? PASS ?\n";
+                text += obj.slowdown + "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<LevelInfoObject>(true)))
+            {
+                text += "? LevelInfoObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += obj.ambientColor + "\n";
+                text += "? PASS ?\n";
+                text += obj.intensityMultiplier + "\n";
+                text += "? PASS ?\n";
+                text += obj.changeLighting + "\n";
+                text += "? PASS ?\n";
+                text += obj.tipOfTheDay + "\n";
+                text += "? PASS ?\n";
+                text += obj.levelLayer + "\n";
+                text += "? PASS ?\n";
+                text += obj.playMusicOnDoorOpen + "\n";
+                text += "? PASS ?\n";
+                text += obj.levelName + "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
             {
                 while (obj.GetComponent<CheckpointObject>() != null)
+                {
+                    /*obj.rooms = obj.GetComponent<CheckpointObject>().checkpointRooms;
+                    obj.roomsToInherit = obj.GetComponent<CheckpointObject>().checkpointRoomsToInherit;*/
                     Destroy(obj.GetComponent<CheckpointObject>());
+                }
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
 
                 foreach (var e in obj.rooms)
                 {
-                    if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
-                        co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
-                    else
-                        co.addRoomId(GetIdOfObj(e));
+                    if (e != null)
+                    {
+                        if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
+                            co.addRoomId(GetIdOfObj(e, new Vector3(-10000, 0, 0)));
+                        else
+                            co.addRoomId(GetIdOfObj(e));
+                    }
                 }
                 foreach (var e in obj.roomsToInherit)
                 {
-                    co.addRoomToInheritId(GetIdOfObj(e));
+                    if (e != null)
+                        co.addRoomToInheritId(GetIdOfObj(e));
                 }
 
                 text += "? CheckpointObject ?";
@@ -2102,9 +2345,23 @@ namespace UltraEditor.Classes
                 Destroy(obj.GetComponent<CheckpointObject>());
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<CheckpointObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
             {
                 if (obj.transform.childCount != 0) continue;
+
+                obj.rooms = [];
+                foreach (var e in obj.checkpointRooms)
+                {
+                    if (e != null)
+                        obj.addRoomId(GetIdOfObj(e));
+                }
+
+                obj.roomsToInherit = [];
+                foreach (var e in obj.checkpointRoomsToInherit)
+                {
+                    if (e != null)
+                        obj.addRoomToInheritId(GetIdOfObj(e));
+                }
 
                 text += "? CheckpointObject ?";
                 text += "\n";
@@ -2122,7 +2379,7 @@ namespace UltraEditor.Classes
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<DeathZone>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<DeathZone>(true)))
             {
                 if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
                 text += "? DeathZone ?";
@@ -2140,9 +2397,10 @@ namespace UltraEditor.Classes
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<Light>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<Light>(true)))
             {
                 if (obj.GetComponent<SavableObject>() == null) continue;
+                if (obj.GetComponent<PrefabObject>() != null) continue;
                 text += "? Light ?";
                 text += "\n";
                 text += addShit(obj.gameObject.AddComponent<SavableObject>());
@@ -2154,20 +2412,125 @@ namespace UltraEditor.Classes
                 text += "? PASS ?\n";
                 text += (int)obj.type;
                 text += "\n";
+                text += "? PASS ?\n";
+                text += (new Vector3(obj.color.r * 255f, obj.color.g * 255f, obj.color.b * 255f)).ToString();
+                text += "\n";
                 text += "? END ?";
                 text += "\n";
             }
 
-            foreach (var obj in GameObject.FindObjectsOfType<MusicObject>(true))
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MusicObject>(true)))
             {
                 if (obj.GetComponent<SavableObject>() == null) continue;
                 text += "? MusicObject ?";
                 text += "\n";
                 text += addShit(obj);
-                text += obj.calmThemeUrl;
+                text += obj.calmThemePath;
                 text += "\n";
                 text += "? PASS ?\n";
-                text += obj.battleThemeUrl;
+                text += obj.battleThemePath;
+                text += "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SFXObject>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                text += "? SFXObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += $"{obj.url}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.disableAfterPlaying}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.playOnAwake}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.loop}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.range}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.volume}\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                obj.affectedCubesIds = [];
+                obj.pointsIds = [];
+                foreach (var e in obj.affectedCubes)
+                    if (e != null)
+                        obj.addAffectedCubeId(GetIdOfObj(e));
+                foreach (var e in obj.points)
+                    if (e != null)
+                        obj.addPointId(GetIdOfObj(e));
+                text += "? MovingPlatformAnimator ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.affectedCubesIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.pointsIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                text += $"{obj.speed}\n";
+                text += "? PASS ?\n";
+                text += $"{obj.movesWithThePlayer}\n";
+                text += "? PASS ?\n";
+                text += $"{(int)obj.mode}\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SkullActivatorObject>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                obj.triggerAltarsIds = [];
+                obj.toActivateIds = [];
+                obj.toDeactivateIds = [];
+                foreach (var e in obj.toActivate)
+                    if (e != null)
+                        obj.addToActivateId(GetIdOfObj(e));
+                foreach (var e in obj.toDeactivate)
+                    if (e != null)
+                        obj.addToDeactivateId(GetIdOfObj(e));
+                foreach (var e in obj.triggerAltars)
+                    if (e != null)
+                        obj.addTriggerAltarId(GetIdOfObj(e));
+                text += "? SkullActivatorObject ?";
+                text += "\n";
+                text += addShit(obj);
+                text += $"{(int)obj.acceptedItemType}\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.toActivateIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.toDeactivateIds)
+                    text += e + "\n";
+                text += "? PASS ?\n";
+                foreach (var e in obj.triggerAltarsIds)
+                    text += e + "\n";
+                text += "? END ?";
+                text += "\n";
+            }
+
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeTilingAnimator>(true)))
+            {
+                if (obj.GetComponent<SavableObject>() == null) continue;
+                obj.affectedCubesIds = [];
+                foreach (var e in obj.affectedCubes)
+                    if (e != null)
+                        obj.addId(GetIdOfObj(e));
+                text += "? CubeTilingAnimator ?";
+                text += "\n";
+                text += addShit(obj);
+                foreach (var e in obj.affectedCubesIds)
+                    text += e + "\n";
+                text += "\n";
+                text += "? PASS ?\n";
+                text += obj.scrolling.ToString();
                 text += "\n";
                 text += "? END ?";
                 text += "\n";
@@ -2176,8 +2539,127 @@ namespace UltraEditor.Classes
             return text;
         }
 
+        public static void StaticLoadPopup(GameObject canvas)
+        {
+            GameObject loadScenePopup = canvas.transform.GetChild(0).GetChild(8).gameObject;
+            TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+            TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
+            Button addButton = loadScenePopup.transform.GetChild(4).GetComponent<Button>();
+
+            loadScenePopup.SetActive(true);
+
+            field.Select();
+
+            field.onValueChanged.RemoveAllListeners();
+            addButton.onClick.RemoveAllListeners();
+            field.onValueChanged.AddListener((string val) =>
+            {
+                sceneResults.Clear();
+
+                List<string> scenes = GetAllScenes();
+
+                foreach (string type in scenes)
+                {
+                    float accuracy = 0f;
+                    string typeName = type.ToLower();
+                    string searchName = val.ToLower();
+                    int minLength = Math.Min(typeName.Length, searchName.Length);
+                    for (int i = 0; i < minLength; i++)
+                    {
+                        if (typeName[i] == searchName[i])
+                            accuracy += 1f / minLength;
+                        else
+                            break;
+                    }
+                    if (typeName.Contains(searchName))
+                        accuracy += 0.5f;
+
+                    if (typeName == searchName)
+                        accuracy += 10000f;
+
+                    if (accuracy > 0f)
+                        sceneResults.Add((type, accuracy));
+                }
+
+                sceneResults = sceneResults.OrderByDescending(t => t.Item2).ToList();
+
+                foundComponents.text = "Found saves:\n";
+                foreach (var result in sceneResults.Take(3))
+                {
+                    foundComponents.text += $"{result.Item1}<color=grey>   ";
+                }
+            });
+
+            addButton.onClick.AddListener(() =>
+            {
+                if (sceneResults.Count > 0)
+                {
+                    string sceneName = sceneResults[0].Item1;
+                    if (sceneName != null)
+                    {
+                        loadScenePopup.SetActive(false);
+                        canOpenEditor = false;
+                        EmptySceneLoader.forceSave = sceneName;
+                        EmptySceneLoader.forceEditor = false;
+                        EmptySceneLoader.forceLevelCanOpenEditor = false;
+                        EmptySceneLoader.Instance.LoadLevel();
+                    }
+                }
+            });
+        }
+
+        public void GroupName(string n)
+        {
+            List<GameObject> objects = [];
+
+            foreach (var o in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList())
+            {
+                if (o.GetComponent<SavableObject>() != null)
+                    if (o.name == n || (n.StartsWith("*") && o.name.Contains(n.Replace("*", ""))))
+                        objects.Add(o);
+            }
+
+            GameObject group = createCube(pos: new Vector3(0.00f, 90.00f, 4.25f), layer: "Invisible", objName: $"Group of {n}", matType: MaterialChoser.materialTypes.NoCollision);
+            foreach (var o in objects)
+            {
+                o.transform.SetParent(group.transform, true);
+            }
+
+            SetAlert("Group made!", "Info!", col: new Color(0.25f, 1f, 0.25f));
+        }
+
+        public void TryToGroupName()
+        {
+            GameObject loadScenePopup = editorCanvas.transform.GetChild(0).GetChild(18).gameObject;
+            TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
+            TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
+            Button addButton = loadScenePopup.transform.GetChild(4).GetComponent<Button>();
+
+            loadScenePopup.SetActive(true);
+
+            field.Select();
+
+            if (cameraSelector.selectedObject != null)
+                field.text = cameraSelector.selectedObject.name;
+
+            field.onValueChanged.RemoveAllListeners();
+            addButton.onClick.RemoveAllListeners();
+            field.onValueChanged.AddListener((string val) =>
+            {
+
+            });
+
+            addButton.onClick.AddListener(() =>
+            {
+                loadScenePopup.SetActive(false);
+                GroupName(field.text);
+            });
+        }
+
         public void TryToLoadShit()
         {
+            //UltraEditor.Classes.EditorManager.Instance.Save("new saving system test uwu :3", "testing the new saving system rn", "Bryan_-000-", "newsavetesting", "C:\\Users\\freda\\Downloads\\absolute cinema.jpg", "C:\\Users\\freda\\Music\\fe\\femtanyl - LOVESICK, CANNIBAL! (feat takihasdied).mp3", "Bryan_-000-.ULTRAEDITOR.SaveSystemTest");
+
             GameObject loadScenePopup = editorCanvas.transform.GetChild(0).GetChild(8).gameObject;
             TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
             TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
@@ -2235,15 +2717,25 @@ namespace UltraEditor.Classes
                     string sceneName = sceneResults[0].Item1;
                     if (sceneName != null)
                     {
-                        LoadShit(sceneName);
+                        StartCoroutine(LoadScene(sceneName));
                     }
                 }
             });
         }
 
-        void LoadShit(string sceneName)
+        public IEnumerator LoadScene(string sceneName)
         {
-            string path = Application.persistentDataPath + $"/{sceneName}";
+            DeleteScene(true);
+            yield return new WaitForEndOfFrame();
+            LoadShit(sceneName);
+            yield return new WaitForEndOfFrame();
+            SetAlert("Scene loaded!", "Info!", new Color(1, 0.5f, 0.25f));
+            Billboard.UpdateBillboards();
+        }
+
+        public void LoadShit(string sceneName)
+        {
+            string path = Application.persistentDataPath + $"/ULTRAEDITOR/{sceneName}";
 
             if (!File.Exists(path))
             {
@@ -2265,14 +2757,17 @@ namespace UltraEditor.Classes
 
         }
 
-        void LoadSceneJson(string text)
+        public void LoadSceneJson(string text)
         {
+            Log("Trying to load scene json...");
+
             float startTime = Time.realtimeSinceStartup;
 
             int lineIndex = 0;
             int phase = 0;
             bool isInScript = false;
             string scriptType = "";
+            List<string> passes = [];
             GameObject workingObject = null;
 
             foreach (var line in text.Split(["\r\n", "\n"], StringSplitOptions.None))
@@ -2290,7 +2785,7 @@ namespace UltraEditor.Classes
                 else if (isInScript)
                 {
                     if (logShit)
-                        Plugin.LogInfo($"Line {lineIndex} {line} {scriptType}");
+                        Plugin.LogInfo($"Line {lineIndex} \"{line}\" type \"{scriptType}\" phase {phase}");
 
                     if (line == "? END ?")
                     {
@@ -2329,8 +2824,21 @@ namespace UltraEditor.Classes
                     if (lineIndex == 9)
                         workingObject.GetComponent<SpawnedObject>().parentID = line;
 
+                    if (lineIndex >= 10)
+                    {
+                        passes.Append(line);
+                    }
                     if (lineIndex == 10 && scriptType == "CubeObject")
                         CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
+                    if (lineIndex >= 10 && scriptType == "CubeObject")
+                    {
+                        if (phase == 1)
+                            workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<CubeObject>().shape = (MaterialChoser.shapes)Enum.GetValues(typeof(MaterialChoser.shapes)).GetValue(int.Parse(line));
+                    }
 
                     if (lineIndex == 10 && scriptType == "PrefabObject")
                     {
@@ -2389,6 +2897,8 @@ namespace UltraEditor.Classes
                             workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
                         else if (phase == 2)
                             workingObject.GetComponent<ActivateObject>().canBeReactivated = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<ActivateObject>().delay = float.Parse(line);
 
                     if (scriptType == "CheckpointObject" && workingObject.GetComponent<CheckpointObject>() == null)
                         CheckpointObject.Create(workingObject);
@@ -2412,19 +2922,107 @@ namespace UltraEditor.Classes
                         LightObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "Light")
                         if (phase == 0)
-                            workingObject.GetComponent<LightObject>().intensity = int.Parse(line);
+                            workingObject.GetComponent<LightObject>().intensity = float.Parse(line);
                         else if (phase == 1)
-                            workingObject.GetComponent<LightObject>().range = int.Parse(line);
+                            workingObject.GetComponent<LightObject>().range = float.Parse(line);
                         else if (phase == 2)
                             workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
+                        else if (phase == 3)
+                            workingObject.GetComponent<LightObject>().color = ParseVector3(line);
 
                     if (scriptType == "MusicObject" && workingObject.GetComponent<MusicObject>() == null)
                         MusicObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "MusicObject")
                         if (phase == 0)
-                            workingObject.GetComponent<MusicObject>().calmThemeUrl = line;
+                            workingObject.GetComponent<MusicObject>().calmThemePath = line;
                         else if (phase == 1)
-                            workingObject.GetComponent<MusicObject>().battleThemeUrl = line;
+                            workingObject.GetComponent<MusicObject>().battleThemePath = line;
+
+                    if (scriptType == "SFXObject" && workingObject.GetComponent<SFXObject>() == null)
+                        SFXObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "SFXObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<SFXObject>().url = line;
+                        else if (phase == 1)
+                            workingObject.GetComponent<SFXObject>().disableAfterPlaying = line.ToLower() == "true";
+                        else if (phase == 2)
+                            workingObject.GetComponent<SFXObject>().playOnAwake = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<SFXObject>().loop = line.ToLower() == "true";
+                        else if (phase == 4)
+                            workingObject.GetComponent<SFXObject>().range = float.Parse(line);
+                        else if (phase == 5)
+                            workingObject.GetComponent<SFXObject>().volume = float.Parse(line);
+
+                    if (scriptType == "MovingPlatformAnimator" && workingObject.GetComponent<MovingPlatformAnimator>() == null)
+                        MovingPlatformAnimator.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "MovingPlatformAnimator")
+                        if (phase == 0)
+                            workingObject.GetComponent<MovingPlatformAnimator>().addAffectedCubeId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<MovingPlatformAnimator>().addPointId(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<MovingPlatformAnimator>().speed = float.Parse(line);
+                        else if (phase == 3)
+                            workingObject.GetComponent<MovingPlatformAnimator>().movesWithThePlayer = line.ToLower() == "true";
+                        else if (phase == 4)
+                            workingObject.GetComponent<MovingPlatformAnimator>().mode = (MovingPlatformAnimator.platformMode)Enum.GetValues(typeof(MovingPlatformAnimator.platformMode)).GetValue(int.Parse(line));
+
+                    if (scriptType == "SkullActivatorObject" && workingObject.GetComponent<SkullActivatorObject>() == null)
+                        SkullActivatorObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "SkullActivatorObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<SkullActivatorObject>().acceptedItemType = (SkullActivatorObject.skullType)Enum.GetValues(typeof(SkullActivatorObject.skullType)).GetValue(int.Parse(line));
+                        else if (phase == 1)
+                            workingObject.GetComponent<SkullActivatorObject>().addToActivateId(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<SkullActivatorObject>().addToDeactivateId(line);
+                        else if (phase == 3)
+                            workingObject.GetComponent<SkullActivatorObject>().addTriggerAltarId(line);
+
+                    if (scriptType == "CubeTilingAnimator" && workingObject.GetComponent<CubeTilingAnimator>() == null)
+                        CubeTilingAnimator.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "CubeTilingAnimator")
+                        if (phase == 0)
+                            workingObject.GetComponent<CubeTilingAnimator>().addId(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<CubeTilingAnimator>().scrolling = ParseVector2(line);
+
+                    if (scriptType == "HUDMessageObject" && workingObject.GetComponent<HUDMessageObject>() == null)
+                        HUDMessageObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "HUDMessageObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<HUDMessageObject>().message = line;
+                        else if (phase == 1)
+                            workingObject.GetComponent<HUDMessageObject>().disableAfterShowing = line.ToLower() == "true";
+
+                    if (scriptType == "TeleportObject" && workingObject.GetComponent<NewTeleportObject>() == null)
+                        NewTeleportObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "TeleportObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseVector3(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
+                        else if (phase == 2)
+                            workingObject.GetComponent<NewTeleportObject>().slowdown = line.ToLower() == "true";
+
+                    if (scriptType == "LevelInfoObject" && workingObject.GetComponent<LevelInfoObject>() == null)
+                        LevelInfoObject.Create(workingObject);
+                    if (lineIndex >= 10 && scriptType == "LevelInfoObject")
+                        if (phase == 0)
+                            workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseVector3(line);
+                        else if (phase == 1)
+                            workingObject.GetComponent<LevelInfoObject>().intensityMultiplier = float.Parse(line);
+                        else if (phase == 2)
+                            workingObject.GetComponent<LevelInfoObject>().changeLighting = line.ToLower() == "true";
+                        else if (phase == 3)
+                            workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
+                        else if (phase == 4)
+                            workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
+                        else if (phase == 5)
+                            workingObject.GetComponent<LevelInfoObject>().playMusicOnDoorOpen = line.ToLower() == "true";
+                        else if (phase == 6)
+                            workingObject.GetComponent<LevelInfoObject>().levelName = line;
                 }
 
                 lineIndex++;
@@ -2454,17 +3052,26 @@ namespace UltraEditor.Classes
             foreach (var obj in allObjs)
             {
                 obj.GetComponent<ArenaObject>()?.createArena();
+                obj.GetComponent<ArenaObject>()?.createArena();
                 obj.GetComponent<NextArenaObject>()?.createArena();
                 obj.GetComponent<ActivateObject>()?.createActivator();
                 obj.GetComponent<CheckpointObject>()?.createCheckpoint();
                 obj.GetComponent<DeathZoneObject>()?.createDeathzone();
                 obj.GetComponent<LightObject>()?.createLight();
                 obj.GetComponent<MusicObject>()?.createMusic();
+                obj.GetComponent<SFXObject>()?.createSFX();
+                obj.GetComponent<HUDMessageObject>()?.createHudMessage();
+                obj.GetComponent<NewTeleportObject>()?.createTeleporter();
+                obj.GetComponent<LevelInfoObject>()?.createLevelInfo();
+                obj.GetComponent<CubeTilingAnimator>()?.createAnimator();
+                obj.GetComponent<MovingPlatformAnimator>()?.createAnimator();
+                obj.GetComponent<SkullActivatorObject>()?.createActivator();
             }
 
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
 
             cameraSelector.selectedObject = null;
+            cameraSelector.UnselectObject();
         }
 
         IEnumerator GoToBackupScene()
@@ -2473,20 +3080,23 @@ namespace UltraEditor.Classes
             yield return new WaitForEndOfFrame();
             LoadSceneJson(tempScene);
             yield return new WaitForEndOfFrame();
-            SetAlert("Loaded scene backup", "Info!");
+            SetAlert("Loaded scene backup", "Info!", new Color(1, 0.5f, 0.25f));
+            Billboard.UpdateBillboards();
         }
 
-        public void SetAlert(string str, string title = "Error!")
+        public void SetAlert(string str, string title = "Error!", Color? col = null)
         {
             GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
-            alert.GetComponent<Animator>().speed = 0.4f;
-            if (title == "Info!")
-            alert.GetComponent<Animator>().speed = 1.2f;
+            alert.GetComponent<Animator>().speed = 1f;
             alert.SetActive(false);
             alert.SetActive(true);
 
+            Color finalCol = col != null ? (Color)col : new Color(1, 0.25f, 0.25f);
+
             alert.transform.GetChild(0).GetComponent<TMP_Text>().text = title;
             alert.transform.GetChild(1).GetComponent<TMP_Text>().text = str;
+            alert.transform.GetComponent<Image>().color = finalCol;
+            PlayAudio(chord);
         }
 
         public void DisableAlert()
@@ -2498,6 +3108,24 @@ namespace UltraEditor.Classes
         public static void Log(string str)
         {
             Plugin.LogInfo(str);
+        }
+
+        public static AudioClip activateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech On");
+        public static AudioClip inactivateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech Sleep");
+        public static AudioClip selectObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Balloon");
+        public static AudioClip unselectObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Default");
+        public static AudioClip destroyObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Error");
+        public static AudioClip spawnAsset = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Exclamation");
+        public static AudioClip removeComponent = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Logoff Sound");
+        public static AudioClip addComponent = BundlesManager.editorBundle.LoadAsset<AudioClip>("Windows Logon Sound");
+        public static AudioClip chord = BundlesManager.editorBundle.LoadAsset<AudioClip>("chord");
+        static AudioSource source = null;
+        public static void PlayAudio(AudioClip clip)
+        {
+            if (source == null)
+                source = new GameObject().AddComponent<AudioSource>();
+            source.clip = clip;
+            source.Play();
         }
     }
 }

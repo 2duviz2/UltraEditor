@@ -1,7 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<!-- Set this to where ever your ULTRAKILL folder is. -->
-		<ULTRAKILLPath>C:\Program Files (x86)\Steam\steamapps\common\ULTRAKILL</ULTRAKILLPath>
+		<ULTRAKILLPath>E:\SteamLibrary\steamapps\common\ULTRAKILL</ULTRAKILLPath>
 
 		<!-- You shouldn't need to touch these. If you do, ask me about it on discord @fredayddd321ewq -->
 		<ManagedPath>$(ULTRAKILLPath)\ULTRAKILL_Data\Managed</ManagedPath>

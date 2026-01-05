@@ -5,20 +5,22 @@ using System.Text;
 using Unity.AI.Navigation;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
-    internal class ActivateObject : SavableObject
+    public class ActivateObject : SavableObject
     {
         public GameObject[] toActivate = [];
         public GameObject[] toDeactivate = [];
         public List<string> toActivateIds = [];
         public List<string> toDeactivateIds = [];
         public bool canBeReactivated = false;
+        public float delay = 0;
 
-        public static ActivateObject Create(GameObject target)
+        public static ActivateObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
-            ActivateObject obj = target.AddComponent<ActivateObject>();
-            return obj;
+            ActivateObject activateObject = target.AddComponent<ActivateObject>();
+            if (spawnedObject != null) spawnedObject.activateObject = activateObject;
+            return activateObject;
         }
 
         public void addToActivateId(string id)
@@ -100,19 +102,24 @@ namespace UltraEditor.Classes.Saving
         {
             if (other.gameObject.CompareTag("Player"))
             {
-                foreach (var item in toActivate)
-                {
-                    item.SetActive(true);
-                }
-
-                foreach (var item in toDeactivate)
-                {
-                    item.SetActive(false);
-                }
-
-                if (!canBeReactivated)
-                    Destroy(this);
+                Invoke("ProcessTrigger", delay);
             }
+        }
+
+        public void ProcessTrigger()
+        {
+            foreach (var item in toActivate)
+            {
+                item.SetActive(true);
+            }
+
+            foreach (var item in toDeactivate)
+            {
+                item.SetActive(false);
+            }
+
+            if (!canBeReactivated)
+                Destroy(this);
         }
     }
 }

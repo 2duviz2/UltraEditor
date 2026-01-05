@@ -5,18 +5,37 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>UltraEditor</AssemblyName>
 		<Description>WIP in-game level editor for ultrakill</Description>
-		<Version>1.0.0</Version>
+		<Version>0.0.8</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
+		<NoWarn>CS0649, CS0414</NoWarn>
+		<DebugType>embedded</DebugType>
+
+		<!-- Resources so nuget can fucking find BepInEx and Unity. -->
+		<RestoreAdditionalProjectSources>
+			https://api.nuget.org/v3/index.json;
+			https://nuget.bepinex.dev/v3/index.json
+		</RestoreAdditionalProjectSources>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
 	</ItemGroup>
-
+	
 	<ItemGroup>
-		<!-- Embed the assetbundle into the dll. -->
+		<!-- Embed the assetbundles into the dll. -->
+		<EmbeddedResource Include="Assets\emptyscene.bundle" />
 		<EmbeddedResource Include="Assets\editorcanvas.bundle" />
+
+		<!-- Remove these from doing shit since the new saving system isnt complete yet. -->
+		<None Include="Classes\IO\IO.cs" />
+		<None Include="Classes\IO\Loading.cs" />
+		<None Include="Classes\IO\SaveLevelData.cs" />
+		<None Include="Classes\IO\Saving.cs" />
+		<Compile Remove="Classes\IO\IO.cs" />
+		<Compile Remove="Classes\IO\Loading.cs" />
+		<Compile Remove="Classes\IO\SaveLevelData.cs" />
+		<Compile Remove="Classes\IO\Saving.cs" />
 
 		<!-- Packages -->
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />
@@ -51,8 +70,13 @@
 			<HintPath>$(ManagedPath)\Unity.ResourceManager.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="Classes\TempScripts\" />
+	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
+		<Message Text="Copying DLL to: $(CopyPath)..." Importance="high" />
 		<Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyPath)" OverwriteReadOnlyFiles="true" />
 	</Target>
 

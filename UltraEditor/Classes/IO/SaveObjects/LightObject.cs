@@ -5,18 +5,20 @@ using System.Text;
 using Unity.AI.Navigation;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Saving
+namespace UltraEditor.Classes.IO.SaveObjects
 {
-    internal class LightObject : SavableObject
+    public class LightObject : SavableObject
     {
         public float intensity = 1f;
-        public float range = 10f;
+        public float range = 50f;
+        public Vector3 color = Vector3.one * 255;
         public LightType type = LightType.Point;
 
-        public static LightObject Create(GameObject target)
+        public static LightObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
-            LightObject obj = target.AddComponent<LightObject>();
-            return obj;
+            LightObject lightObject = target.AddComponent<LightObject>();
+            if (spawnedObject != null) spawnedObject.lightObject = lightObject;
+            return lightObject;
         }
 
         public void createLight()
@@ -30,6 +32,7 @@ namespace UltraEditor.Classes.Saving
             light.intensity = intensity;
             light.range = range;
             light.type = type;
+            light.color = new Color(color.x / 255f, color.y / 255f, color.z / 255f);
         }
     }
 }

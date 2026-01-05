@@ -10,7 +10,7 @@ namespace UltraEditor.Classes
 {
     public class CameraMovement : MonoBehaviour
     {
-        public float movementSpeed = 50f;
+        public float movementSpeed = 30f;
         public float mouseSensitivity = 3f;
         public float shiftMultiplier = 3f;
         (int x, int y) savedMousePos = new (0,0);

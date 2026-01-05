@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using UltraEditor.Classes.Saving;
+using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 
 namespace UltraEditor.Classes
@@ -39,6 +39,33 @@ namespace UltraEditor.Classes
             WhiteFlowers,
             WarningStripes,
             WhiteWood,
+            UnbreakableGlass,
+            LightGlow,
+            Bush,
+            Dirt,
+            LimboGlass1,
+            LimboGlass2,
+            LimboGlass3,
+            LimboGlass4,
+            StoneMossy,
+            Mulch,
+            Metal1,
+            Metal2,
+            Metal3,
+            Metal4,
+            Metal5,
+            Metal6,
+            Metal7,
+            Metal8,
+        }
+
+        public enum shapes
+        {
+            Cube,
+            Pyramid,
+            /*Sphere,
+            Capsule,
+            Plane,*/
         }
 
         public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -48,13 +75,41 @@ namespace UltraEditor.Classes
             return obj;
         }
 
-        public void ProcessMaterial(materialTypes type)
+        shapes lastShape = shapes.Cube;
+        public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null)
         {
-            Renderer renderer = GetComponent<Renderer>();
+            var renderer = GetComponent<Renderer>();
+            if (!renderer) return;
+
+            var collider = GetComponent<Collider>();
+            if (collider) collider.enabled = true;
 
             Material newMat = null;
+            lastScale = Vector3.zero;
 
-            GetComponent<Collider>().enabled = true;
+            if (shape != null)
+            if ((shapes)shape != lastShape)
+            {
+                lastShape = (shapes)shape;
+                GameObject tempObj = GameObject.CreatePrimitive(
+                      (shapes)shape == shapes.Cube ? PrimitiveType.Cube
+                    /*: (shapes)shape == shapes.Sphere ? PrimitiveType.Sphere
+                    : (shapes)shape == shapes.Capsule ? PrimitiveType.Capsule
+                    : (shapes)shape == shapes.Plane ? PrimitiveType.Plane*/
+                    : PrimitiveType.Cube);
+                Mesh mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
+                Destroy(tempObj);
+                if ((shapes)shape == shapes.Pyramid)
+                {
+                    tempObj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("PyramidMesh"));
+                    mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
+                    Destroy(tempObj);
+                }
+                GetComponent<MeshFilter>().mesh = mesh2;
+
+                mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
+                GetComponent<MeshFilter>().mesh = mesh;
+            }
 
             if (type == materialTypes.Default)
                 newMat = GetSandboxMaterial("Procedural Cube");
@@ -107,12 +162,57 @@ namespace UltraEditor.Classes
                 newMat = new Material(DefaultReferenceManager.Instance.masterShader);
                 GetComponent<Collider>().enabled = false;
             }
+            else if (type == materialTypes.UnbreakableGlass)
+                newMat = GetPathMaterial("GlassUnbreakable");
+            else if (type == materialTypes.LightGlow)
+                newMat = GetPathMaterial("LightPillar 3");
+            else if (type == materialTypes.Bush)
+                newMat = GetPathMaterial("Environment/Layer 1/Bush");
+            else if (type == materialTypes.Dirt)
+                newMat = GetPathMaterial("Environment/Layer 1/Dirt");
+            else if (type == materialTypes.LimboGlass1)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassBig");
+            else if (type == materialTypes.LimboGlass2)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassBlue");
+            else if (type == materialTypes.LimboGlass3)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassGabriel1");
+            else if (type == materialTypes.LimboGlass4)
+                newMat = GetPathMaterial("Environment/Layer 1/StainedGlassRed");
+            else if (type == materialTypes.StoneMossy)
+                newMat = GetPathMaterial("Environment/Layer 1/StoneMossy");
+            else if (type == materialTypes.Mulch)
+                newMat = GetPathMaterial("Environment/Metal/Mulch");
+            else if (type == materialTypes.Metal1)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 1");
+            else if (type == materialTypes.Metal2)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 2");
+            else if (type == materialTypes.Metal3)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 3");
+            else if (type == materialTypes.Metal4)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 4");
+            else if (type == materialTypes.Metal5)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 5");
+            else if (type == materialTypes.Metal6)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 6");
+            else if (type == materialTypes.Metal7)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 7");
+            else if (type == materialTypes.Metal8)
+                newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 8");
 
+            if (newMat == null) return;
             renderer.material = newMat;
 
-            tile = renderer.material.GetTextureScale("_MainTex") * 0.25f;
+            tile = renderer.material.GetTextureScale("_MainTex") * tiling;
             offset = renderer.material.GetTextureOffset("_MainTex");
             mesh = null;
+        }
+
+        public void UpdateOffset()
+        {
+            var renderer = GetComponent<Renderer>();
+            if (!renderer) return;
+
+            renderer.material.SetTextureOffset("_MainTex", offset);
         }
 
         public void Update()
@@ -123,12 +223,18 @@ namespace UltraEditor.Classes
                 GetComponent<MeshFilter>().mesh = mesh;
                 return;
             }
+            else
+            {
+                GetComponent<MeshFilter>().mesh = mesh;
+            }
             
             if (transform.lossyScale != lastScale)
             {
                 UpdateUVs();
                 lastScale = transform.lossyScale;
             }
+
+            UpdateOffset();
         }
 
         void UpdateUVs()
