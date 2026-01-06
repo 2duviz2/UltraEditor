@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using TMPro;
+using UltraEditor.Classes.Editor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,7 +31,7 @@ namespace UltraEditor.Classes.Canvas
             levelNameText.text = levelName;
             levelAuthorText.text = levelAuthor;
             levelSizeText.text = "Play";
-            Vector3 cc = EditorManager.ParseVector3(color);
+            Vector3 cc = ParseHelper.ParseVector3(color);
             Color c = new Color(cc.x / 255f, cc.y / 255f, cc.z / 255f);
             levelBackground.color = c;
             levelNameText.color = c;

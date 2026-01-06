@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.Editor;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -37,66 +38,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public void createCheckpoint()
         {
-            checkpointRooms = [];
-            checkpointRoomsToInherit = [];
-
-            foreach (var e in rooms)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> rooms = (checkpointRooms ?? new GameObject[0]).ToList();
-                        rooms.Add(obj.gameObject);
-                        checkpointRooms = rooms.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> rooms = (checkpointRooms ?? new GameObject[0]).ToList();
-                            rooms.Add(obj.gameObject);
-                            checkpointRooms = rooms.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
-
-            foreach (var e in roomsToInherit)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> rooms = checkpointRoomsToInherit ?? [];
-                        rooms.Add(obj.gameObject);
-                        checkpointRoomsToInherit = rooms;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> rooms = checkpointRoomsToInherit ?? [];
-                            rooms.Add(obj.gameObject);
-                            checkpointRoomsToInherit = rooms;
-                            found = true;
-                            break;
-                        }
-                    }
-            }
+            checkpointRooms = LoadingHelper.GetObjectsWithIds(rooms);
+            checkpointRoomsToInherit = LoadingHelper.GetObjectsWithIdsList(roomsToInherit);
 
             StartCoroutine(waitTillPlayer());
         }
@@ -113,12 +56,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
             so.transform.localScale = Vector3.one;
 
             CheckPoint checkpoint = so.GetComponent<CheckPoint>();
-            checkpoint.rooms = [];
-            checkpoint.roomsToInherit = [];
             checkpoint.rooms = checkpointRooms;
             checkpoint.roomsToInherit = checkpointRoomsToInherit;
-
-            
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using TMPro;
 using UltraEditor.Classes.Canvas;
+using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -28,37 +29,12 @@ namespace UltraEditor.Classes
 
         bool mouseLocked = true;
         bool destroyedLastFrame = false;
-        public bool advancedInspector = false;
+        static public bool advancedInspector = false;
         static public bool friendlyAdvancedInspector = false;
         public static bool logShit = false;
         public static bool canOpenEditor = false;
 
-        static string tempScene = @"
-? CubeObject ?
-Wall(-10.00, 98.75, 20.00)(0.00, 0.00, 90.00)(20.00, 0.25, 40.00)
-Wall
-24
-Wall
-(-10.00, 98.75, 20.00)
-(0.00, 0.00, 90.00)
-(20.00, 0.25, 40.00)
-1
-
-0
-
-? END ?
-? CubeObject ?
-Floor(0.00, 89.25, 20.00)(0.00, 0.00, 0.00)(20.00, 1.00, 40.00)
-Floor
-24
-Floor
-(0.00, 89.25, 20.00)
-(0.00, 0.00, 0.00)
-(20.00, 1.00, 40.00)
-1
-
-0
-";
+        static string tempScene = ExampleScenes.GetDefaultScene();
 
         List<InspectorVariable> inspectorVariables = new List<InspectorVariable>();
 
@@ -185,11 +161,6 @@ Floor
 
             if (FinalRank.Instance != null)
                 FinalRank.Instance.targetLevelName = "Main Menu";
-        }
-
-        public void LateUpdate()
-        {
-            
         }
 
         public static TMP_Text MissionNameText = null;
@@ -333,8 +304,8 @@ Floor
             Time.timeScale = mouseLocked ? 1f : 0f;
 
             SetupButtons();
-            if (GameObject.FindObjectOfType<NavMeshSurface>() != null)
-                EditorVisualizers.RebuildNavMeshVis(GameObject.FindObjectOfType<NavMeshSurface>());
+            if (FindObjectOfType<NavMeshSurface>() != null)
+                EditorVisualizers.RebuildNavMeshVis(FindObjectOfType<NavMeshSurface>());
 
             if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor) // load backup level after restart
             {
@@ -484,9 +455,7 @@ Floor
         void RebuildNavmesh(bool forceFindNavmesh)
         {
             if (navMeshSurface == null)
-            {
                 navMeshSurface = FindObjectOfType<NavMeshSurface>();
-            }
 
             if (navMeshSurface == null)
             {
@@ -494,7 +463,7 @@ Floor
                 navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
                 navMeshSurface.collectObjects = CollectObjects.All;
                 navMeshSurface.BuildNavMesh();
-                if (logShit) Plugin.LogInfo("NavMeshSurface created.");
+                if (logShit) Log("NavMeshSurface created.");
             }
 
             if (navMeshSurface != null)
@@ -502,11 +471,11 @@ Floor
                 navMeshSurface.BuildNavMesh();
                 EditorVisualizers.RebuildNavMeshVis(navMeshSurface);
                 if (logShit)
-                    Plugin.LogInfo("NavMesh rebuilt.");
+                    Log("NavMesh rebuilt.");
             }
             else
             {
-                Plugin.LogError("No NavMeshSurface found to rebuild.");
+                Log("No NavMeshSurface found to rebuild.");
             }
         }
 
@@ -580,7 +549,7 @@ Floor
             NewInspectorVariable("affectedCubes", typeof(MovingPlatformAnimator));
             NewInspectorVariable("points", typeof(MovingPlatformAnimator));
             NewInspectorVariable("speed", typeof(MovingPlatformAnimator));
-            NewInspectorVariable("movesWithThePlayer", typeof(MovingPlatformAnimator));
+            //NewInspectorVariable("movesWithThePlayer", typeof(MovingPlatformAnimator));
             NewInspectorVariable("mode", typeof(MovingPlatformAnimator));
 
             //NewInspectorVariable("acceptedItemType", typeof(SkullActivatorObject));
@@ -605,7 +574,7 @@ Floor
             if (dir == "DuvizPlushFixed") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
             GameObject obj = null;
 
-            // exclusive exceptions
+            // Exclusive exceptions
             if (dir == "ImCloudingIt")
             {
                 obj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("Cloud"));
@@ -613,6 +582,7 @@ Floor
             else if (dir == "AltarBlueOff")
             {
                 obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
+
                 //            |Cube       |SkullBlue
                 obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
                 obj.name += " (Off)";
@@ -620,13 +590,27 @@ Floor
             else if (dir == "AltarRedOff")
             {
                 obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
+
                 //            |Cube       |SkullBlue
                 obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
                 obj.name += " (Off)";
             }
+            else if (dir == "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab(Active)")
+            {
+                obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
+
+                obj.transform.GetComponent<DisabledEnemiesChecker>().enabled = false;
+                //            |SuicideTree4
+                obj.transform.GetChild(0).GetComponent<BloodFiller>().enabled = false;
+                //            |FinishEffects
+                obj.transform.GetChild(1).gameObject.SetActive(true);
+                //            |BloodLeaves
+                obj.transform.GetChild(2).gameObject.SetActive(true);
+                obj.name += " (Active)";
+            }
             else
             {
-                //spawn the object like normal
+                // Spawn the object like normal
                 obj = Instantiate(Plugin.Ass<GameObject>(dir));
             }
 
@@ -837,8 +821,8 @@ Floor
             return "/" + string.Join("/", parts);
         }
 
-        Component[] lastComponents = new Component[0];
-        public GameObject[] lastHierarchy = new GameObject[0];
+        Component[] lastComponents = [];
+        public GameObject[] lastHierarchy = [];
         GameObject lastSelected = null;
         GameObject holdingObject = null;
         GameObject holdingTarget = null;
@@ -924,64 +908,6 @@ Floor
 
             UpdateInspector();
             Billboard.UpdateBillboards();
-        }
-
-        public static List<Type> GetAllMonoBehaviourTypes(bool forceNormalOnes = false)
-        {
-            if ((Instance != null && !Instance.advancedInspector) || forceNormalOnes)
-            {
-                List<Type> list = new List<Type>();
-
-                list.Add(typeof(ActivateArena));
-                list.Add(typeof(ActivateNextWave));
-                list.Add(typeof(ActivateObject));
-                list.Add(typeof(HUDMessageObject));
-                list.Add(typeof(NewTeleportObject));
-                list.Add(typeof(LevelInfoObject));
-                list.Add(typeof(DeathZone));
-                list.Add(typeof(Light));
-                list.Add(typeof(MusicObject));
-                list.Add(typeof(SFXObject));
-                list.Add(typeof(CubeTilingAnimator));
-                list.Add(typeof(MovingPlatformAnimator));
-                list.Add(typeof(SkullActivatorObject));
-
-                return list;
-            }
-
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies().ToList();
-
-            var engineAssemblyNames = new[]
-            {
-            "UnityEngine.CoreModule",
-            "UnityEngine.PhysicsModule",
-            "UnityEngine.UIModule",
-            "UnityEngine.AnimationModule",
-            "UnityEngine.AIModule",
-            "UnityEngine.AudioModule",
-            "UnityEngine.ParticleSystemModule"
-        };
-
-            foreach (var name in engineAssemblyNames)
-            {
-                var a = assemblies.FirstOrDefault(x => x.GetName().Name == name);
-                if (a == null)
-                {
-                    try { assemblies.Add(Assembly.Load(name)); }
-                    catch { }
-                }
-            }
-
-            var types = assemblies
-                .SelectMany(a =>
-                {
-                    try { return a.GetTypes(); }
-                    catch (ReflectionTypeLoadException e) { return e.Types.Where(t => t != null); }
-                })
-                .Where(t => (t.IsSubclassOf(typeof(MonoBehaviour)) || typeof(Component).IsAssignableFrom(t)) && !t.IsAbstract)
-                .ToList();
-
-            return types;
         }
 
         void InitializeDefaultFields(Component component)
@@ -1092,7 +1018,7 @@ Floor
                         {
                             searchResults.Clear();
 
-                            var monoTypes = GetAllMonoBehaviourTypes();
+                            var monoTypes = EditorComponentsList.GetMonoBehaviourTypes();
 
                             foreach (var type in monoTypes)
                             {
@@ -1138,19 +1064,8 @@ Floor
                                 {
                                     Component c = cameraSelector.selectedObject.AddComponent(componentType);
                                     InitializeDefaultFields(c);
-                                    if (c is ActivateArena)
-                                    {
-                                        ActivateArena cc = (ActivateArena)c;
-                                        cc.doors = new Door[0];
-                                        cc.onlyWave = true;
-                                        
-                                    }
-                                    if (c is ActivateObject)
-                                    {
-                                        
-                                    }
 
-                                    if (c is LevelInfoObject || c is NewTeleportObject || c is HUDMessageObject || c is ActivateObject || c is ActivateArena || c is DeathZone || c is Light || c is MusicObject || c is SFXObject || c is CubeTilingAnimator || c is MovingPlatformAnimator || c is SkullActivatorObject)
+                                    if (EditorComponentsList.IsTrigger(c))
                                     {
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
                                         {
@@ -1162,17 +1077,19 @@ Floor
                                         }
                                     }
 
-
-                                    if (c is ActivateNextWave)
+                                    // Exclusive exceptions for default components
+                                    if (c is ActivateArena arena)
                                     {
-                                        SetAlert("ActivateNextWave will remove any material from the object when saved, as it's meant to be in empty objects and make every enemy be in the child of this object.", "Advice!");
-                                        ((ActivateNextWave)c).noActivationDelay = true;
+                                        arena.doors = [];
+                                        arena.onlyWave = true;
                                     }
-
-                                    if (c is HudMessage)
+                                    else if (c is ActivateNextWave nextWave)
                                     {
-                                        HudMessage cc = (HudMessage)c;
-                                        cc.timed = true;
+                                        nextWave.noActivationDelay = true;
+                                    }
+                                    else if (c is HudMessage hudMessage)
+                                    {
+                                        hudMessage.timed = true;
                                     }
 
                                     UpdateInspector();
@@ -1227,7 +1144,7 @@ Floor
                     }
                     else
                     {
-                        if (GetAllMonoBehaviourTypes(true).Contains(component.GetType()))
+                        if (EditorComponentsList.GetMonoBehaviourTypes(true).Contains(component.GetType()))
                             if (component is PrefabObject || component is CubeObject || (component is Light && cameraSelector.selectedObject.GetComponent<PrefabObject>() != null))
                                 CreateInspectorItem(compName, inspectorItemType.None);
                             else
@@ -1236,19 +1153,15 @@ Floor
                                     Destroy(component);
                                     if (cameraSelector.selectedObject.GetComponent<CubeObject>() != null)
                                     {
-                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
-                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = false;
-                                        if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
-                                            cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
+                                        cameraSelector.selectedObject.GetComponent<Collider>()?.isTrigger = false;
+                                        cameraSelector.selectedObject.GetComponent<NavMeshModifier>()?.ignoreFromBuild = false;
                                     }
                                     else if (cameraSelector.selectedObject.GetComponent<CubeObject>() == null)
                                     {
                                         CubeObject.Create(cameraSelector.selectedObject, MaterialChoser.materialTypes.Default);
                                         if (cameraSelector.selectedObject.GetComponent<Collider>() == null) cameraSelector.selectedObject.AddComponent<BoxCollider>();
-                                        if (cameraSelector.selectedObject.GetComponent<Collider>() != null)
-                                            cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = false;
-                                        if (cameraSelector.selectedObject.GetComponent<NavMeshModifier>() != null)
-                                            cameraSelector.selectedObject.GetComponent<NavMeshModifier>().ignoreFromBuild = false;
+                                        cameraSelector.selectedObject.GetComponent<Collider>()?.isTrigger = false;
+                                        cameraSelector.selectedObject.GetComponent<NavMeshModifier>()?.ignoreFromBuild = false;
                                     }
                                     PlayAudio(removeComponent);
                                     Billboard.UpdateBillboards();
@@ -1350,7 +1263,6 @@ Floor
         int choosing_index = 0;
         bool choosing = false;
         string choosing_special = "";
-        string choosing_field_name = "";
         GameObject choosing_object = null;
 
         void CreateInspectorVariable(string fieldName, object value, Type type, object field, Component comp, GameObject obj)
@@ -1388,16 +1300,16 @@ Floor
                     SetMemberValue(field, comp, lastFieldText.ToLower() == "true");
 
                 else if (type == typeof(Vector3))
-                    SetMemberValue(field, comp, ParseVector3(lastFieldText));
+                    SetMemberValue(field, comp, ParseHelper.ParseVector3(lastFieldText));
 
                 else if (type == typeof(Vector2))
-                    SetMemberValue(field, comp, ParseVector2(lastFieldText));
+                    SetMemberValue(field, comp, ParseHelper.ParseVector2(lastFieldText));
 
                 else if (type == typeof(Vector4))
-                    SetMemberValue(field, comp, ParseVector4(lastFieldText));
+                    SetMemberValue(field, comp, ParseHelper.ParseVector4(lastFieldText));
 
                 else if (type == typeof(Color)) {
-                    Vector3 c = ParseVector3(lastFieldText);
+                    Vector3 c = ParseHelper.ParseVector3(lastFieldText);
                     SetMemberValue(field, comp, new Color(c.x / 255f, c.y / 255f, c.z / 255f));
                 }
 
@@ -1465,7 +1377,6 @@ Floor
 
                                 choosing_comp = comp;
                                 choosing_field = field;
-                                choosing_field_name = fieldName;
                                 choosing_special = "";
                                 choosing_type = type;
                                 choosing_index = index;
@@ -1575,7 +1486,6 @@ Floor
 
                                 choosing_comp = comp;
                                 choosing_field = field;
-                                choosing_field_name = fieldName;
                                 choosing_special = "";
                                 choosing_type = type;
                                 choosing_index = index;
@@ -1677,51 +1587,6 @@ Floor
         void SetMessageText(string txt)
         {
             editorCanvas.transform.GetChild(0).GetChild(7).GetComponent<TMP_Text>().text = txt;
-        }
-
-        Vector4 ParseVector4(string input)
-        {
-            input = input.Trim('(', ')', ' ');
-            var parts = input.Split(',');
-
-            if (parts.Length != 4)
-                throw new FormatException($"Invalid Vector4 format: {input}");
-
-            return new Vector4(
-                float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture),
-                float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture),
-                float.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture),
-                float.Parse(parts[3], System.Globalization.CultureInfo.InvariantCulture)
-            );
-        }
-
-        public static Vector3 ParseVector3(string input)
-        {
-            input = input.Trim('(', ')', ' ');
-            var parts = input.Split(',');
-
-            if (parts.Length != 3)
-                throw new FormatException($"Invalid Vector3 format: {input}");
-
-            return new Vector3(
-                float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture),
-                float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture),
-                float.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture)
-            );
-        }
-
-        public static Vector2 ParseVector2(string input)
-        {
-            input = input.Trim('(', ')', ' ');
-            var parts = input.Split(',');
-
-            if (parts.Length != 2)
-                throw new FormatException($"Invalid Vector2 format: {input}");
-
-            return new Vector2(
-                float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture),
-                float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture)
-            );
         }
 
         UnityEvent CreateInspectorItem(string DisplayName, inspectorItemType itemType, string defaultValue = "", object value = null, int forceChildIndex = -1)
@@ -2132,7 +1997,7 @@ Floor
                     continue;
                 }
 
-                if (obj.GetComponent<SkullActivatorObject>() != null || obj.GetComponent<MovingPlatformAnimator>() != null || obj.GetComponent<CubeTilingAnimator>() != null || obj.GetComponent<MusicObject>() != null || obj.GetComponent<SFXObject>() != null || obj.GetComponent<Light>() != null || obj.GetComponent<ActivateObject>() != null || obj.GetComponent<CheckpointObject>() != null || obj.GetComponent<DeathZone>() != null || obj.GetComponent<HUDMessageObject>() != null || obj.GetComponent<NewTeleportObject>() != null || obj.GetComponent<LevelInfoObject>() != null)
+                if (obj.GetComponents(typeof(Component)).Where(o => EditorComponentsList.GetTypes().Contains(o.GetType())).ToList().Count != 0)
                     continue;
 
                 text += "? CubeObject ?";
@@ -2658,8 +2523,6 @@ Floor
 
         public void TryToLoadShit()
         {
-            //UltraEditor.Classes.EditorManager.Instance.Save("new saving system test uwu :3", "testing the new saving system rn", "Bryan_-000-", "newsavetesting", "C:\\Users\\freda\\Downloads\\absolute cinema.jpg", "C:\\Users\\freda\\Music\\fe\\femtanyl - LOVESICK, CANNIBAL! (feat takihasdied).mp3", "Bryan_-000-.ULTRAEDITOR.SaveSystemTest");
-
             GameObject loadScenePopup = editorCanvas.transform.GetChild(0).GetChild(8).gameObject;
             TMP_InputField field = loadScenePopup.transform.GetChild(5).GetChild(0).GetComponent<TMP_InputField>();
             TMP_Text foundComponents = loadScenePopup.transform.GetChild(2).GetComponent<TMP_Text>();
@@ -2700,7 +2563,7 @@ Floor
                         sceneResults.Add((type, accuracy));
                 }
 
-                sceneResults = sceneResults.OrderByDescending(t => t.Item2).ToList();
+                sceneResults = [.. sceneResults.OrderByDescending(t => t.Item2)];
 
                 foundComponents.text = "Found saves:\n";
                 foreach (var result in sceneResults.Take(3))
@@ -2746,7 +2609,7 @@ Floor
             string text = File.ReadAllText(path);
 
             Plugin.LogInfo($"Loading {sceneName}...");
-            LoadSceneJson(text);
+            LoadSceneFile(text);
 
             if (MissionNameText != null)
             {
@@ -2757,9 +2620,9 @@ Floor
 
         }
 
-        public void LoadSceneJson(string text)
+        public void LoadSceneFile(string text)
         {
-            Log("Trying to load scene json...");
+            Log("Trying to load scene file...");
 
             float startTime = Time.realtimeSinceStartup;
 
@@ -2814,11 +2677,11 @@ Floor
                     if (lineIndex == 4)
                         workingObject.tag = line;
                     if (lineIndex == 5)
-                        workingObject.transform.position = ParseVector3(line);
+                        workingObject.transform.position = ParseHelper.ParseVector3(line);
                     if (lineIndex == 6)
-                        workingObject.transform.eulerAngles = ParseVector3(line);
+                        workingObject.transform.eulerAngles = ParseHelper.ParseVector3(line);
                     if (lineIndex == 7)
-                        workingObject.transform.localScale = ParseVector3(line);
+                        workingObject.transform.localScale = ParseHelper.ParseVector3(line);
                     if (lineIndex == 8)
                         workingObject.gameObject.SetActive(line == "1");
                     if (lineIndex == 9)
@@ -2928,7 +2791,7 @@ Floor
                         else if (phase == 2)
                             workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
                         else if (phase == 3)
-                            workingObject.GetComponent<LightObject>().color = ParseVector3(line);
+                            workingObject.GetComponent<LightObject>().color = ParseHelper.ParseVector3(line);
 
                     if (scriptType == "MusicObject" && workingObject.GetComponent<MusicObject>() == null)
                         MusicObject.Create(workingObject);
@@ -2986,7 +2849,7 @@ Floor
                         if (phase == 0)
                             workingObject.GetComponent<CubeTilingAnimator>().addId(line);
                         else if (phase == 1)
-                            workingObject.GetComponent<CubeTilingAnimator>().scrolling = ParseVector2(line);
+                            workingObject.GetComponent<CubeTilingAnimator>().scrolling = ParseHelper.ParseVector2(line);
 
                     if (scriptType == "HUDMessageObject" && workingObject.GetComponent<HUDMessageObject>() == null)
                         HUDMessageObject.Create(workingObject);
@@ -3000,7 +2863,7 @@ Floor
                         NewTeleportObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "TeleportObject")
                         if (phase == 0)
-                            workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseVector3(line);
+                            workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseHelper.ParseVector3(line);
                         else if (phase == 1)
                             workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
                         else if (phase == 2)
@@ -3010,7 +2873,7 @@ Floor
                         LevelInfoObject.Create(workingObject);
                     if (lineIndex >= 10 && scriptType == "LevelInfoObject")
                         if (phase == 0)
-                            workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseVector3(line);
+                            workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseHelper.ParseVector3(line);
                         else if (phase == 1)
                             workingObject.GetComponent<LevelInfoObject>().intensityMultiplier = float.Parse(line);
                         else if (phase == 2)
@@ -3078,7 +2941,7 @@ Floor
         {
             DeleteScene(true);
             yield return new WaitForEndOfFrame();
-            LoadSceneJson(tempScene);
+            LoadSceneFile(tempScene);
             yield return new WaitForEndOfFrame();
             SetAlert("Loaded scene backup", "Info!", new Color(1, 0.5f, 0.25f));
             Billboard.UpdateBillboards();
@@ -3107,7 +2970,7 @@ Floor
 
         public static void Log(string str)
         {
-            Plugin.LogInfo(str);
+            Plugin.LogInfo($"[EditorManager] {str}");
         }
 
         public static AudioClip activateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech On");

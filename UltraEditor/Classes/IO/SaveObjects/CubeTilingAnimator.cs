@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.Editor;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -31,34 +32,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             mod.ignoreFromBuild = true;
             gameObject.GetComponent<Collider>().isTrigger = true;
 
-            foreach (var e in affectedCubesIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> objs = affectedCubes.ToList();
-                        objs.Add(obj.gameObject);
-                        affectedCubes = objs.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> objs = affectedCubes.ToList();
-                            objs.Add(obj.gameObject);
-                            affectedCubes = objs.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
+            affectedCubes = LoadingHelper.GetObjectsWithIds(affectedCubesIds);
         }
 
         public void Tick()

@@ -7,6 +7,7 @@ using UnityEngine.AddressableAssets;
 using UltraEditor.Classes;
 using UnityEngine.SceneManagement;
 using System;
+using UltraEditor.Classes.Editor;
 
 namespace UltraEditor
 {
@@ -15,7 +16,7 @@ namespace UltraEditor
     {
         public const string GUID = "duviz.ultrakill.ultraeditor";
         public const string Name = "UltraEditor";
-        public const string Version = "0.0.8";
+        public const string Version = "0.0.9";
 
         public static Plugin instance;
         public plog.Logger Log;
@@ -69,17 +70,14 @@ namespace UltraEditor
         public void Awake()
         {
             instance = this;
-
-            /*gameObject.hideFlags = ThreadingHelper.Instance.hideFlags = (HideFlags)61;
-            ((ConfigEntry<bool>)AccessTools.Field(typeof(Chainloader), "ConfigHideBepInExGOs").GetValue(null)).Value = true;*/
-
             LogInfo("Hello, the Instagram community!");
             
+            EditorComponentsList.SetupEditorComponents();
+         
             var harmony = new Harmony("duviz.ultrakill.ultraeditor");
             harmony.PatchAll();
-            
-            gameObject.hideFlags = HideFlags.DontSaveInEditor;
 
+            gameObject.hideFlags = HideFlags.DontSaveInEditor;
             SceneManager.sceneLoaded += (_, _) => new GameObject("load pls uwu :3").AddComponent<EmptySceneLoader>();
         }
 
@@ -106,11 +104,6 @@ namespace UltraEditor
                 }
                 seenWelcomeMessage = true;
             }
-        }
-
-        public void LateUpdate()
-        {
-
         }
 
         public static T Ass<T>(string path) { return Addressables.LoadAssetAsync<T>((object)path).WaitForCompletion(); }

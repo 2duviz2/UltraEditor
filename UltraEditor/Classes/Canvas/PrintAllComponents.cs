@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using TMPro;
+using UltraEditor.Classes.Editor;
 using UnityEngine;
 
 namespace UltraEditor.Classes.Canvas
@@ -16,7 +17,7 @@ namespace UltraEditor.Classes.Canvas
         {
             text.text = prefix + string.Join(
             "<br><br>",
-            EditorManager.GetAllMonoBehaviourTypes(true).Select(t => t.Name)
+            EditorComponentsList.GetMonoBehaviourTypes(true).Select(t => t.Name)
         );
 
         }

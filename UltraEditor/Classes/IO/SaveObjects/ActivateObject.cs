@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.Editor;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -39,63 +40,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
             mod.ignoreFromBuild = true;
             gameObject.GetComponent<Collider>().isTrigger = true;
 
-            foreach (var e in toActivateIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> activate = (toActivate ?? []).ToList();
-                        activate.Add(obj.gameObject);
-                        toActivate = activate.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> activate = (toActivate ?? []).ToList();
-                            activate.Add(obj.gameObject);
-                            toActivate = activate.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
-
-            foreach (var e in toDeactivateIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> deactivate = (toDeactivate ?? []).ToList();
-                        deactivate.Add(obj.gameObject);
-                        toDeactivate = deactivate.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> deactivate = (toDeactivate ?? []).ToList();
-                            deactivate.Add(obj.gameObject);
-                            toDeactivate = deactivate.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
+            toActivate = LoadingHelper.GetObjectsWithIds(toActivateIds);
+            toDeactivate = LoadingHelper.GetObjectsWithIds(toDeactivateIds);
         }
 
         public void OnTriggerEnter(Collider other)

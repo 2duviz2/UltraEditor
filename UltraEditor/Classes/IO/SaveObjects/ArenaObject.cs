@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.Editor;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -34,34 +35,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             gameObject.GetComponent<Collider>().isTrigger = true;
             activateArena.onlyWave = onlyWave;
 
-            foreach (var e in enemyIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> enemies = (activateArena.enemies ?? []).ToList();
-                        enemies.Add(obj.gameObject);
-                        activateArena.enemies = enemies.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> enemies = (activateArena.enemies ?? []).ToList();
-                            enemies.Add(obj.gameObject);
-                            activateArena.enemies = enemies.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
+            activateArena.enemies = LoadingHelper.GetObjectsWithIds(enemyIds);
 
             bool enemiesHaveParent = true;
             foreach (var enemy in activateArena.enemies)

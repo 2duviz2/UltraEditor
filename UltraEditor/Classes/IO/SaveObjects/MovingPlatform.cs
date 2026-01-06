@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.Editor;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -46,7 +47,6 @@ namespace UltraEditor.Classes.IO.SaveObjects
         float timeToSpawnPopup = 5;
         public void Tick()
         {
-            time += Time.deltaTime;
 
             if (points == null || points.Length < 2 || affectedCubes == null || affectedCubes.Length == 0)
                 return;
@@ -61,6 +61,17 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 }
                 return;
             }
+
+            if (time == 0)
+            {
+                foreach (var obj in affectedCubes)
+                {
+                    obj.tag = "Moving";
+                    obj.AddComponent<Rigidbody>().isKinematic = true;
+                }
+            }
+
+            time += Time.deltaTime;
 
             int count = points.Length;
             float total = time * speed / 10;
@@ -123,76 +134,9 @@ namespace UltraEditor.Classes.IO.SaveObjects
             mod.ignoreFromBuild = true;
             gameObject.GetComponent<Collider>().isTrigger = true;
 
-            affectedCubes = [];
-            points = [];
-
             time = 0;
-
-            foreach (var e in affectedCubesIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> objs = affectedCubes.ToList();
-                        objs.Add(obj.gameObject);
-                        affectedCubes = objs.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> objs = affectedCubes.ToList();
-                            objs.Add(obj.gameObject);
-                            affectedCubes = objs.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
-            foreach (var e in pointsIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> objs = points.ToList();
-                        objs.Add(obj.gameObject);
-                        points = objs.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> objs = points.ToList();
-                            objs.Add(obj.gameObject);
-                            points = objs.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
-
-            if (movesWithThePlayer)
-            {
-                foreach (var obj in affectedCubes)
-                {
-                    obj.tag = "Moving";
-                    obj.AddComponent<Rigidbody>().isKinematic = true;
-                }
-            }
+            affectedCubes = LoadingHelper.GetObjectsWithIds(affectedCubesIds);
+            points = LoadingHelper.GetObjectsWithIds(pointsIds);
         }
     }
 }

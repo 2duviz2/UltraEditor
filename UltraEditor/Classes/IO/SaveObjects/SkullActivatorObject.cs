@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.Editor;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -101,9 +102,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             bool activated = true;
             foreach (var obj in tempObjects)
-            {
                 if (!obj.activeSelf) activated = false;
-            }
 
             if (activated != state || !started)
             {
@@ -130,94 +129,9 @@ namespace UltraEditor.Classes.IO.SaveObjects
             mod.ignoreFromBuild = true;
             gameObject.GetComponent<Collider>().isTrigger = true;
 
-            toActivate = [];
-            toDeactivate = [];
-            triggerAltars = [];
-
-            foreach (var e in toActivateIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> objs = toActivate.ToList();
-                        objs.Add(obj.gameObject);
-                        toActivate = objs.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> objs = toActivate.ToList();
-                            objs.Add(obj.gameObject);
-                            toActivate = objs.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
-            foreach (var e in toDeactivateIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> objs = toDeactivate.ToList();
-                        objs.Add(obj.gameObject);
-                        toDeactivate = objs.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> objs = toDeactivate.ToList();
-                            objs.Add(obj.gameObject);
-                            toDeactivate = objs.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
-            foreach (var e in triggerAltarsIds)
-            {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
-                {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                    {
-                        List<GameObject> objs = triggerAltars.ToList();
-                        objs.Add(obj.gameObject);
-                        triggerAltars = objs.ToArray();
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            List<GameObject> objs = triggerAltars.ToList();
-                            objs.Add(obj.gameObject);
-                            triggerAltars = objs.ToArray();
-                            found = true;
-                            break;
-                        }
-                    }
-            }
+            toActivate = LoadingHelper.GetObjectsWithIds(toActivateIds);
+            toDeactivate = LoadingHelper.GetObjectsWithIds(toDeactivateIds);
+            triggerAltars = LoadingHelper.GetObjectsWithIds(triggerAltarsIds);
         }
     }
 }

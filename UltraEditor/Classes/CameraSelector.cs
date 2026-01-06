@@ -268,7 +268,7 @@ namespace UltraEditor.Classes
                     {
                         hoveredObject = hitObj;
                         var renderer = hitObj.GetComponent<Renderer>();
-                        if (renderer && (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.Instance.advancedInspector))
+                        if (renderer && (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.advancedInspector))
                         {
                             if (!originalMaterials.ContainsKey(hitObj))
                                 originalMaterials[hitObj] = renderer.material;
@@ -281,7 +281,7 @@ namespace UltraEditor.Classes
                         if (Input.GetKey(Plugin.altKey))
                             EditorManager.Instance.SelectObject(hitObj);
                         else
-                            if (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.Instance.advancedInspector)
+                            if (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.advancedInspector)
                                 SelectObject(hitObj);
                 }
             }

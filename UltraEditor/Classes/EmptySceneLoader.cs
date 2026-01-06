@@ -129,7 +129,7 @@ public class EmptySceneLoader : MonoBehaviour
             }
             else
             {
-                EditorManager.Instance.LoadSceneJson(forceSaveData);
+                EditorManager.Instance.LoadSceneFile(forceSaveData);
                 levelName = forceLevelName;
 
                 int pt = int.Parse(pTime);
