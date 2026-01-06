@@ -69,8 +69,8 @@ public static class Builder
     {
         Image img = Image(name, parent, rect, sprite, col);
         TMP_InputField field = img.gameObject.AddComponent<TMP_InputField>();
-        TextMeshProUGUI placeholderComp = Text("Placeholder", placeholder, img.transform, rect, size, alignment, col);
-        TextMeshProUGUI textComp = Text("Text", "", img.transform, rect, size, alignment, col);
+        TextMeshProUGUI placeholderComp = Text("Placeholder", placeholder, img.transform, new(rect.x, rect.y, rect.width-5f, rect.height-5f), size, alignment);
+        TextMeshProUGUI textComp = Text("Text", "", img.transform, new(rect.x, rect.y, rect.width-5f, rect.height-5f), size, alignment);
 
         field.textComponent = textComp;
         field.placeholder = placeholderComp;
