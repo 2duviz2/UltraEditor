@@ -82,11 +82,11 @@ namespace UltraEditor
             gameObject.hideFlags = HideFlags.DontSaveInEditor;
 
             SceneManager.sceneLoaded += (_, _) => new GameObject("load pls uwu :3").AddComponent<EmptySceneLoader>();
-            Classes.UI.Sprites.Load();
         }
 
         public void Start()
         {
+            Classes.UI.Sprites.Load();
             GameObject obj = new GameObject("BundlesManager");
             obj.AddComponent<BundlesManager>();
             obj.AddComponent<ChapterSelectChanger>();
