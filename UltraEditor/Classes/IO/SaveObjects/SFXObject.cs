@@ -42,7 +42,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             gameObject.GetComponent<Collider>().isTrigger = true;
         }
 
-        public void createSFX()
+        public override void Create()
         {
             started = false;
             DownloadMusic();
@@ -55,11 +55,11 @@ namespace UltraEditor.Classes.IO.SaveObjects
             source.loop = loop;
         }
 
-        public void Tick()
+        public override void Tick()
         {
             if (EditorManager.canOpenEditor) // update while in editor
             {
-                if (source == null) createSFX();
+                if (source == null) Create();
                 source.spatialize = range <= 0 ? false : true;
                 source.maxDistance = range;
                 source.minDistance = 0;

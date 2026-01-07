@@ -36,7 +36,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             roomsToInherit.Add(id);
         }
 
-        public void createCheckpoint()
+        public override void Create()
         {
             checkpointRooms = LoadingHelper.GetObjectsWithIds(rooms);
             checkpointRoomsToInherit = LoadingHelper.GetObjectsWithIdsList(roomsToInherit);

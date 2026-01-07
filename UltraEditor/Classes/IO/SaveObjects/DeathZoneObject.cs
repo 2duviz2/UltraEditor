@@ -20,7 +20,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             return deathZoneObject;
         }
 
-        public void createDeathzone()
+        public override void Create()
         {
             DeathZone deathZone = gameObject.AddComponent<DeathZone>();
 

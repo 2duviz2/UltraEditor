@@ -45,7 +45,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         float time = 0;
         float timeToSpawnPopup = 5;
-        public void Tick()
+        public override void Tick()
         {
 
             if (points == null || points.Length < 2 || affectedCubes == null || affectedCubes.Length == 0)
@@ -128,7 +128,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             time = 0;
         }
 
-        public void createAnimator()
+        public override void Create()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;

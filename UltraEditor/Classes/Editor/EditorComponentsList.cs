@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 using NewTeleportObject = UltraEditor.Classes.IO.SaveObjects.TeleportObject;
@@ -48,6 +47,13 @@ namespace UltraEditor.Classes.Editor
         public static bool IsTrigger(Component c)
         {
             return GetTriggerTypes().Contains(c.GetType());
+        }
+
+        /// <summary> Returns the component's description </summary>
+        /// <returns> Component's description </returns>
+        public static string GetDescription(Component c)
+        {
+            return editorComponents.FirstOrDefault(t => t.componentType == c.GetType())?.description;
         }
 
         /// <summary> Returns a list of MonoBehaviour types avaliable for the editor </summary>

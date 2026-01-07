@@ -36,7 +36,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             gameObject.GetComponent<Collider>().isTrigger = true;
         }
 
-        public void createMusic()
+        public override void Create()
         {
             DownloadMusic();
             if (EditorManager.canOpenEditor) { MusicManager.Instance.ForceStopMusic(); MusicManager.Instance.forcedOff = false; }

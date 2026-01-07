@@ -16,7 +16,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             return teleportObject;
         }
 
-        public void createTeleporter()
+        public override void Create()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;

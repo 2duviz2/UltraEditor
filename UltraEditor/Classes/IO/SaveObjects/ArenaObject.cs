@@ -25,7 +25,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             enemyIds.Add(id);
         }
 
-        public void createArena()
+        public override void Create()
         {
             if (gameObject.GetComponent<ActivateArena>() != null) { return; }
             ActivateArena activateArena = gameObject.AddComponent<ActivateArena>();

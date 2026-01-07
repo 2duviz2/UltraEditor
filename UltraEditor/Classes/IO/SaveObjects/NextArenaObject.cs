@@ -34,7 +34,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         }
 
         bool addedGoreZone = false;
-        public void Tick()
+        public override void Tick()
         {
             if (Time.timeScale == 0) return;
             if (!addedGoreZone)
@@ -42,7 +42,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             addedGoreZone = true;
         }
 
-        public void createArena()
+        public override void Create()
         {
             ActivateNextWave activateNextWave = gameObject.AddComponent<ActivateNextWave>();
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();

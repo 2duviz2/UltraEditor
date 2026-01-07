@@ -628,7 +628,11 @@ namespace UltraEditor.Classes
             {
                 cameraSelector.SelectObject(obj);
             }
-            if (Input.GetKey(Plugin.altKey)) obj.SetActive(false);
+
+            if (Input.GetKey(Plugin.altKey))
+            {
+                obj.SetActive(false);
+            }
             else
             {
                 if (dir.StartsWith("Assets/Prefabs/Enemies/") && !isLoading)
@@ -638,6 +642,7 @@ namespace UltraEditor.Classes
                 }
             }
 
+            // Manage special stuff
             if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab" && !isLoading)
                 SetAlert("You need to assign at least one item in rooms for the checkpoint to work.", "Warning!");
             if (dir == "Assets/Prefabs/Levels/Special Rooms/FinalRoom.prefab" && !isLoading)
@@ -779,29 +784,12 @@ namespace UltraEditor.Classes
             editorCamera.cullingMask = layerMask;
         }
 
-        bool legacyUnlit = false;
         void ChangeLighting(int lit)
         {
             if (lit == 1)
-            {
-                if (legacyUnlit)
-                    editorCamera.ResetReplacementShader();
-                else
-                    editorCamera.GetComponent<CameraMovement>().setUnlit(false);
-            }
+                editorCamera.GetComponent<CameraMovement>().setUnlit(false);
             else if (lit == 0)
-            {
-                if (legacyUnlit)
-                {
-                    Shader unlitShader = Shader.Find("Unlit/Texture");
-                    if (unlitShader != null)
-                        editorCamera.SetReplacementShader(unlitShader, "");
-                    else
-                        Plugin.LogError("Unlit shader not found");
-                }
-                else
-                    editorCamera.GetComponent<CameraMovement>().setUnlit(true);
-            }
+                editorCamera.GetComponent<CameraMovement>().setUnlit(true);
         }
 
         string GetHierarchyPath(GameObject go)
@@ -927,7 +915,7 @@ namespace UltraEditor.Classes
                 {
                     field.SetValue(component, "");
                 }
-                else if (typeof(System.Collections.IList).IsAssignableFrom(fieldType))
+                else if (typeof(IList).IsAssignableFrom(fieldType))
                 {
                     try
                     {
@@ -1148,7 +1136,7 @@ namespace UltraEditor.Classes
                             if (component is PrefabObject || component is CubeObject || (component is Light && cameraSelector.selectedObject.GetComponent<PrefabObject>() != null))
                                 CreateInspectorItem(compName, inspectorItemType.None);
                             else
-                                CreateInspectorItem(compName, inspectorItemType.RemoveButton).AddListener(() =>
+                                CreateInspectorItem(compName, inspectorItemType.RemoveButton, infoButton : true, infoButtonDescription: EditorComponentsList.GetDescription(component)).AddListener(() =>
                                 {
                                     Destroy(component);
                                     if (cameraSelector.selectedObject.GetComponent<CubeObject>() != null)
@@ -1213,17 +1201,11 @@ namespace UltraEditor.Classes
         public static object GetMemberValue(object member, object target)
         {
             if (member is FieldInfo field)
-            {
                 return field.GetValue(target);
-            }
             else if (member is PropertyInfo prop)
-            {
                 return prop.GetValue(target);
-            }
             else
-            {
                 throw new ArgumentException("Member must be a FieldInfo or PropertyInfo", nameof(member));
-            }
         }
 
         void SetMemberValue(object member, object target, object value)
@@ -1245,17 +1227,17 @@ namespace UltraEditor.Classes
         }
 
         Type[] supportedTypes = new Type[]
-                {
-                    typeof(string),
-                    typeof(int),
-                    typeof(float),
-                    typeof(double),
-                    typeof(bool),
-                    typeof(Vector3),
-                    typeof(Vector2),
-                    typeof(Vector4),
-                    typeof(Color),
-                };
+            {
+                typeof(string),
+                typeof(int),
+                typeof(float),
+                typeof(double),
+                typeof(bool),
+                typeof(Vector3),
+                typeof(Vector2),
+                typeof(Vector4),
+                typeof(Color),
+            };
 
         Type choosing_type = null;
         object choosing_field = null;
@@ -1589,7 +1571,7 @@ namespace UltraEditor.Classes
             editorCanvas.transform.GetChild(0).GetChild(7).GetComponent<TMP_Text>().text = txt;
         }
 
-        UnityEvent CreateInspectorItem(string DisplayName, inspectorItemType itemType, string defaultValue = "", object value = null, int forceChildIndex = -1)
+        UnityEvent CreateInspectorItem(string DisplayName, inspectorItemType itemType, string defaultValue = "", object value = null, int forceChildIndex = -1, bool infoButton = false, string infoButtonDescription = "Null.")
         {
             GameObject content = editorCanvas.transform.GetChild(0).GetChild(1).GetChild(0).GetChild(3).gameObject;
             GameObject templateItem = content.transform.GetChild(0).gameObject;
@@ -1610,6 +1592,7 @@ namespace UltraEditor.Classes
             GameObject copyButton = newItem.transform.GetChild(4).gameObject;
             GameObject pasteButton = newItem.transform.GetChild(5).gameObject;
             GameObject dropdown = newItem.transform.GetChild(6).gameObject;
+            GameObject descriptionButton = newItem.transform.GetChild(7).gameObject;
 
             field.SetActive(false);
             removeButton.SetActive(false);
@@ -1617,6 +1600,15 @@ namespace UltraEditor.Classes
             copyButton.SetActive(false);
             pasteButton.SetActive(false);
             dropdown.SetActive(false);
+            descriptionButton.SetActive(infoButton);
+
+            if (infoButton)
+            {
+                descriptionButton.GetComponentInChildren<Button>().onClick.AddListener(() =>
+                {
+                    PopupManager.CreatePopup("Info popup", infoButtonDescription);
+                });
+            }
 
             if (itemType == inspectorItemType.InputField)
             {
@@ -2166,11 +2158,8 @@ namespace UltraEditor.Classes
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
             {
                 while (obj.GetComponent<CheckpointObject>() != null)
-                {
-                    /*obj.rooms = obj.GetComponent<CheckpointObject>().checkpointRooms;
-                    obj.roomsToInherit = obj.GetComponent<CheckpointObject>().checkpointRoomsToInherit;*/
                     Destroy(obj.GetComponent<CheckpointObject>());
-                }
+
                 CheckpointObject co = CheckpointObject.Create(obj.gameObject);
 
                 foreach (var e in obj.rooms)
@@ -2914,21 +2903,7 @@ namespace UltraEditor.Classes
 
             foreach (var obj in allObjs)
             {
-                obj.GetComponent<ArenaObject>()?.createArena();
-                obj.GetComponent<ArenaObject>()?.createArena();
-                obj.GetComponent<NextArenaObject>()?.createArena();
-                obj.GetComponent<ActivateObject>()?.createActivator();
-                obj.GetComponent<CheckpointObject>()?.createCheckpoint();
-                obj.GetComponent<DeathZoneObject>()?.createDeathzone();
-                obj.GetComponent<LightObject>()?.createLight();
-                obj.GetComponent<MusicObject>()?.createMusic();
-                obj.GetComponent<SFXObject>()?.createSFX();
-                obj.GetComponent<HUDMessageObject>()?.createHudMessage();
-                obj.GetComponent<NewTeleportObject>()?.createTeleporter();
-                obj.GetComponent<LevelInfoObject>()?.createLevelInfo();
-                obj.GetComponent<CubeTilingAnimator>()?.createAnimator();
-                obj.GetComponent<MovingPlatformAnimator>()?.createAnimator();
-                obj.GetComponent<SkullActivatorObject>()?.createActivator();
+                obj.GetComponent<SavableObject>()?.Create();
             }
 
             Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");

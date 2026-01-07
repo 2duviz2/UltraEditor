@@ -71,7 +71,8 @@ namespace UltraEditor
         {
             instance = this;
             LogInfo("Hello, the Instagram community!");
-            
+            System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+
             EditorComponentsList.SetupEditorComponents();
          
             var harmony = new Harmony("duviz.ultrakill.ultraeditor");

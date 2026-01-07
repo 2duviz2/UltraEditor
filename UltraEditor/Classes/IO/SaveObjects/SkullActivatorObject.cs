@@ -58,7 +58,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         bool tried = false;
         bool started = false;
         List<GameObject> tempObjects = [];
-        public void Tick()
+        public override void Tick()
         {
             if (Time.timeScale == 0) return;
             if (tempObjects.Count == 0 && !tried)
@@ -123,7 +123,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     obj.SetActive(!a);
         }
 
-        public void createActivator()
+        public override void Create()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;

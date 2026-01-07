@@ -34,7 +34,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             toDeactivateIds.Add(id);
         }
 
-        public void createActivator()
+        public override void Create()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;

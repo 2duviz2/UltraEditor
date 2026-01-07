@@ -36,7 +36,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             return obj;
         }
 
-        public void Tick()
+        public override void Tick()
         {
             if (GetComponent<Collider>() != null)
                 _isTrigger = GetComponent<Collider>().isTrigger;

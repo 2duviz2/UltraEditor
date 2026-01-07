@@ -26,7 +26,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             affectedCubesIds.Add(id);
         }
 
-        public void createAnimator()
+        public override void Create()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;
@@ -35,7 +35,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             affectedCubes = LoadingHelper.GetObjectsWithIds(affectedCubesIds);
         }
 
-        public void Tick()
+        public override void Tick()
         {
             foreach (var c in affectedCubes)
             {

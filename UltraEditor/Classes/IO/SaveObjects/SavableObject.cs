@@ -17,12 +17,10 @@ namespace UltraEditor.Classes.IO.SaveObjects
             EulerAngles = transform.eulerAngles;
             Scale = transform.lossyScale;
 
-            GetComponent<CubeObject>()?.Tick();
-            GetComponent<CubeTilingAnimator>()?.Tick();
-            GetComponent<MovingPlatformAnimator>()?.Tick();
-            GetComponent<NextArenaObject>()?.Tick();
-            GetComponent<SFXObject>()?.Tick();
-            GetComponent<SkullActivatorObject>()?.Tick();
+            Tick();
         }
+
+        public virtual void Tick() { }
+        public virtual void Create() { }
     }
 }

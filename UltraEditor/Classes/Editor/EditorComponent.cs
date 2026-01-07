@@ -1,21 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace UltraEditor.Classes.Editor
 {
     public class EditorComponent
     {
-        public string componentName = "Undefined component name";
+        public string description = "Undefined component name";
         public Type componentType;
         public bool isTrigger;
 
-        public EditorComponent(Type componentType, bool isTrigger, string componentName = "Undefined")
+        public EditorComponent(Type componentType, bool isTrigger, string description = "Description not set for this component")
         {
-            if (componentName != "Undefined")
-                this.componentName = componentName;
-            else
-                this.componentName = componentType.ToString();
+            this.description = description;
             this.componentType = componentType;
             this.isTrigger = isTrigger;
             EditorComponentsList.editorComponents.Add(this);

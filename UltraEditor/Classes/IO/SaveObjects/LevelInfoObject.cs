@@ -24,7 +24,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             return levelInfoObject;
         }
 
-        public void createLevelInfo()
+        public override void Create()
         {
             NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
             mod.ignoreFromBuild = true;
