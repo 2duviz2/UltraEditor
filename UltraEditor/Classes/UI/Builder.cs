@@ -28,6 +28,7 @@ public static class Builder
         {
             textGui.alignment = alignment;
             textGui.color = col ?? Color.white;
+            textGui.enableWordWrapping = true;
             textGui.font = Sprites.VCROSDMONO;
             textGui.fontSize = size;
             textGui.text = text;
@@ -47,6 +48,16 @@ public static class Builder
                 image.pixelsPerUnitMultiplier = 4.05f;
         });
 
+    /// <summary> Creates a Mask with the given sprite and color. </summary>
+    public static Mask Mask(string name, Transform parent, Rect rect, Sprite sprite = null)
+    {
+        Image img = Image(name, parent, rect, sprite);
+        Mask mask = img.gameObject.AddComponent<Mask>();
+        mask.showMaskGraphic = false;
+
+        return mask;
+    }
+
     /// <summary> Creates a Button with the given sprite, color, and onClick Action. </summary>
     public static Button Button(string name, Transform parent, Rect rect, Sprite sprite = null, Color? col = null, Action onClick = null)
     {
@@ -64,13 +75,15 @@ public static class Builder
         return button;
     }
 
-    /// <summary>  </summary>
+    /// <summary> Creates an InputField with the given properties. </summary>
     public static TMP_InputField InputField(string name, string placeholder, Transform parent, Rect rect, Sprite sprite = null, Color? col = null, float size = 27f, TextAlignmentOptions alignment = TextAlignmentOptions.Left, Action<string> onEndEdit = null)
     {
         Image img = Image(name, parent, rect, sprite, col);
         TMP_InputField field = img.gameObject.AddComponent<TMP_InputField>();
-        TextMeshProUGUI placeholderComp = Text("Placeholder", placeholder, img.transform, new(rect.x, rect.y, rect.width-5f, rect.height-5f), size, alignment);
-        TextMeshProUGUI textComp = Text("Text", "", img.transform, new(rect.x, rect.y, rect.width-5f, rect.height-5f), size, alignment);
+
+        Mask mask = Mask("Viewport", img.transform, rect, sprite);
+        TextMeshProUGUI placeholderComp = Text("Placeholder", placeholder, mask.transform, new(rect.x, rect.y, rect.width-5f, rect.height-5f), size, alignment);
+        TextMeshProUGUI textComp = Text("Text", "", mask.transform, new(rect.x, rect.y, rect.width-5f, rect.height-5f), size, alignment);
 
         field.textComponent = textComp;
         field.placeholder = placeholderComp;
