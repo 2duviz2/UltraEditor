@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace UltraEditor.Libraries
 {
@@ -16,7 +14,7 @@ namespace UltraEditor.Libraries
         {
             string t = originalText;
             foreach (var pat in patches)
-                t.Replace(pat.Item1, pat.Item2);
+                t = t.Replace(pat.Item1, pat.Item2);
             return t;
         }
     }

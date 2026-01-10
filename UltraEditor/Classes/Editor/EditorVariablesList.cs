@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 
@@ -22,7 +21,7 @@ namespace UltraEditor.Classes.Editor
             NewInspectorVariable("matType", typeof(CubeObject), "Material type");
             NewInspectorVariable("matTiling", typeof(CubeObject), "Material scale");
             NewInspectorVariable("shape", typeof(CubeObject), "Object shape");
-            NewInspectorVariable("isTrigger", typeof(CubeObject), "Has collision");
+            NewInspectorVariable("isTrigger", typeof(CubeObject), "Ignore collision");
 
             NewInspectorVariable("enemies", typeof(ActivateArena), "Enemies");
             NewInspectorVariable("onlyWave", typeof(ActivateArena), "Is only wave");

@@ -50,7 +50,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             activateNextWave.doors = [];
             activateNextWave.nextEnemies = LoadingHelper.GetObjectsWithIds(enemyIds);
             activateNextWave.toActivate = LoadingHelper.GetObjectsWithIds(toActivateIds);
-            activateNextWave.noActivationDelay = true;
+            //activateNextWave.noActivationDelay = true; removed because its dumb :c
             Destroy(gameObject.GetComponent<Collider>());
             activateNextWave.lastWave = lastWave;
             activateNextWave.enemyCount = enemyCount;

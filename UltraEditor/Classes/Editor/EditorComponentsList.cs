@@ -17,7 +17,12 @@ namespace UltraEditor.Classes.Editor
         public static void SetupEditorComponents()
         {
             editorComponents = [];
-            new EditorComponent(typeof(ActivateArena), true, "When touched, every enemy in ");
+            new EditorComponent(typeof(ActivateArena), true, 
+                $"When touched, every enemy in <b>{EditorVariablesList.GetVariableDisplay("enemies", typeof(ActivateArena))}</b> will be activated.<br>" +
+                $"If <b>{EditorVariablesList.GetVariableDisplay("onlyWave", typeof(ActivateArena))}</b> is <b>True</b> when triggered, then the music will be set to the combat track " +
+                $"until an <b>ActivateNextWave</b> with <b>{EditorVariablesList.GetVariableDisplay("lastWave", typeof(ActivateNextWave))}</b> set to true is " +
+                $"activated</b>"
+            );
             new EditorComponent(typeof(ActivateNextWave), true);
             new EditorComponent(typeof(ActivateObject), true);
             new EditorComponent(typeof(HUDMessageObject), true);
