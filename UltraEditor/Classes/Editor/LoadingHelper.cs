@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
+using static MonoMod.Cil.RuntimeILReferenceBag.FastDelegateInvokers;
 
 namespace UltraEditor.Classes.Editor
 {
@@ -13,46 +15,75 @@ namespace UltraEditor.Classes.Editor
         /// Returns a list of every found object in the list of ids
         /// </summary>
         /// <param name="ids">A list of ids to search for</param>
-        /// <returns>List of objects retrieved from the ids</returns>
         public static List<GameObject> GetObjectsWithIdsList(List<string> ids)
         {
             return [.. GetObjectsWithIds(ids)];
+        }
+
+        /// <summary> Cached ids, reset when loading a new scene </summary>
+        public static List<(string, GameObject)> cachedIds = [];
+
+        public static void RebuiltCacheForIDs()
+        {
+            foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
+            {
+                string id = GetIdOfObj(obj.gameObject);
+                cachedIds.Add((id, obj.gameObject));
+                continue;
+            }
+            foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+            {
+                string id = GetIdOfObj(obj.gameObject);
+                cachedIds.Add((id, obj.gameObject));
+                continue;
+            }
         }
 
         /// <summary>
         /// Returns an array of every found object in the list of ids
         /// </summary>
         /// <param name="ids">A list of ids to search for</param>
-        /// <returns>Array of objects retrieved from the ids</returns>
         public static GameObject[] GetObjectsWithIds(List<string> ids)
         {
+            if (cachedIds.Count == 0)
+                RebuiltCacheForIDs();
+
             List<GameObject> foundObjects = [];
             foreach (var e in ids)
             {
-                bool found = false;
-                foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
+                (string, GameObject) cached = cachedIds.FirstOrDefault(x => x.Item1 == e);
+                if (cached.Item2 != null)
                 {
-                    if (e == EditorManager.GetIdOfObj(obj.gameObject))
+                    foundObjects.Add(cached.Item2);
+                    continue;
+                }
+                foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+                {
+                    string id = GetIdOfObj(obj.gameObject);
+                    if (e == id)
                     {
                         foundObjects.Add(obj.gameObject);
-                        found = true;
+                        cachedIds.Add((id, obj.gameObject));
                         break;
                     }
                 }
-
-                if (!found)
-                    foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
-                    {
-                        if (e == EditorManager.GetIdOfObj(obj.gameObject))
-                        {
-                            foundObjects.Add(obj.gameObject);
-                            found = true;
-                            break;
-                        }
-                    }
             }
 
             return [.. foundObjects];
         }
+
+        /// <summary> Returns an ID for the object </summary>
+        /// <param name="obj"> GameObject to get the ID from </param>
+        /// <param name="offset"> In case you want to add offset to the position like when using checkpoints </param>
+        public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
+        {
+            legacyIDs = true;
+            if (obj == null) return "";
+            if (legacyIDs)
+                return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
+            return HashCode.Combine((offset == null ? obj.transform.position : (obj.transform.position + offset)), obj.transform.localScale, obj.transform.localEulerAngles).ToString();
+        }
+
+        public static bool legacyIDs = true;
     }
 }

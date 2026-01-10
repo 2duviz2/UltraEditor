@@ -1,6 +1,4 @@
 ﻿using BepInEx;
-using BepInEx.Bootstrap;
-using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -74,6 +72,7 @@ namespace UltraEditor
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
             EditorComponentsList.SetupEditorComponents();
+            EditorVariablesList.SetupEditorVariables();
          
             var harmony = new Harmony("duviz.ultrakill.ultraeditor");
             harmony.PatchAll();

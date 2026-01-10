@@ -27,16 +27,6 @@
 		<EmbeddedResource Include="Assets\emptyscene.bundle" />
 		<EmbeddedResource Include="Assets\editorcanvas.bundle" />
 
-		<!-- Remove these from doing shit since the new saving system isnt complete yet. -->
-		<None Include="Classes\IO\IO.cs" />
-		<None Include="Classes\IO\Loading.cs" />
-		<None Include="Classes\IO\SaveLevelData.cs" />
-		<None Include="Classes\IO\Saving.cs" />
-		<Compile Remove="Classes\IO\IO.cs" />
-		<Compile Remove="Classes\IO\Loading.cs" />
-		<Compile Remove="Classes\IO\SaveLevelData.cs" />
-		<Compile Remove="Classes\IO\Saving.cs" />
-
 		<!-- Packages -->
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

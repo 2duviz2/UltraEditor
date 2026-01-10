@@ -209,7 +209,7 @@ namespace UltraEditor.Classes
         }
 
         float timeToUpdate = 0.1f;
-        public void LateUpdate()
+        public void RenderInsides()
         {
             highlightMaterial.SetFloat("_Offset", highlightMaterial.GetFloat("_Offset") + Time.unscaledDeltaTime);
             if (selectedObject == null) return;

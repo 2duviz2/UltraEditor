@@ -17,7 +17,7 @@ namespace UltraEditor.Classes.Editor
         public static void SetupEditorComponents()
         {
             editorComponents = [];
-            new EditorComponent(typeof(ActivateArena), true);
+            new EditorComponent(typeof(ActivateArena), true, "When touched, every enemy in ");
             new EditorComponent(typeof(ActivateNextWave), true);
             new EditorComponent(typeof(ActivateObject), true);
             new EditorComponent(typeof(HUDMessageObject), true);
