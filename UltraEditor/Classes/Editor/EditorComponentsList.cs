@@ -18,16 +18,42 @@ namespace UltraEditor.Classes.Editor
         {
             editorComponents = [];
             new EditorComponent(typeof(ActivateArena), true, 
-                $"When touched, every enemy in <b>{EditorVariablesList.GetVariableDisplay("enemies", typeof(ActivateArena))}</b> will be activated.<br>" +
+                $"When touched, every <b>enemy</b> in <b>{EditorVariablesList.GetVariableDisplay("enemies", typeof(ActivateArena))}</b> will be activated.<br>" +
                 $"If <b>{EditorVariablesList.GetVariableDisplay("onlyWave", typeof(ActivateArena))}</b> is <b>True</b> when triggered, then the music will be set to the combat track " +
                 $"until an <b>ActivateNextWave</b> with <b>{EditorVariablesList.GetVariableDisplay("lastWave", typeof(ActivateNextWave))}</b> set to true is " +
                 $"activated</b>"
             );
-            new EditorComponent(typeof(ActivateNextWave), true);
-            new EditorComponent(typeof(ActivateObject), true);
-            new EditorComponent(typeof(HUDMessageObject), true);
-            new EditorComponent(typeof(NewTeleportObject), true);
-            new EditorComponent(typeof(LevelInfoObject), true);
+            new EditorComponent(typeof(ActivateNextWave), true,
+                $"When the amount of <b>dead enemies</b> inside the object reaches <b>{EditorVariablesList.GetVariableDisplay("enemyCount", typeof(ActivateNextWave))}</b>, two things can happen,\n" +
+                $"If <b>{EditorVariablesList.GetVariableDisplay("lastWave", typeof(ActivateNextWave))}</b> is <b>True</b>:\n" +
+                $"    Every object in <b>{EditorVariablesList.GetVariableDisplay("toActivate", typeof(ActivateNextWave))}</b> will get enabled.\n" +
+                $"If <b>not</b>:\n" +
+                $"    Every enemy in <b>{EditorVariablesList.GetVariableDisplay("nextEnemies", typeof(ActivateNextWave))} will get enabled, usually placed in another ActivateNextWave.</b>"
+            );
+            new EditorComponent(typeof(ActivateObject), true,
+                $"When touched by the <b>player</b>, after the time in <b>{EditorVariablesList.GetVariableDisplay("delay", typeof(ActivateObject))}</b> has passed, every object in <b>{EditorVariablesList.GetVariableDisplay("toActivate", typeof(ActivateObject))}</b> will get enabled and every object in <b>{EditorVariablesList.GetVariableDisplay("toDeactivate", typeof(ActivateObject))}</b> will get disabled." +
+                $"If <b>{EditorVariablesList.GetVariableDisplay("canBeReactivated", typeof(ActivateObject))}</b> is set to <b>False</b>, the trigger will not be able to be touched again."
+            );
+            new EditorComponent(typeof(HUDMessageObject), true,
+                $"When touched by the <b>player</b>, the message in <b>{EditorVariablesList.GetVariableDisplay("message", typeof(HUDMessageObject))}</b> will show for the player.\n" +
+                $"If <b>{EditorVariablesList.GetVariableDisplay("disableAfterShowing", typeof(HUDMessageObject))}</b> is <b>True</b>, the trigger will not be able to be touched again."
+            );
+            new EditorComponent(typeof(NewTeleportObject), true,
+                $"When touched by the <b>player</b>, the player will be <b>teleported</b> to the position in <b>{EditorVariablesList.GetVariableDisplay("NewTeleportObject", typeof(NewTeleportObject))}</b> without losing any velocity.\n" +
+                $"A slowdown effect will appear when touched if <b>{EditorVariablesList.GetVariableDisplay("slowdown", typeof(NewTeleportObject))}</b> is <b>True</b>.\n" +
+                $"If <b>{EditorVariablesList.GetVariableDisplay("canBeReactivated", typeof(NewTeleportObject))}</b> is <b>False</b>, the trigger will not be able to be touched again."
+            );
+            new EditorComponent(typeof(LevelInfoObject), true,
+                $"There should only be <b>one</b> LevelInfoObject in the level, every variable does something in specific:" +
+                $"{VariableDescription("tipOfTheDay", typeof(LevelInfoObject), "Changes terminal's Tip of the Day, only works when playing the level via the main menu.")}\n" +
+                $"{VariableDescription("levelLayer", typeof(LevelInfoObject), "Changes the hud title that shows the level layer, only works when playing the level via the main menu.")}\n" +
+                $"{VariableDescription("levelName", typeof(LevelInfoObject), "Changed the hud title that shows the level name, only works when playing the level via the main menu.")}\n" +
+                $"{VariableDescription("playMusicOnDoorOpen", typeof(LevelInfoObject), "Makes the music play when the first door is opened, only works when playing the level via the main menu.")}\n" +
+                $"{VariableDescription("changeLighting", typeof(LevelInfoObject), "If enabled, every lighting variable will  change the light.")}\n" +
+                $"{VariableDescription("ambientColor", typeof(LevelInfoObject), "Changes the ambient color of the level.")}\n" +
+                $"{VariableDescription("intensityMultiplier", typeof(LevelInfoObject), "Changes default light strenght.")}\n" +
+                $"{VariableDescription("skybox", typeof(LevelInfoObject), "Changes the skybox type.")}\n"
+            );
             new EditorComponent(typeof(DeathZone), true);
             new EditorComponent(typeof(Light), true);
             new EditorComponent(typeof(MusicObject), true);
@@ -103,6 +129,12 @@ namespace UltraEditor.Classes.Editor
                 .ToList();
 
             return types;
+        }
+
+        /// <summary> Will return a variable preset string for the description text, it will highlight the variable name. </summary>
+        static string VariableDescription(string varName, Type type, string varDescription)
+        {
+            return $"<b>{EditorVariablesList.GetVariableDisplay(varName, type)}</b> {varDescription}";
         }
     }
 }
