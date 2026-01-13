@@ -13,9 +13,12 @@ namespace UltraEditor.Classes.IO.SaveObjects
         MaterialChoser.materialTypes _matType;
         float _matTiling = 0.25f;
         MaterialChoser.shapes _shape;
+        public bool _fixMaterialTiling = false;
+        public bool fixMaterialTiling;
         public bool _isTrigger = false;
         public bool isTrigger
-        { get
+        {
+            get
             {
                 return _isTrigger;
             }
@@ -40,7 +43,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         {
             if (GetComponent<Collider>() != null)
                 _isTrigger = GetComponent<Collider>().isTrigger;
-            if (matType != _matType || matTiling != _matTiling || shape != _shape)
+            if (matType != _matType || matTiling != _matTiling || shape != _shape || fixMaterialTiling != _fixMaterialTiling)
             {
                 if (matType != _matType)
                     EditorManager.Instance.SetAlert("Material changed!", "Info!", new Color(0.25f, 1f, 0.25f));
@@ -48,10 +51,13 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     EditorManager.Instance.SetAlert("Shape changed!", "Info!", new Color(0.25f, 1f, 0.25f));
                 if (matTiling != _matTiling)
                     EditorManager.Instance.SetAlert("Tiling changed!", "Info!");
+                if (fixMaterialTiling != _fixMaterialTiling)
+                    EditorManager.Instance.SetAlert("Tiling fix changed!", "Info!");
                 _matType = matType;
                 _shape = shape;
                 _matTiling = matTiling;
-                GetComponent<MaterialChoser>()?.ProcessMaterial(matType, matTiling, shape);
+                _fixMaterialTiling = fixMaterialTiling;
+                GetComponent<MaterialChoser>()?.ProcessMaterial(matType, matTiling, shape, fixMaterialTiling);
             }
 
             if (Time.timeScale > 0)

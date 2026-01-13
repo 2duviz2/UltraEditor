@@ -22,6 +22,7 @@ namespace UltraEditor.Classes.Editor
             NewInspectorVariable("matTiling", typeof(CubeObject), "Material scale");
             NewInspectorVariable("shape", typeof(CubeObject), "Object shape");
             NewInspectorVariable("isTrigger", typeof(CubeObject), "Ignore collision");
+            NewInspectorVariable("fixMaterialTiling", typeof(CubeObject), "Center texture");
 
             NewInspectorVariable("enemies", typeof(ActivateArena), "Enemies");
             NewInspectorVariable("onlyWave", typeof(ActivateArena), "Is only wave");

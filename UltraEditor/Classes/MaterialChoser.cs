@@ -76,7 +76,7 @@ namespace UltraEditor.Classes
         }
 
         shapes lastShape = shapes.Cube;
-        public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null)
+        public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null, bool fixMaterialTiling = false)
         {
             var renderer = GetComponent<Renderer>();
             if (!renderer) return;
@@ -203,7 +203,7 @@ namespace UltraEditor.Classes
             renderer.material = newMat;
 
             tile = renderer.material.GetTextureScale("_MainTex") * tiling;
-            offset = renderer.material.GetTextureOffset("_MainTex");
+            offset = renderer.material.GetTextureOffset("_MainTex") + Vector2.one * (fixMaterialTiling ? 0.5f : 0f);
             mesh = null;
         }
 
@@ -220,6 +220,16 @@ namespace UltraEditor.Classes
             if (mesh == null)
             {
                 mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
+                float maxScale = Mathf.Max(new float[]
+                {
+                    transform.lossyScale.x,
+                    transform.lossyScale.y,
+                    transform.lossyScale.z
+                });
+                float localStep = 1f / (maxScale / 10f);
+                localStep = MathF.Max(localStep, 0.1f);
+                if (PlayerPrefs.GetInt("PerformanceLighting") == 0 && !EditorManager.canOpenEditor)
+                    SubdivideToUnitSize(this.mesh, localStep);
                 GetComponent<MeshFilter>().mesh = mesh;
                 return;
             }
@@ -259,6 +269,85 @@ namespace UltraEditor.Classes
             }
 
             mesh.uv = uvs;
+        }
+
+        /// <summary> This function took 2 fucking hours to make just for my SSD to die so here's the backup from the exported DLL :3 </summary>
+        private void SubdivideToUnitSize(Mesh m, float unit = 1f)
+        {
+            Vector3[] oldVerts = m.vertices;
+            Vector3[] oldNormals = m.normals;
+            Vector2[] oldUVs = m.uv;
+            int[] oldTris = m.triangles;
+            List<Vector3> verts = new List<Vector3>();
+            List<Vector3> normals = new List<Vector3>();
+            List<Vector2> uvs = new List<Vector2>();
+            List<int> tris = new List<int>();
+            for (int i = 0; i < oldTris.Length; i += 3)
+            {
+                int ia = oldTris[i];
+                int ib = oldTris[i + 1];
+                int ic = oldTris[i + 2];
+                Vector3 a = oldVerts[ia];
+                Vector3 b = oldVerts[ib];
+                Vector3 c = oldVerts[ic];
+                Vector3 na = oldNormals[ia];
+                Vector3 nb = oldNormals[ib];
+                Vector3 nc = oldNormals[ic];
+                Vector2 uva = oldUVs[ia];
+                Vector2 uvb = oldUVs[ib];
+                Vector2 uvc = oldUVs[ic];
+                float maxEdge = Mathf.Max(new float[]
+                {
+                    Vector3.Distance(a, b),
+                    Vector3.Distance(b, c),
+                    Vector3.Distance(c, a)
+                });
+                int steps = Mathf.Max(1, Mathf.CeilToInt(maxEdge / unit));
+                int[,] indexGrid = new int[steps + 1, steps + 1];
+                for (int y = 0; y <= steps; y++)
+                {
+                    for (int x = 0; x <= steps - y; x++)
+                    {
+                        float u = (float)x / (float)steps;
+                        float v = (float)y / (float)steps;
+                        float w = 1f - u - v;
+                        Vector3 pos = a * w + b * u + c * v;
+                        Vector3 normal = (na * w + nb * u + nc * v).normalized;
+                        Vector2 uv = uva * w + uvb * u + uvc * v;
+                        int idx = verts.Count;
+                        verts.Add(pos);
+                        normals.Add(normal);
+                        uvs.Add(uv);
+                        indexGrid[x, y] = idx;
+                    }
+                }
+                for (int y2 = 0; y2 < steps; y2++)
+                {
+                    for (int x2 = 0; x2 < steps - y2; x2++)
+                    {
+                        int i2 = indexGrid[x2, y2];
+                        int i3 = indexGrid[x2 + 1, y2];
+                        int i4 = indexGrid[x2, y2 + 1];
+                        tris.Add(i2);
+                        tris.Add(i3);
+                        tris.Add(i4);
+                        bool flag = x2 + y2 < steps - 1;
+                        if (flag)
+                        {
+                            int i5 = indexGrid[x2 + 1, y2 + 1];
+                            tris.Add(i3);
+                            tris.Add(i5);
+                            tris.Add(i4);
+                        }
+                    }
+                }
+            }
+            m.Clear();
+            m.SetVertices(verts);
+            m.SetNormals(normals);
+            m.SetUVs(0, uvs);
+            m.SetTriangles(tris, 0);
+            m.RecalculateBounds();
         }
 
         Material GetSandboxMaterial(string path)

@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO.SaveObjects;
+using UltraEditor.Classes.World;
 using UnityEngine;
 
 namespace UltraEditor.Classes.IO
@@ -547,6 +548,7 @@ namespace UltraEditor.Classes.IO
             var scene = new SceneSave();
             Plugin.LogInfo("Serializing objects...");
 
+            // CubeObject
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
             {
                 if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
@@ -580,6 +582,7 @@ namespace UltraEditor.Classes.IO
                 data["matTiling"] = obj.matTiling;
                 data["isTrigger"] = obj._isTrigger;
                 data["shape"] = (int)obj.shape;
+                data["fixTiling"] = obj.fixMaterialTiling;
                 so.data = data;
                 scene.objects.Add(so);
             }
@@ -719,6 +722,7 @@ namespace UltraEditor.Classes.IO
                 data["levelLayer"] = obj.levelLayer;
                 data["playMusicOnDoorOpen"] = obj.playMusicOnDoorOpen;
                 data["levelName"] = obj.levelName;
+                data["skybox"] = (int)obj.skybox;
                 so.data = data;
                 scene.objects.Add(so);
             }
@@ -1019,6 +1023,7 @@ namespace UltraEditor.Classes.IO
                             if (data.TryGetValue("matTiling", out var mtil)) cube.matTiling = ParseFloat(mtil);
                             if (data.TryGetValue("isTrigger", out var istr)) cube.isTrigger = ParseBool(istr);
                             if (data.TryGetValue("shape", out var shp)) cube.shape = (MaterialChoser.shapes)Enum.GetValues(typeof(MaterialChoser.shapes)).GetValue(ParseInt(shp));
+                            if (data.TryGetValue("fixTiling", out var fx)) cube.fixMaterialTiling = ParseBool(fx);
                         }
                     }
                     else if (typeName == "PrefabObject")
@@ -1230,6 +1235,7 @@ namespace UltraEditor.Classes.IO
                             if (data.TryGetValue("levelLayer", out var ll)) li.levelLayer = ll.ToString();
                             if (data.TryGetValue("playMusicOnDoorOpen", out var pd)) li.playMusicOnDoorOpen = ParseBool(pd);
                             if (data.TryGetValue("levelName", out var ln)) li.levelName = ln.ToString();
+                            if (data.TryGetValue("skybox", out var sx)) li.skybox = (SkyboxManager.Skybox)Enum.GetValues(typeof(SkyboxManager.Skybox)).GetValue(ParseInt(sx)); ;
                         }
                     }
                     else

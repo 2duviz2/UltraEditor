@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UltraEditor.Classes.World;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -16,6 +17,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public bool changeLighting = false;
         public Vector3 ambientColor = new Vector3(255, 255, 255);
         public float intensityMultiplier = 1f;
+        public SkyboxManager.Skybox skybox = SkyboxManager.Skybox.BlackSky;
+        SkyboxManager.Skybox currentSkybox = SkyboxManager.Skybox.BlackSky;
 
         public static LevelInfoObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
@@ -32,6 +35,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
             if (changeLighting)
                 updateLight();
+            UpdateSkybox(true);
         }
 
         void updateLight()
@@ -41,10 +45,22 @@ namespace UltraEditor.Classes.IO.SaveObjects
             RenderSettings.reflectionIntensity = intensityMultiplier;
         }
 
-        public void update()
+        void UpdateSkybox(bool force = false)
+        {
+            bool flag = currentSkybox == this.skybox && !force;
+            if (!flag)
+            {
+                currentSkybox = this.skybox;
+                SkyboxManager.SetSkybox(this.skybox);
+                MonoSingleton<CameraController>.Instance.cam.clearFlags = ((this.skybox == SkyboxManager.Skybox.BlackSky) ? CameraClearFlags.Color : CameraClearFlags.Skybox);
+            }
+        }
+
+        public override void Tick()
         {
             if (changeLighting)
                 updateLight();
+            UpdateSkybox();
         }
     }
 }
