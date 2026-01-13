@@ -73,6 +73,7 @@ namespace UltraEditor.Classes.Editor
             NewInspectorVariable("changeLighting", typeof(LevelInfoObject), "Change lighting");
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject), "Ambient color");
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject), "Lighting intensity");
+            NewInspectorVariable("skybox", typeof(LevelInfoObject), "Skybox");
 
             NewInspectorVariable("scrolling", typeof(CubeTilingAnimator), "Scrolling");
             NewInspectorVariable("affectedCubes", typeof(CubeTilingAnimator), "Affected objects");
