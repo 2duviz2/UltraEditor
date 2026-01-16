@@ -1526,8 +1526,8 @@ namespace UltraEditor.Classes
                     e.Invoke();
                 });
 
-                copyButton.SetActive(true);
-                pasteButton.SetActive(true);
+                //copyButton.SetActive(true);
+                //pasteButton.SetActive(true);
 
                 copyButton.GetComponentInChildren<Button>().onClick.AddListener(() =>
                 {
