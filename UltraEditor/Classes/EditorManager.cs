@@ -293,8 +293,6 @@ namespace UltraEditor.Classes
             Time.timeScale = editorOpen ? 0f : 1f;
 
             SetupButtons();
-            if (FindObjectOfType<NavMeshSurface>() != null)
-                EditorVisualizers.RebuildNavMeshVis(FindObjectOfType<NavMeshSurface>());
 
             if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor) // load backup level after restart
             {
@@ -443,6 +441,9 @@ namespace UltraEditor.Classes
 
         void RebuildNavmesh(bool forceFindNavmesh)
         {
+            if (SceneHelper.CurrentScene != EditorSceneName)
+                return;
+
             if (navMeshSurface == null)
                 navMeshSurface = FindObjectOfType<NavMeshSurface>();
 
@@ -789,7 +790,7 @@ namespace UltraEditor.Classes
 
             foreach (GameObject obj in objectsToHierarch)
             {
-                if (cameraSelector.selectedObject == null && SceneHelper.CurrentScene == EditorSceneName)
+                if (cameraSelector.selectedObject == null && (SceneHelper.CurrentScene == EditorSceneName || !advancedInspector))
                 {
                     if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                         continue;
