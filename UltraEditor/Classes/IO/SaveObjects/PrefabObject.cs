@@ -19,11 +19,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
 
         public override void Create()
         {
-            if (transform.lossyScale.magnitude > 10)
-            {
-                NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
-                mod.ignoreFromBuild = true;
-            }
+            
         }
     }
 }

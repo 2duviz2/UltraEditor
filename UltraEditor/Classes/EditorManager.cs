@@ -580,6 +580,9 @@ namespace UltraEditor.Classes
                 Billboard.UpdateBillboards();
             }
 
+            NavMeshModifier mod = obj.AddComponent<NavMeshModifier>();
+            mod.ignoreFromBuild = true;
+
             return obj;
         }
 
