@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Unity.AI.Navigation;
 using UnityEngine;
 
 namespace UltraEditor.Classes.IO.SaveObjects
@@ -14,6 +15,15 @@ namespace UltraEditor.Classes.IO.SaveObjects
             PrefabObject obj = target.AddComponent<PrefabObject>();
             obj.PrefabAsset = path;
             return obj;
+        }
+
+        public override void Create()
+        {
+            if (transform.lossyScale.magnitude > 10)
+            {
+                NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
+                mod.ignoreFromBuild = true;
+            }
         }
     }
 }

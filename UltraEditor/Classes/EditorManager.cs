@@ -452,10 +452,11 @@ namespace UltraEditor.Classes
                 GameObject navMeshObj = new("NavMeshSurface");
                 navMeshSurface = navMeshObj.AddComponent<NavMeshSurface>();
                 navMeshSurface.collectObjects = CollectObjects.All;
+                Log("Building navmesh...");
                 navMeshSurface.BuildNavMesh();
+                EditorVisualizers.RebuildNavMeshVis(navMeshSurface);
                 Log("NavMeshSurface created and built.");
             }
-
             else if (navMeshSurface != null)
             {
                 Log("Building navmesh...");
