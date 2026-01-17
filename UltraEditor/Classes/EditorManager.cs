@@ -2062,12 +2062,10 @@ namespace UltraEditor.Classes
 
             if (text.StartsWith("{"))
             {
-                LoadingHelper.legacyIDs = false;
                 SceneJsonSaver.LoadSceneJson(text);
                 return;
             }
 
-            LoadingHelper.legacyIDs = true;
             float startTime = Time.realtimeSinceStartup;
 
             int lineIndex = 0;

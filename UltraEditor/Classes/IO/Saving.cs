@@ -542,7 +542,6 @@ namespace UltraEditor.Classes.IO
         public static string GetSceneJson()
         {
             LoadingHelper.cachedIds = [];
-            LoadingHelper.legacyIDs = false;
 
             Plugin.LogInfo("Creating scene...");
             var scene = new SceneSave();

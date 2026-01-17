@@ -42,7 +42,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             {
                 if (enemy.transform.parent == null || (enemy.transform.parent.GetComponent<CubeObject>() == null && enemy.transform.parent.GetComponent<ActivateNextWave>() == null)) enemiesHaveParent = false;
             }
-            if (!enemiesHaveParent)
+            if (!enemiesHaveParent && activateArena.enemies.Length > 0)
             {
                 GameObject group = EditorManager.Instance.createCube(layer : "Invisible", objName : "EnemyWave", pos : activateArena.enemies[0].transform.position, matType: MaterialChoser.materialTypes.NoCollision);
                 foreach (var enemy in activateArena.enemies)

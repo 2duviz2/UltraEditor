@@ -123,7 +123,7 @@ namespace UltraEditor.Classes
                         else if (phase == 1)
                         {
                             GameObject copyChapterButton = null;
-                            if (chapterButton.name.Contains("(Clone)"))
+                            if (chapterButton.name.Contains("(Clone)") || chapterButton.name == "Boss Rush Button") // Angry level loader or bossrush
                             {
                                 copyChapterButton = chapterButton;
 

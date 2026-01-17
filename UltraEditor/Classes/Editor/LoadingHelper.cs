@@ -77,13 +77,8 @@ namespace UltraEditor.Classes.Editor
         /// <param name="offset"> In case you want to add offset to the position like when using checkpoints </param>
         public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
         {
-            legacyIDs = true;
             if (obj == null) return "";
-            if (legacyIDs)
-                return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
-            return HashCode.Combine((offset == null ? obj.transform.position : (obj.transform.position + offset)), obj.transform.localScale, obj.transform.localEulerAngles).ToString();
+            return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
         }
-
-        public static bool legacyIDs = true;
     }
 }
