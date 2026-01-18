@@ -895,6 +895,16 @@ namespace UltraEditor.Classes.IO
                 scene.objects.Add(so);
             }
 
+            // BookObject
+            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<BookObject>(true)))
+            {
+                var bo = new SerializedObject { type = "BookObject", common = SerializeCommon(obj) };
+                var data = new JObject();
+                data["content"] = obj.content;
+                bo.data = data;
+                scene.objects.Add(bo);
+            }
+
             return JsonConvert.SerializeObject(scene, jsonSettings);
         }
 
@@ -1208,6 +1218,15 @@ namespace UltraEditor.Classes.IO
                         {
                             if (data.TryGetValue("message", out var m)) hm.message = m.ToString();
                             if (data.TryGetValue("disableAfterShowing", out var d)) hm.disableAfterShowing = ParseBool(d);
+                        }
+                    }
+                    else if (typeName == "BookObject")
+                    {
+                        if (workingObject.GetComponent<BookObject>() == null) BookObject.Create(workingObject);
+                        var bo = workingObject.GetComponent<BookObject>();
+                        if (data != null)
+                        {
+                            if (data.TryGetValue("content", out var m)) bo.content = m.ToString();
                         }
                     }
                     else if (typeName == "TeleportObject")

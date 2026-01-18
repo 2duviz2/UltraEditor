@@ -89,6 +89,8 @@ namespace UltraEditor.Classes.Editor
             NewInspectorVariable("triggerAltars", typeof(SkullActivatorObject), "Trigger altars");
             NewInspectorVariable("toActivate", typeof(SkullActivatorObject), "To activate");
             NewInspectorVariable("toDeactivate", typeof(SkullActivatorObject), "To deactivate");
+
+            NewInspectorVariable("content", typeof(BookObject), "Content");
         }
 
         /// <summary> Creates a new EditorVariable </summary>

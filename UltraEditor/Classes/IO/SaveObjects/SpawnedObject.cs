@@ -24,5 +24,6 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public CubeTilingAnimator cubeTilingAnimator = null;
         public MovingPlatformAnimator movingPlatform = null;
         public SkullActivatorObject skullActivatorObject = null;
+        public BookObject bookObject = null;
     }
 }

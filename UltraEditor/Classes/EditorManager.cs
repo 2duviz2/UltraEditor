@@ -530,7 +530,8 @@ namespace UltraEditor.Classes
             }
             else
             {
-                cameraSelector.SelectObject(obj);
+                if (!isLoading)
+                    cameraSelector.SelectObject(obj);
             }
 
             if (Input.GetKey(Plugin.altKey))

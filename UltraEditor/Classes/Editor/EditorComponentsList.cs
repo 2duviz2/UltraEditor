@@ -61,6 +61,10 @@ namespace UltraEditor.Classes.Editor
             new EditorComponent(typeof(CubeTilingAnimator), true);
             new EditorComponent(typeof(MovingPlatformAnimator), true);
             new EditorComponent(typeof(SkullActivatorObject), true);
+            new EditorComponent(typeof(BookObject), true,
+                $"Spawns a book where the object is whenever the level starts.\n" +
+                $"{VariableDescription("content", typeof(BookObject), "Sets the content inside the book.")}\n"
+            );
         }
 
         /// <summary> Returns a list of every type in editorComponents without any other property </summary>

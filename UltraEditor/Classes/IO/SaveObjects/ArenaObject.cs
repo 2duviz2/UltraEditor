@@ -40,7 +40,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
             bool enemiesHaveParent = true;
             foreach (var enemy in activateArena.enemies)
             {
-                if (enemy.transform.parent == null || (enemy.transform.parent.GetComponent<CubeObject>() == null && enemy.transform.parent.GetComponent<ActivateNextWave>() == null)) enemiesHaveParent = false;
+                if (IsEnemyRoot(enemy)) enemiesHaveParent = false;
             }
             if (!enemiesHaveParent && activateArena.enemies.Length > 0)
             {
@@ -52,6 +52,11 @@ namespace UltraEditor.Classes.IO.SaveObjects
             }
             if (activateArena.enemies.Length > 0)
                 activateArena.enemies[0].transform.parent.gameObject.AddComponent<GoreZone>();
+        }
+
+        bool IsEnemyRoot(GameObject enemy)
+        {
+            return (enemy.transform.parent == null || (enemy.transform.parent.GetComponent<CubeObject>() == null && enemy.transform.parent.GetComponent<ActivateNextWave>() == null && enemy.transform.parent.GetComponent<NextArenaObject>() == null));
         }
     }
 }

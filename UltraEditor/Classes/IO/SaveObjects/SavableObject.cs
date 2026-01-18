@@ -10,7 +10,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public Vector3 EulerAngles;
         public Vector3 Scale;
 
-        public virtual void Update()
+        public void Update()
         {
             Name = gameObject.name;
             Position = transform.position;
