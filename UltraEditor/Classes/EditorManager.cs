@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BlackholeChaos.Scripts;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -70,6 +71,7 @@ namespace UltraEditor.Classes
 
             if (editorOpen)
             {
+                Time.timeScale = 0f;
                 Cursor.lockState = CursorLockMode.None;
                 if (!cameraSelector.dragging && !editorCamera.GetComponent<CameraMovement>().moving())
                     Cursor.visible = true;
@@ -498,6 +500,19 @@ namespace UltraEditor.Classes
                 //            |Cube       |SkullBlue
                 obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
                 obj.name += " (Off)";
+            }
+            else if (dir == "BlackholeChaos/Blackhole")
+            {
+                obj = new GameObject("Blackhole");
+                Blackhole bh = obj.AddComponent<Blackhole>();
+                bh.Create();
+            }
+            else if (dir == "BlackholeChaos/Whitehole")
+            {
+                obj = new GameObject("Whitehole");
+                Blackhole bh = obj.AddComponent<Blackhole>();
+                bh.white = true;
+                bh.Create();
             }
             else if (dir == "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab(Active)")
             {
