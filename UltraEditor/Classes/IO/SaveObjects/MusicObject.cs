@@ -97,7 +97,6 @@ namespace UltraEditor.Classes.IO.SaveObjects
                 }));
         }
 
-
         IEnumerator GetAudio(string url, Action<AudioClip> callback)
         {
             (string, AudioClip) cached = cachedClips.FirstOrDefault(x => x.Item1 == url);

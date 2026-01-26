@@ -727,7 +727,7 @@ namespace UltraEditor.Classes.IO
             }
 
             // CheckPoint/CheckpointObject
-            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
+            /*foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
             {
                 while (obj.GetComponent<CheckpointObject>() != null)
                     GameObject.Destroy(obj.GetComponent<CheckpointObject>());
@@ -737,9 +737,9 @@ namespace UltraEditor.Classes.IO
                 foreach (var e in obj.rooms)
                     if (e != null)
                     {
-                        /*if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
+                        if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
                             co.addRoomId(LoadingHelper.GetIdOfObj(e, new Vector3(-10000, 0, 0)));
-                        else*/
+                        else
                             co.addRoomId(LoadingHelper.GetIdOfObj(e));
                     }
 
@@ -754,7 +754,7 @@ namespace UltraEditor.Classes.IO
                 scene.objects.Add(so);
 
                 GameObject.Destroy(obj.GetComponent<CheckpointObject>());
-            }
+            }*/
 
             // CheckpointObject children-less cases
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
