@@ -189,8 +189,12 @@ namespace UltraEditor.Classes.IO.SaveObjects
             {
                 foreach (var obj in affectedCubes)
                 {
+                    if (obj == null) continue;
                     obj.tag = "Moving";
-                    obj.AddComponent<Rigidbody>().isKinematic = true;
+                    if (obj.GetComponent<Rigidbody>() != null)
+                        obj.GetComponent<Rigidbody>().isKinematic = true;
+                    else
+                        obj.AddComponent<Rigidbody>().isKinematic = true;
                 }
             }
         }
