@@ -1,26 +1,24 @@
-﻿using System;
+﻿namespace UltraEditor.Classes.IO.SaveObjects;
+
 using UnityEngine;
 
-namespace UltraEditor.Classes.IO.SaveObjects
+public class SavableObject : MonoBehaviour
 {
-    public class SavableObject : MonoBehaviour
+    public string Name;
+    public Vector3 Position;
+    public Vector3 EulerAngles;
+    public Vector3 Scale;
+
+    public void Update()
     {
-        public string Name;
-        public Vector3 Position;
-        public Vector3 EulerAngles;
-        public Vector3 Scale;
+        Name = gameObject.name;
+        Position = transform.position;
+        EulerAngles = transform.eulerAngles;
+        Scale = transform.lossyScale;
 
-        public void Update()
-        {
-            Name = gameObject.name;
-            Position = transform.position;
-            EulerAngles = transform.eulerAngles;
-            Scale = transform.lossyScale;
-
-            Tick();
-        }
-
-        public virtual void Tick() { }
-        public virtual void Create() { }
+        Tick();
     }
+
+    public virtual void Tick() { }
+    public virtual void Create() { }
 }

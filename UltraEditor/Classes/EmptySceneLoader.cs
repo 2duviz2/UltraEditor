@@ -5,7 +5,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using TMPro;
 using UltraEditor.Classes.IO.SaveObjects;
@@ -48,11 +47,11 @@ public class EmptySceneLoader : MonoBehaviour
     public void Load()
     {
         // skip if we're already loaded
-        if (_loaded || Instance != null) 
-        { 
-            if (Instance != null) Destroy(gameObject); 
-            if (_loaded )
-                return; 
+        if (_loaded || Instance != null)
+        {
+            if (Instance != null) Destroy(gameObject);
+            if (_loaded)
+                return;
         }
 
         DontDestroyOnLoad((Instance = this).gameObject);
@@ -83,7 +82,7 @@ public class EmptySceneLoader : MonoBehaviour
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(true);
         SceneHelper.SetLoadingSubtext("Loading editor...");
         yield return null;
-        
+
         if (!_loaded)
         {
             Plugin.LogError("Empty Scene Bundle wasn't loaded before trying to enter the scene.");
@@ -99,7 +98,7 @@ public class EmptySceneLoader : MonoBehaviour
         var sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
-        while (!sceneload.isDone) 
+        while (!sceneload.isDone)
         { Plugin.LogInfo("waiting for sceneload to complete"); yield return null; }
 
         Plugin.LogInfo("Scene loaded!");
@@ -137,7 +136,7 @@ public class EmptySceneLoader : MonoBehaviour
                 int ps = int.Parse(pStyle);
 
                 for (int i = 0; i < 4; i++)
-                    StatsManager.Instance.timeRanks[3 - i] = (int)(pt * ((i*0.25f) + 1f));
+                    StatsManager.Instance.timeRanks[3 - i] = (int)(pt * ((i * 0.25f) + 1f));
                 for (int i = 0; i < 4; i++)
                     StatsManager.Instance.killRanks[3 - i] = pk - (i * 5);
                 for (int i = 0; i < 4; i++)

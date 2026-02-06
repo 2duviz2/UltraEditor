@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace UltraEditor.Classes.Canvas;
+
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace UltraEditor.Classes.Canvas
+public class ClickableWithKey : MonoBehaviour
 {
-    public class ClickableWithKey : MonoBehaviour
-    {
-        public Button button;
+    public Button button;
 
-        public void Update()
-        {
-            if (Input.GetMouseButtonDown(3)) // back button
-                button.onClick.Invoke();
-        }
+    public void Update()
+    {
+        if (Input.GetMouseButtonDown(3)) // back button
+            button.onClick.Invoke();
     }
 }

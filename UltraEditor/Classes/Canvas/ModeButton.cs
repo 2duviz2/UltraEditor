@@ -1,46 +1,43 @@
-﻿using System;
+﻿namespace UltraEditor.Classes.Canvas;
+
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Canvas
+internal class ModeButton : MonoBehaviour
 {
-    internal class ModeButton : MonoBehaviour
+    public static List<ModeButton> buttons = new List<ModeButton>();
+    public CameraSelector.SelectionMode mode;
+    public GameObject selectedObject;
+
+    void Start()
     {
-        public static List<ModeButton> buttons = new List<ModeButton>();
-        public CameraSelector.SelectionMode mode;
-        public GameObject selectedObject;
+        buttons.Add(this);
+    }
 
-        void Start()
+    void OnDestroy()
+    {
+        buttons.Remove(this);
+    }
+
+    public void Click()
+    {
+        if (EditorManager.Instance != null && EditorManager.Instance.cameraSelector != null)
         {
-            buttons.Add(this);
+            EditorManager.Instance.cameraSelector.selectionMode = mode;
         }
+    }
 
-        void OnDestroy()
+    public static void UpdateButtons()
+    {
+        foreach (var item in buttons)
         {
-            buttons.Remove(this);
-        }
-
-        public void Click()
-        {
-            if (EditorManager.Instance != null && EditorManager.Instance.cameraSelector != null)
+            if (item.mode != EditorManager.Instance.cameraSelector.selectionMode)
             {
-                EditorManager.Instance.cameraSelector.selectionMode = mode;
+                item.selectedObject.SetActive(false);
             }
-        }
-
-        public static void UpdateButtons()
-        {
-            foreach (var item in buttons)
+            else
             {
-                if (item.mode != EditorManager.Instance.cameraSelector.selectionMode)
-                {
-                    item.selectedObject.SetActive(false);
-                }
-                else
-                {
-                    item.selectedObject.SetActive(true);
-                }
+                item.selectedObject.SetActive(true);
             }
         }
     }

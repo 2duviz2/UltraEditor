@@ -1,43 +1,42 @@
-﻿using UnityEngine;
+﻿namespace UltraEditor.Classes;
+
+using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace UltraEditor.Classes
+internal class WindowDragger : MonoBehaviour, IPointerDownHandler, IDragHandler
 {
-    internal class WindowDragger : MonoBehaviour, IPointerDownHandler, IDragHandler
+    public RectTransform parentWindow;
+    RectTransform canvasRect;
+    Vector2 offset;
+
+    void Start()
     {
-        public RectTransform parentWindow;
-        RectTransform canvasRect;
-        Vector2 offset;
+        canvasRect = GetComponentInParent<UnityEngine.Canvas>().GetComponent<RectTransform>();
+    }
 
-        void Start()
-        {
-            canvasRect = GetComponentInParent<UnityEngine.Canvas>().GetComponent<RectTransform>();
-        }
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect,
+            eventData.position,
+            eventData.pressEventCamera,
+            out var pointerOnCanvas
+        );
 
-        public void OnPointerDown(PointerEventData eventData)
-        {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRect,
-                eventData.position,
-                eventData.pressEventCamera,
-                out var pointerOnCanvas
-            );
+        offset = parentWindow.anchoredPosition - pointerOnCanvas;
+    }
 
-            offset = parentWindow.anchoredPosition - pointerOnCanvas;
-        }
+    public void OnDrag(PointerEventData eventData)
+    {
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect,
+            eventData.position,
+            eventData.pressEventCamera,
+            out var pointerOnCanvas
+        );
 
-        public void OnDrag(PointerEventData eventData)
-        {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                canvasRect,
-                eventData.position,
-                eventData.pressEventCamera,
-                out var pointerOnCanvas
-            );
+        var newPos = pointerOnCanvas + offset;
 
-            var newPos = pointerOnCanvas + offset;
-
-            parentWindow.anchoredPosition = newPos;
-        }
+        parentWindow.anchoredPosition = newPos;
     }
 }

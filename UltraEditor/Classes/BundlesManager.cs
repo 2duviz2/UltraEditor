@@ -1,45 +1,43 @@
-﻿using BepInEx;
-using UnityEngine;
+﻿namespace UltraEditor.Classes;
+
 using System.IO;
 using System.Reflection;
+using UnityEngine;
 
-namespace UltraEditor.Classes
+public class BundlesManager : MonoBehaviour
 {
-    public class BundlesManager : MonoBehaviour
+    public static AssetBundle editorBundle;
+
+    public void Awake()
     {
-        public static AssetBundle editorBundle;
+        DontDestroyOnLoad(this.gameObject);
 
-        public void Awake()
+        var assembly = Assembly.GetExecutingAssembly();
+
+        string resourceName = "UltraEditor.Assets.editorcanvas.bundle";
+
+        using (Stream stream = assembly.GetManifestResourceStream(resourceName))
         {
-            DontDestroyOnLoad(this.gameObject);
-
-            var assembly = Assembly.GetExecutingAssembly();
-
-            string resourceName = "UltraEditor.Assets.editorcanvas.bundle";
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+            if (stream == null)
             {
-                if (stream == null)
-                {
-                    Plugin.LogError($"Embedded resource '{resourceName}' not found!");
-                    return;
-                }
-
-                byte[] data = new byte[stream.Length];
-                stream.Read(data, 0, data.Length);
-
-                editorBundle = AssetBundle.LoadFromMemory(data);
-                if (editorBundle != null)
-                    Plugin.LogInfo("Loaded embedded AssetBundle!");
-                else
-                    Plugin.LogError("Failed to load AssetBundle from memory!");
+                Plugin.LogError($"Embedded resource '{resourceName}' not found!");
+                return;
             }
-        }
 
-        public void OnDestroy()
-        {
-            editorBundle?.Unload(false);
-        }
+            byte[] data = new byte[stream.Length];
+            stream.Read(data, 0, data.Length);
 
+            editorBundle = AssetBundle.LoadFromMemory(data);
+            if (editorBundle != null)
+                Plugin.LogInfo("Loaded embedded AssetBundle!");
+            else
+                Plugin.LogError("Failed to load AssetBundle from memory!");
+        }
     }
+
+    public void OnDestroy()
+    {
+        editorBundle?.Unload(false);
+    }
+
 }

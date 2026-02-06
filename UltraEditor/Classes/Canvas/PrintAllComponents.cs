@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace UltraEditor.Classes.Canvas;
+
 using System.Linq;
-using System.Text;
 using TMPro;
 using UltraEditor.Classes.Editor;
 using UnityEngine;
 
-namespace UltraEditor.Classes.Canvas
+public class PrintAllComponents : MonoBehaviour
 {
-    public class PrintAllComponents : MonoBehaviour
+    public TMP_Text text;
+    public string prefix;
+
+    public void Start()
     {
-        public TMP_Text text;
-        public string prefix;
+        text.text = prefix + string.Join(
+        "<br><br>",
+        EditorComponentsList.GetMonoBehaviourTypes(true).Select(t => t.Name)
+    );
 
-        public void Start()
-        {
-            text.text = prefix + string.Join(
-            "<br><br>",
-            EditorComponentsList.GetMonoBehaviourTypes(true).Select(t => t.Name)
-        );
-
-        }
     }
 }

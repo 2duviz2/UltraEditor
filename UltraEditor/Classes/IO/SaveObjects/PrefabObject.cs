@@ -1,25 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Unity.AI.Navigation;
+﻿namespace UltraEditor.Classes.IO.SaveObjects;
+
 using UnityEngine;
 
-namespace UltraEditor.Classes.IO.SaveObjects
+public class PrefabObject : SavableObject
 {
-    public class PrefabObject : SavableObject
+    public string PrefabAsset;
+
+    public static PrefabObject Create(GameObject target, string path)
     {
-        public string PrefabAsset;
+        PrefabObject obj = target.AddComponent<PrefabObject>();
+        obj.PrefabAsset = path;
+        return obj;
+    }
 
-        public static PrefabObject Create(GameObject target, string path)
-        {
-            PrefabObject obj = target.AddComponent<PrefabObject>();
-            obj.PrefabAsset = path;
-            return obj;
-        }
+    public override void Create()
+    {
 
-        public override void Create()
-        {
-            
-        }
     }
 }

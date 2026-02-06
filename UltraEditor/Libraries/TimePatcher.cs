@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace UltraEditor.Libraries;
+
 using UnityEngine;
 
-namespace UltraEditor.Libraries
+public static class TimePatcher
 {
-    public static class TimePatcher
+    static float maxValue = 0.1f;
+
+    public static float DeltaTime()
     {
-        static float maxValue = 0.1f;
+        return Mathf.Min(Time.deltaTime, maxValue);
+    }
 
-        public static float DeltaTime()
-        {
-            return Mathf.Min(Time.deltaTime, maxValue);
-        }
-
-        public static float UnscaledDeltaTime()
-        {
-            return Mathf.Min(Time.unscaledDeltaTime, maxValue);
-        }
+    public static float UnscaledDeltaTime()
+    {
+        return Mathf.Min(Time.unscaledDeltaTime, maxValue);
     }
 }

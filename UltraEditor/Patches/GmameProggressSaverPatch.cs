@@ -1,15 +1,14 @@
-﻿using HarmonyLib;
+﻿namespace UltrakillStupid.Patches;
 
-namespace UltrakillStupid.Patches
+using HarmonyLib;
+
+[HarmonyPatch(typeof(GameProgressSaver))]
+[HarmonyPatch("SecretFound")]
+internal class GmameProggressSaverPatch
 {
-    [HarmonyPatch(typeof(GameProgressSaver))]
-    [HarmonyPatch("SecretFound")]
-    internal class GmameProggressSaverPatch
+    public static bool Prefix(int secretNum)
     {
-        public static bool Prefix(int secretNum)
-        {
-            //return secretNum != 100000;
-            return true;
-        }
+        //return secretNum != 100000;
+        return true;
     }
 }

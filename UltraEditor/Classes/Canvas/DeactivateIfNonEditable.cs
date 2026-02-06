@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace UltraEditor.Classes.Canvas;
+
 using UnityEngine;
 
-namespace UltraEditor.Classes.Canvas
+public class DeactivateIfNonEditable : MonoBehaviour
 {
-    public class DeactivateIfNonEditable : MonoBehaviour
-    {
-        public GameObject go;
+    public GameObject go;
 
-        public void Update()
+    public void Update()
+    {
+        if (EditorManager.Instance != null)
         {
-            if (EditorManager.Instance != null)
-            {
-                go.SetActive(EditorManager.Instance.IsObjectEditable());
-            }
+            go.SetActive(EditorManager.Instance.IsObjectEditable());
         }
     }
 }

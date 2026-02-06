@@ -1,62 +1,58 @@
-﻿using System;
+﻿namespace UltraEditor.Classes.Canvas;
+
 using System.Collections.Generic;
-using System.Text;
 using TMPro;
 using UltraEditor.Libraries;
 using UnityEngine;
 using UnityEngine.UI;
-using static UnityEngine.GraphicsBuffer;
 
-namespace UltraEditor.Classes.Canvas
+public class PopupOpenAnimation : MonoBehaviour
 {
-    public class PopupOpenAnimation : MonoBehaviour
+    RectTransform rectTransform;
+    public List<Image> images;
+    public List<TMP_Text> texts;
+
+    float target = 1;
+    public bool spawnedPopup = false;
+
+    public void Start()
     {
-        RectTransform rectTransform;
-        public List<Image> images;
-        public List<TMP_Text> texts;
+        target = 1;
+        rectTransform = GetComponent<RectTransform>();
+        rectTransform.localScale = Vector3.one * 0.5f;
+        UpdateAlpha();
+    }
 
-        float target = 1;
-        public bool spawnedPopup = false;
+    public void OnEnable()
+    {
+        Start();
+    }
 
-        public void Start()
+    public void Update()
+    {
+        rectTransform.localScale = rectTransform.localScale - (rectTransform.localScale - Vector3.one * target) / (target < 1 ? 5f : 10f / (TimePatcher.UnscaledDeltaTime() * 60));
+        if (target < 1 && rectTransform.localScale.y < 0.52f)
         {
-            target = 1;
-            rectTransform = GetComponent<RectTransform>();
-            rectTransform.localScale = Vector3.one * 0.5f;
-            UpdateAlpha();
+            if (!spawnedPopup)
+                gameObject.SetActive(false);
+            else
+                Destroy(gameObject);
         }
 
-        public void OnEnable()
-        {
-            Start();
-        }
+        UpdateAlpha();
+    }
 
-        public void Update()
-        {
-            rectTransform.localScale = rectTransform.localScale - (rectTransform.localScale - Vector3.one * target) / (target < 1 ? 5f : 10f / (TimePatcher.UnscaledDeltaTime() * 60));
-            if (target < 1 && rectTransform.localScale.y < 0.52f)
-            {
-                if (!spawnedPopup)
-                    gameObject.SetActive(false);
-                else
-                    Destroy(gameObject);
-            }
+    public void UpdateAlpha()
+    {
+        float a = (rectTransform.localScale.y - 0.5f) * 2;
+        foreach (var img in images)
+            img.color = img.color * new Color(1, 1, 1, 0) + new Color(0, 0, 0, a);
+        foreach (var tex in texts)
+            tex.color = tex.color * new Color(1, 1, 1, 0) + new Color(0, 0, 0, a);
+    }
 
-            UpdateAlpha();
-        }
-        
-        public void UpdateAlpha()
-        {
-            float a = (rectTransform.localScale.y - 0.5f) * 2;
-            foreach (var img in images)
-                img.color = img.color * new Color(1, 1, 1, 0) + new Color(0, 0, 0, a);
-            foreach (var tex in texts)
-                tex.color = tex.color * new Color(1, 1, 1, 0) + new Color(0, 0, 0, a);
-        }
-
-        public void Close()
-        {
-            target = 0.5f;
-        }
+    public void Close()
+    {
+        target = 0.5f;
     }
 }

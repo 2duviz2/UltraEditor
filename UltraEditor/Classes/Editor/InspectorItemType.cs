@@ -1,12 +1,11 @@
-﻿namespace UltraEditor.Classes.Editor
+﻿namespace UltraEditor.Classes.Editor;
+
+public enum InspectorItemType
 {
-    public enum InspectorItemType
-    {
-        None,
-        InputField,
-        RemoveButton,
-        Button,
-        ArrayItem,
-        Dropdown,
-    }
+    None,
+    InputField,
+    RemoveButton,
+    Button,
+    ArrayItem,
+    Dropdown,
 }
