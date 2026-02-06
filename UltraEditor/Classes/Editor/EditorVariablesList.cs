@@ -50,10 +50,10 @@ namespace UltraEditor.Classes.Editor
             NewInspectorVariable("damage", typeof(DeathZone), "Damage");
             NewInspectorVariable("affected", typeof(DeathZone), "Affected entities");
 
-            NewInspectorVariable("calmThemePath", typeof(MusicObject), "Calm theme url");
-            NewInspectorVariable("battleThemePath", typeof(MusicObject), "Battle theme url");
+            NewInspectorVariable("calmThemePath", typeof(MusicObject), "Calm theme URL");
+            NewInspectorVariable("battleThemePath", typeof(MusicObject), "Battle theme URL");
 
-            NewInspectorVariable("url", typeof(SFXObject), "Sound url");
+            NewInspectorVariable("url", typeof(SFXObject), "Sound URL");
             NewInspectorVariable("disableAfterPlaying", typeof(SFXObject), "Disable after playing");
             NewInspectorVariable("playOnAwake", typeof(SFXObject), "Play on awake");
             NewInspectorVariable("loop", typeof(SFXObject), "Loop");
@@ -76,6 +76,7 @@ namespace UltraEditor.Classes.Editor
             NewInspectorVariable("ambientColor", typeof(LevelInfoObject), "Ambient color");
             NewInspectorVariable("intensityMultiplier", typeof(LevelInfoObject), "Lighting intensity");
             NewInspectorVariable("skybox", typeof(LevelInfoObject), "Skybox");
+            NewInspectorVariable("customSkyboxUrl", typeof(LevelInfoObject), "Custom skybox URL");
 
             NewInspectorVariable("scrolling", typeof(CubeTilingAnimator), "Scrolling");
             NewInspectorVariable("affectedCubes", typeof(CubeTilingAnimator), "Affected objects");

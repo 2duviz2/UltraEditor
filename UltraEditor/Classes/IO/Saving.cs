@@ -725,6 +725,7 @@ namespace UltraEditor.Classes.IO
                 data["playMusicOnDoorOpen"] = obj.playMusicOnDoorOpen;
                 data["levelName"] = obj.levelName;
                 data["skybox"] = (int)obj.skybox;
+                data["skyboxUrl"] = obj.customSkyboxUrl;
                 so.data = data;
                 scene.objects.Add(so);
             }
@@ -1257,7 +1258,8 @@ namespace UltraEditor.Classes.IO
                             if (data.TryGetValue("levelLayer", out var ll)) li.levelLayer = ll.ToString();
                             if (data.TryGetValue("playMusicOnDoorOpen", out var pd)) li.playMusicOnDoorOpen = ParseBool(pd);
                             if (data.TryGetValue("levelName", out var ln)) li.levelName = ln.ToString();
-                            if (data.TryGetValue("skybox", out var sx)) li.skybox = (SkyboxManager.Skybox)Enum.GetValues(typeof(SkyboxManager.Skybox)).GetValue(ParseInt(sx)); ;
+                            if (data.TryGetValue("skybox", out var sx)) li.skybox = (SkyboxManager.Skybox)Enum.GetValues(typeof(SkyboxManager.Skybox)).GetValue(ParseInt(sx));
+                            if (data.TryGetValue("skyboxUrl", out var su)) { li.customSkyboxUrl = su?.ToString(); li.UpdateSkybox(true); }
                         }
                     }
                     else

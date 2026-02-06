@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
+using UltraEditor.Classes.Canvas;
 using UnityEngine;
 
 namespace UltraEditor.Classes.World
@@ -61,20 +62,36 @@ namespace UltraEditor.Classes.World
             ViolenceSky1,
             [Path($"{prefix}ViolenceSky4{sufix}")]
             ViolenceSky4,
+            Custom,
         }
 
-        public static void SetSkybox(Skybox skybox)
+        public static void SetSkybox(Skybox skybox, string customUrl)
         {
             string path = GetPath(skybox);
             if (path == null)
             {
                 switch (skybox)
                 {
+                    case Skybox.Custom:
+                        Plugin.instance.StartCoroutine(ImageGetter.GetTextureFromURL(customUrl, tex =>
+                        {
+                            if (tex != null)
+                            {
+                                var skyboxMat = new Material(Plugin.Ass<Shader>("Assets/Shaders/Special/Skybox_Panoramic.shader"));
+                                skyboxMat.mainTexture = tex;
+                                RenderSettings.skybox = skyboxMat;
+                            }
+                            else
+                                RenderSettings.skybox = null;
+                        }));
+                        return;
                     case Skybox.BlackSky:
                         RenderSettings.skybox = null;
                         return;
+                    default:
+                        RenderSettings.skybox = null;
+                        return;
                 }
-                return;
             }
             Material skyboxMaterial = Plugin.Ass<Material>(path);
             if (skyboxMaterial != null)

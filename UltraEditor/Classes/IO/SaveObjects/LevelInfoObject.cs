@@ -19,6 +19,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
         public float intensityMultiplier = 1f;
         public SkyboxManager.Skybox skybox = SkyboxManager.Skybox.BlackSky;
         SkyboxManager.Skybox currentSkybox = SkyboxManager.Skybox.BlackSky;
+        public string customSkyboxUrl = "";
+        public string currentSkyboxUrl = "";
 
         public static LevelInfoObject Create(GameObject target, SpawnedObject spawnedObject = null)
         {
@@ -38,21 +40,22 @@ namespace UltraEditor.Classes.IO.SaveObjects
             UpdateSkybox(true);
         }
 
-        void updateLight()
+        public void updateLight()
         {
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(ambientColor.x / 255f, ambientColor.y / 255f, ambientColor.z / 255f);
             RenderSettings.reflectionIntensity = intensityMultiplier;
         }
 
-        void UpdateSkybox(bool force = false)
+        public void UpdateSkybox(bool force = false)
         {
-            bool flag = currentSkybox == this.skybox && !force;
+            bool flag = currentSkybox == skybox && currentSkyboxUrl == customSkyboxUrl && !force;
             if (!flag)
             {
-                currentSkybox = this.skybox;
-                SkyboxManager.SetSkybox(this.skybox);
-                MonoSingleton<CameraController>.Instance.cam.clearFlags = ((this.skybox == SkyboxManager.Skybox.BlackSky) ? CameraClearFlags.Color : CameraClearFlags.Skybox);
+                currentSkybox = skybox;
+                currentSkyboxUrl = customSkyboxUrl;
+                SkyboxManager.SetSkybox(skybox, customSkyboxUrl);
+                MonoSingleton<CameraController>.Instance.cam.clearFlags = ((skybox == SkyboxManager.Skybox.BlackSky) ? CameraClearFlags.Color : CameraClearFlags.Skybox);
             }
         }
 

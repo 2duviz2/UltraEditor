@@ -282,6 +282,7 @@ namespace UltraEditor.Classes
             editorCamera.transform.position = Camera.main.transform.position;
             editorCamera.depth = 100;
             editorCamera.fieldOfView = 105;
+            editorCamera.backgroundColor = Color.black;
             cameraSelector = cameraObj.GetComponent<CameraSelector>();
             blocker = editorCanvas.transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
 

@@ -42,6 +42,7 @@ namespace UltraEditor.Classes.Canvas
             _loaded = false;
             using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
             {
+                uwr.timeout = 5;
                 yield return uwr.SendWebRequest();
 
                 if (uwr.result != UnityWebRequest.Result.Success)
@@ -53,6 +54,7 @@ namespace UltraEditor.Classes.Canvas
                 else
                 {
                     Texture2D tex = DownloadHandlerTexture.GetContent(uwr);
+                    cachedTextures.Add((url, tex));
                     callback?.Invoke(tex);
                     _loaded = true;
                 }

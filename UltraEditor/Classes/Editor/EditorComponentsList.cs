@@ -52,7 +52,8 @@ namespace UltraEditor.Classes.Editor
                 $"{VariableDescription("changeLighting", typeof(LevelInfoObject), "If enabled, every lighting variable will  change the light.")}\n" +
                 $"{VariableDescription("ambientColor", typeof(LevelInfoObject), "Changes the ambient color of the level.")}\n" +
                 $"{VariableDescription("intensityMultiplier", typeof(LevelInfoObject), "Changes default light strenght.")}\n" +
-                $"{VariableDescription("skybox", typeof(LevelInfoObject), "Changes the skybox type.")}\n"
+                $"{VariableDescription("skybox", typeof(LevelInfoObject), "Changes the skybox type.")}\n" +
+                $"{VariableDescription("customSkyboxUrl", typeof(LevelInfoObject), "Changes the skybox url, requires the skybox type to be Custom.")}\n"
             );
             new EditorComponent(typeof(DeathZone), true);
             new EditorComponent(typeof(Light), true);
