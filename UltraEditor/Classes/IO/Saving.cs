@@ -14,6 +14,7 @@ namespace UltraEditor.Classes.IO
 {
     public static class Saving
     {
+        #region OLD
         public static string addShit(SavableObject obj)
         {
             string text = "";
@@ -476,6 +477,7 @@ namespace UltraEditor.Classes.IO
             return text;
         }
     }
+        #endregion
 
     public static class SceneJsonSaver
     {
@@ -582,6 +584,7 @@ namespace UltraEditor.Classes.IO
                 data["isTrigger"] = obj._isTrigger;
                 data["shape"] = (int)obj.shape;
                 data["fixTiling"] = obj.fixMaterialTiling;
+                data["customUrl"] = obj.customTextureUrl;
                 so.data = data;
                 scene.objects.Add(so);
             }
@@ -1033,6 +1036,7 @@ namespace UltraEditor.Classes.IO
                             if (data.TryGetValue("isTrigger", out var istr)) cube.isTrigger = ParseBool(istr);
                             if (data.TryGetValue("shape", out var shp)) cube.shape = (MaterialChoser.shapes)Enum.GetValues(typeof(MaterialChoser.shapes)).GetValue(ParseInt(shp));
                             if (data.TryGetValue("fixTiling", out var fx)) cube.fixMaterialTiling = ParseBool(fx);
+                            if (data.TryGetValue("customUrl", out var cu)) cube.customTextureUrl = cu?.ToString();
                         }
                     }
                     else if (typeName == "PrefabObject")

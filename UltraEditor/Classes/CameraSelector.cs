@@ -298,7 +298,7 @@ namespace UltraEditor.Classes
         {
             if (obj.GetComponent<CubeObject>() != null && obj.GetComponent<MaterialChoser>() != null)
             {
-                obj.GetComponent<MaterialChoser>().ProcessMaterial(obj.GetComponent<CubeObject>().matType);
+                obj.GetComponent<MaterialChoser>().ProcessMaterial(obj.GetComponent<CubeObject>().matType, obj.GetComponent<CubeObject>().matTiling, obj.GetComponent<CubeObject>().shape, obj.GetComponent<CubeObject>().fixMaterialTiling, obj.GetComponent<CubeObject>().customTextureUrl);
                 return;
             }
 

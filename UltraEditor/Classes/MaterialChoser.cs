@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 
@@ -76,7 +77,7 @@ namespace UltraEditor.Classes
         }
 
         shapes lastShape = shapes.Cube;
-        public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null, bool fixMaterialTiling = false)
+        public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null, bool fixMaterialTiling = false, string customTexture = "")
         {
             var renderer = GetComponent<Renderer>();
             if (!renderer) return;
@@ -111,7 +112,32 @@ namespace UltraEditor.Classes
                 GetComponent<MeshFilter>().mesh = mesh;
             }
 
-            if (type == materialTypes.Default)
+            if (customTexture != "")
+            {
+                newMat = GetSandboxMaterial("Procedural Cube");
+                StartCoroutine(ImageGetter.GetTextureFromURL(customTexture, tex =>
+                {
+                    if (tex != null)
+                    {
+                        newMat.mainTexture = tex;
+                        ContinueProccess(type, tiling, shape, fixMaterialTiling, customTexture, newMat, renderer);
+                    }
+                    else
+                    {
+                        newMat.mainTexture = new();
+                        ContinueProccess(type, tiling, shape, fixMaterialTiling, "", newMat, renderer);
+                    }
+                }));
+            }
+            else
+                ContinueProccess(type, tiling, shape, fixMaterialTiling, "", newMat, renderer);
+        }
+
+        public void ContinueProccess(materialTypes type, float tiling = 0.25f, shapes? shape = null, bool fixMaterialTiling = false, string customTexture = "", Material newMat = null, Renderer renderer = null)
+        {
+            if (customTexture != "")
+                customTexture = "";
+            else if (type == materialTypes.Default)
                 newMat = GetSandboxMaterial("Procedural Cube");
             else if (type == materialTypes.Armor)
                 newMat = GetSandboxMaterial("Procedural Armor");
@@ -229,7 +255,7 @@ namespace UltraEditor.Classes
                 float localStep = 1f / (maxScale / 10f);
                 localStep = MathF.Max(localStep, 0.1f);
                 if (PlayerPrefs.GetInt("PerformanceLighting") == 0 && !EditorManager.canOpenEditor)
-                    SubdivideToUnitSize(this.mesh, localStep);
+                    SubdivideToUnitSize(mesh, localStep);
                 GetComponent<MeshFilter>().mesh = mesh;
                 return;
             }

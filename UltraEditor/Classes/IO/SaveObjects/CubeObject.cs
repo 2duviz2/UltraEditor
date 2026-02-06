@@ -29,6 +29,8 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     GetComponent<Collider>().isTrigger = _isTrigger;
             }
         }
+        public string customTextureUrl = "";
+        public string _customTextureUrl = "";
 
         public static CubeObject Create(GameObject target, MaterialChoser.materialTypes materialType)
         {
@@ -43,7 +45,7 @@ namespace UltraEditor.Classes.IO.SaveObjects
         {
             if (GetComponent<Collider>() != null)
                 _isTrigger = GetComponent<Collider>().isTrigger;
-            if (matType != _matType || matTiling != _matTiling || shape != _shape || fixMaterialTiling != _fixMaterialTiling)
+            if (matType != _matType || matTiling != _matTiling || shape != _shape || fixMaterialTiling != _fixMaterialTiling || customTextureUrl != _customTextureUrl)
             {
                 if (matType != _matType)
                     EditorManager.Instance.SetAlert("Material changed!", "Info!", new Color(0.25f, 1f, 0.25f));
@@ -53,11 +55,14 @@ namespace UltraEditor.Classes.IO.SaveObjects
                     EditorManager.Instance.SetAlert("Tiling changed!", "Info!");
                 if (fixMaterialTiling != _fixMaterialTiling)
                     EditorManager.Instance.SetAlert("Tiling fix changed!", "Info!");
+                if (customTextureUrl != _customTextureUrl)
+                    EditorManager.Instance.SetAlert("Texture changed!", "Info!");
                 _matType = matType;
                 _shape = shape;
                 _matTiling = matTiling;
                 _fixMaterialTiling = fixMaterialTiling;
-                GetComponent<MaterialChoser>()?.ProcessMaterial(matType, matTiling, shape, fixMaterialTiling);
+                _customTextureUrl = customTextureUrl;
+                GetComponent<MaterialChoser>()?.ProcessMaterial(matType, matTiling, shape, fixMaterialTiling, customTextureUrl);
             }
 
             if (Time.timeScale > 0)
