@@ -908,6 +908,42 @@ public static class SceneJsonSaver
             scene.objects.Add(bo);
         }
 
+        // GlitchEffect
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GlitchEffect>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+            obj.dummyObjectsIds = new List<string>();
+            foreach (var e in obj.dummyObjects) if (e != null) obj.addId(LoadingHelper.GetIdOfObj(e));
+
+            var so = new SerializedObject { type = "GlitchEffect", common = SerializeCommon(obj) };
+            var data = new JObject();
+            if (obj.dummyObjectsIds.Count > 0) data["dummyObjects"] = new JArray(obj.dummyObjectsIds);
+            data["range"] = obj.range;
+            data["startRange"] = obj.startRange;
+            data["copyLifespan"] = obj.copyLifespan;
+            data["copyAmount"] = obj.copyAmount;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
+        // EnemyModifier
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<EnemyModifier>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+            obj.affectedEnemiesIds = new List<string>();
+            foreach (var e in obj.affectedEnemies) if (e != null) obj.addId(LoadingHelper.GetIdOfObj(e));
+
+            var so = new SerializedObject { type = "EnemyModifier", common = SerializeCommon(obj) };
+            var data = new JObject();
+            if (obj.affectedEnemiesIds.Count > 0) data["affectedEnemies"] = new JArray(obj.affectedEnemiesIds);
+            data["sandified"] = obj.sandified;
+            data["boss"] = obj.boss;
+            data["bossName"] = obj.bossName;
+            data["radiance"] = obj.radiance;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
         return JsonConvert.SerializeObject(scene, jsonSettings);
     }
 
@@ -1211,6 +1247,32 @@ public static class SceneJsonSaver
                     {
                         if (data.TryGetValue("affectedCubesIds", out var ac)) foreach (var e in (JArray)ac) if (e != null) ct.addId(e.ToString());
                         if (data.TryGetValue("scrolling", out var sc)) ct.scrolling = ParseV3(sc);
+                    }
+                }
+                else if (typeName == "GlitchEffect")
+                {
+                    if (workingObject.GetComponent<GlitchEffect>() == null) GlitchEffect.Create(workingObject);
+                    var ge = workingObject.GetComponent<GlitchEffect>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("dummyObjects", out var dob)) foreach (var e in (JArray)dob) if (e != null) ge.addId(e.ToString());
+                        if (data.TryGetValue("range", out var ra)) ge.range = ParseFloat(ra);
+                        if (data.TryGetValue("startRange", out var sr)) ge.startRange = ParseFloat(sr);
+                        if (data.TryGetValue("copyLifespan", out var cl)) ge.copyLifespan = ParseFloat(cl);
+                        if (data.TryGetValue("copyAmount", out var ca)) ge.copyAmount = ParseFloat(ca);
+                    }
+                }
+                else if (typeName == "EnemyModifier")
+                {
+                    if (workingObject.GetComponent<EnemyModifier>() == null) EnemyModifier.Create(workingObject);
+                    var em = workingObject.GetComponent<EnemyModifier>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("affectedEnemies", out var ae)) foreach (var e in (JArray)ae) if (e != null) em.addId(e.ToString());
+                        if (data.TryGetValue("sandified", out var s)) em.sandified = ParseBool(s);
+                        if (data.TryGetValue("boss", out var b)) em.boss = ParseBool(b);
+                        if (data.TryGetValue("bossName", out var bn)) em.bossName = bn.ToString();
+                        if (data.TryGetValue("radiance", out var r)) em.radiance = ParseFloat(r);
                     }
                 }
                 else if (typeName == "HUDMessageObject")

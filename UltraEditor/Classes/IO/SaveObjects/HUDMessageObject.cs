@@ -8,10 +8,9 @@ public class HUDMessageObject : SavableObject
     public string message = "Default message";
     public bool disableAfterShowing = false;
 
-    public static HUDMessageObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static HUDMessageObject Create(GameObject target)
     {
         HUDMessageObject hudObject = target.AddComponent<HUDMessageObject>();
-        if (spawnedObject != null) spawnedObject.hudObject = hudObject;
         return hudObject;
     }
 

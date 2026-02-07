@@ -66,6 +66,9 @@ public static class EditorComponentsList
             $"Spawns a book where the object is whenever the level starts.\n" +
             $"{VariableDescription("content", typeof(BookObject), "Sets the content inside the book.")}\n"
         );
+
+        foreach (var (type, attr) in AttributeHelper.GetTypesWithAttribute<global::EditorComp>())
+            new EditorComponent(type, true, attr.description);
     }
 
     /// <summary> Returns a list of every type in editorComponents without any other property </summary>
@@ -80,17 +83,13 @@ public static class EditorComponentsList
 
     /// <summary> Returns if the Component is a trigger </summary>
     /// <returns> True if the component is a trigger </returns>
-    public static bool IsTrigger(Component c)
-    {
-        return GetTriggerTypes().Contains(c.GetType());
-    }
+    public static bool IsTrigger(Component c) =>
+        GetTriggerTypes().Contains(c.GetType());
 
     /// <summary> Returns the component's description </summary>
     /// <returns> Component's description </returns>
-    public static string GetDescription(Component c)
-    {
-        return editorComponents.FirstOrDefault(t => t.componentType == c.GetType())?.description;
-    }
+    public static string GetDescription(Component c) =>
+        editorComponents.FirstOrDefault(t => t.componentType == c.GetType())?.description;
 
     /// <summary> Returns a list of MonoBehaviour types avaliable for the editor </summary>
     /// <param name="forceNormalOnes"> Forces to return EditorComponents as if AdvancedInspector was false </param>
@@ -137,8 +136,6 @@ public static class EditorComponentsList
     }
 
     /// <summary> Will return a variable preset string for the description text, it will highlight the variable name. </summary>
-    static string VariableDescription(string varName, Type type, string varDescription)
-    {
-        return $"<b>{EditorVariablesList.GetVariableDisplay(varName, type)}</b> {varDescription}";
-    }
+    static string VariableDescription(string varName, Type type, string varDescription) =>
+        $"<b>{EditorVariablesList.GetVariableDisplay(varName, type)}</b> {varDescription}";
 }

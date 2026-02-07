@@ -10,10 +10,9 @@ public class LightObject : SavableObject
     public Vector3 color = Vector3.one * 255;
     public LightType type = LightType.Point;
 
-    public static LightObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static LightObject Create(GameObject target)
     {
         LightObject lightObject = target.AddComponent<LightObject>();
-        if (spawnedObject != null) spawnedObject.lightObject = lightObject;
         return lightObject;
     }
 

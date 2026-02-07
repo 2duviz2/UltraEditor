@@ -12,10 +12,9 @@ public class CheckpointObject : SavableObject
     public GameObject[] checkpointRooms = [];
     public List<GameObject> checkpointRoomsToInherit = [];
 
-    public static CheckpointObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static CheckpointObject Create(GameObject target)
     {
         CheckpointObject checkpointObject = target.AddComponent<CheckpointObject>();
-        if (spawnedObject != null) spawnedObject.checkpointObject = checkpointObject;
         if (checkpointObject.GetComponent<Collider>() != null)
             checkpointObject.GetComponent<Collider>().isTrigger = true;
         return checkpointObject;

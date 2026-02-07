@@ -10,10 +10,9 @@ public class ArenaObject : SavableObject
     public List<string> enemyIds = new List<string>();
     public bool onlyWave = true;
 
-    public static ArenaObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static ArenaObject Create(GameObject target)
     {
         ArenaObject arenaObject = target.AddComponent<ArenaObject>();
-        if (spawnedObject != null) spawnedObject.arenaObject = arenaObject;
         return arenaObject;
     }
 

@@ -16,10 +16,9 @@ public class MusicObject : SavableObject
 
     bool used = false;
 
-    public static MusicObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static MusicObject Create(GameObject target)
     {
         MusicObject musicObject = target.AddComponent<MusicObject>();
-        if (spawnedObject != null) spawnedObject.musicObject = musicObject;
         return musicObject;
     }
 

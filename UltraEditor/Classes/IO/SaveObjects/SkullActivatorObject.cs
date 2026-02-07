@@ -29,10 +29,9 @@ public class SkullActivatorObject : SavableObject
     public List<string> toDeactivateIds = [];
     public List<string> triggerAltarsIds = [];
 
-    public static SkullActivatorObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static SkullActivatorObject Create(GameObject target)
     {
         SkullActivatorObject obj = target.AddComponent<SkullActivatorObject>();
-        spawnedObject?.skullActivatorObject = obj;
         return obj;
     }
 
@@ -92,6 +91,16 @@ public class SkullActivatorObject : SavableObject
                         ipz.doors = [.. drs];
                     }
                 }
+                foreach (var obj in toDeactivate)
+                {
+                    Door d = obj.GetComponent<Door>();
+                    if (d != null)
+                    {
+                        List<Door> drs = [.. ipz.reverseDoors];
+                        drs.Add(d);
+                        ipz.reverseDoors = [.. drs];
+                    }
+                }
                 ipz.Invoke("Awake", 0);
                 ipz.Invoke("Start", 0);
             }
@@ -117,7 +126,8 @@ public class SkullActivatorObject : SavableObject
                     obj.SetActive(a);
         foreach (var obj in toDeactivate)
             if (obj != null)
-                obj.SetActive(!a);
+                if (obj.GetComponent<Door>() == null || triggerAltars.Length > 1)
+                    obj.SetActive(!a);
     }
 
     public override void Create()

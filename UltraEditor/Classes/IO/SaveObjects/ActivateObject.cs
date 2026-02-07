@@ -14,10 +14,9 @@ public class ActivateObject : SavableObject
     public bool canBeReactivated = false;
     public float delay = 0;
 
-    public static ActivateObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static ActivateObject Create(GameObject target)
     {
         ActivateObject activateObject = target.AddComponent<ActivateObject>();
-        if (spawnedObject != null) spawnedObject.activateObject = activateObject;
         return activateObject;
     }
 

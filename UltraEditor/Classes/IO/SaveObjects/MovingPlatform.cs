@@ -23,10 +23,9 @@ public class MovingPlatformAnimator : SavableObject
         Flat,
     }
 
-    public static MovingPlatformAnimator Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static MovingPlatformAnimator Create(GameObject target)
     {
         MovingPlatformAnimator obj = target.AddComponent<MovingPlatformAnimator>();
-        spawnedObject?.movingPlatform = obj;
         return obj;
     }
 
@@ -64,7 +63,9 @@ public class MovingPlatformAnimator : SavableObject
             foreach (var obj in affectedCubes)
             {
                 obj.tag = "Moving";
-                obj.AddComponent<Rigidbody>().isKinematic = true;
+                if (obj.GetComponent<Rigidbody>() == null)
+                    obj.AddComponent<Rigidbody>();
+                obj.GetComponent<Rigidbody>().isKinematic = true;
             }
         }
 

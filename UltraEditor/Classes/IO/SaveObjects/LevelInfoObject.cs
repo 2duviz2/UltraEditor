@@ -18,10 +18,9 @@ public class LevelInfoObject : SavableObject
     public string customSkyboxUrl = "";
     public string currentSkyboxUrl = "";
 
-    public static LevelInfoObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static LevelInfoObject Create(GameObject target)
     {
         LevelInfoObject levelInfoObject = target.AddComponent<LevelInfoObject>();
-        if (spawnedObject != null) spawnedObject.levelInfoObject = levelInfoObject;
         return levelInfoObject;
     }
 

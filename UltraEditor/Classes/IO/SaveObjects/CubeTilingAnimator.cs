@@ -11,10 +11,9 @@ public class CubeTilingAnimator : SavableObject
     public GameObject[] affectedCubes = [];
     public List<string> affectedCubesIds = [];
 
-    public static CubeTilingAnimator Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static CubeTilingAnimator Create(GameObject target)
     {
         CubeTilingAnimator obj = target.AddComponent<CubeTilingAnimator>();
-        if (spawnedObject != null) spawnedObject.cubeTilingAnimator = obj;
         return obj;
     }
 

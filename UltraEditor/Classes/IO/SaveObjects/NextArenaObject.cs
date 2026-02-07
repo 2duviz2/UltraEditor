@@ -12,10 +12,9 @@ public class NextArenaObject : SavableObject
     public bool lastWave = true;
     public int enemyCount = 0;
 
-    public static NextArenaObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static NextArenaObject Create(GameObject target)
     {
         NextArenaObject nextArenaObject = target.AddComponent<NextArenaObject>();
-        if (spawnedObject != null) spawnedObject.nextArenaObject = nextArenaObject;
         return nextArenaObject;
     }
 

@@ -60,10 +60,6 @@
 			<HintPath>$(ManagedPath)\Unity.ResourceManager.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-	
-	<ItemGroup>
-	  <Folder Include="Classes\TempScripts\" />
-	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Message Text="Copying DLL to: $(CopyPath)..." Importance="high" />

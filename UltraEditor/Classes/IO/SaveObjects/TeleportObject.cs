@@ -9,10 +9,9 @@ public class TeleportObject : SavableObject
     public bool canBeReactivated = false;
     public bool slowdown = false;
 
-    public static TeleportObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static TeleportObject Create(GameObject target)
     {
         TeleportObject teleportObject = target.AddComponent<TeleportObject>();
-        if (spawnedObject != null) spawnedObject.teleportObject = teleportObject;
         return teleportObject;
     }
 

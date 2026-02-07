@@ -64,9 +64,9 @@ public static class EditorVariablesList
         NewInspectorVariable("message", typeof(HUDMessageObject), "Message");
         NewInspectorVariable("disableAfterShowing", typeof(HUDMessageObject), "Disable after showing");
 
-        NewInspectorVariable("teleportPosition", typeof(IO.SaveObjects.TeleportObject), "Teleport position");
-        NewInspectorVariable("canBeReactivated", typeof(IO.SaveObjects.TeleportObject), "Can be reactivated");
-        NewInspectorVariable("slowdown", typeof(IO.SaveObjects.TeleportObject), "Slowdown effect");
+        NewInspectorVariable("teleportPosition", typeof(TeleportObject), "Teleport position");
+        NewInspectorVariable("canBeReactivated", typeof(TeleportObject), "Can be reactivated");
+        NewInspectorVariable("slowdown", typeof(TeleportObject), "Slowdown effect");
 
         NewInspectorVariable("tipOfTheDay", typeof(LevelInfoObject), "Tip of the Day");
         NewInspectorVariable("levelLayer", typeof(LevelInfoObject), "Level layer");
@@ -93,6 +93,9 @@ public static class EditorVariablesList
         NewInspectorVariable("toDeactivate", typeof(SkullActivatorObject), "To deactivate");
 
         NewInspectorVariable("content", typeof(BookObject), "Content");
+
+        foreach (var (field, attr) in AttributeHelper.GetFieldsWithAttribute<global::EditorVar>())
+            NewInspectorVariable(field.Name, field.DeclaringType, attr.display);
     }
 
     /// <summary> Creates a new EditorVariable </summary>

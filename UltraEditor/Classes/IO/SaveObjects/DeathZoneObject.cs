@@ -9,10 +9,9 @@ public class DeathZoneObject : SavableObject
     public int damage;
     public AffectedSubjects affected;
 
-    public static DeathZoneObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static DeathZoneObject Create(GameObject target)
     {
         DeathZoneObject deathZoneObject = target.AddComponent<DeathZoneObject>();
-        if (spawnedObject != null) spawnedObject.deathZoneObject = deathZoneObject;
         return deathZoneObject;
     }
 

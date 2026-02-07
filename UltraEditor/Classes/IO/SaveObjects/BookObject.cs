@@ -8,10 +8,9 @@ public class BookObject : SavableObject
 {
     public string content = "Hi!";
 
-    public static BookObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static BookObject Create(GameObject target)
     {
         BookObject obj = target.AddComponent<BookObject>();
-        if (spawnedObject != null) spawnedObject.bookObject = obj;
         return obj;
     }
 

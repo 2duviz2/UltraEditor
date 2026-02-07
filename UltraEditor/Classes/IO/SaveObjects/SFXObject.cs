@@ -23,10 +23,9 @@ public class SFXObject : SavableObject
     bool used = false;
     bool started = false;
 
-    public static SFXObject Create(GameObject target, SpawnedObject spawnedObject = null)
+    public static SFXObject Create(GameObject target)
     {
         SFXObject obj = target.AddComponent<SFXObject>();
-        if (spawnedObject != null) spawnedObject.sfxObject = obj;
         return obj;
     }
 

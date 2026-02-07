@@ -20,6 +20,10 @@ public class CameraSelector : MonoBehaviour
     public GameObject selectedObject;
     public Material highlightMaterial;
 
+    GameObject arrowHolder;
+
+    bool globalArrows = false;
+
     SelectionMode _selectionMode = SelectionMode.Cursor;
     public SelectionMode selectionMode
     {
@@ -152,8 +156,9 @@ public class CameraSelector : MonoBehaviour
         if (!camera)
             camera = GetComponent<Camera>();
 
-        highlightMaterial = //CreateGhostMaterial(new Color(1f, 1f, 1f));
-            new Material(DefaultReferenceManager.Instance.blankMaterial);
+        arrowHolder = new GameObject("MoveArrow_Holder");
+
+        highlightMaterial = new Material(DefaultReferenceManager.Instance.blankMaterial);
         highlightMaterial.color = new Color(0.5f, 0.5f, 1f);
         ghostMaterial = CreateGhostMaterial(new Color(0.25f, 0.25f, 1f));
         ghostMaterial2 = CreateGhostMaterial(new Color(0.25f, 0.25f, 0.25f));
@@ -333,6 +338,7 @@ public class CameraSelector : MonoBehaviour
     }
 
     float scaleMultiplier = 1;
+    Vector3 currentArrowRot = Vector3.zero;
     void HandleMoveMode()
     {
         if (moveArrows == null)
@@ -379,6 +385,7 @@ public class CameraSelector : MonoBehaviour
                 {
                     dragging = true;
                     draggingAxis = hoveredAxis;
+                    currentArrowRot = moveArrows[hoveredAxis].transform.position - arrowHolder.transform.position;
                     objectStartPos = selectedObject.transform.position;
                     objectStartScale = selectedObject.transform.localScale;
                     objectStartEuler = selectedObject.transform.eulerAngles;
@@ -412,9 +419,20 @@ public class CameraSelector : MonoBehaviour
                 Vector3 moveDir = Vector3.zero;
                 float delta = 0f;
 
-                if (draggingAxis == 0) { moveDir = Vector3.right; delta = mouseDelta.x; }
-                if (draggingAxis == 1) { moveDir = Vector3.up; delta = mouseDelta.y; }
-                if (draggingAxis == 2) { moveDir = Vector3.forward; delta = mouseDelta.x; }
+                if (draggingAxis == 0) { moveDir = currentArrowRot.normalized; }
+                if (draggingAxis == 1) { moveDir = currentArrowRot.normalized; }
+                if (draggingAxis == 2) { moveDir = currentArrowRot.normalized; }
+
+                Vector3 axisWorld = currentArrowRot.normalized;
+                Vector3 axisScreen = camera.WorldToScreenPoint(
+                    arrowHolder.transform.position + axisWorld
+                ) - camera.WorldToScreenPoint(
+                    arrowHolder.transform.position
+                );
+
+                axisScreen.Normalize();
+                Vector2 mouse = mouseDelta;
+                delta = Vector2.Dot(mouse, new Vector2(axisScreen.x, axisScreen.y));
 
                 if (selectionMode == SelectionMode.Move)
                 {
@@ -465,7 +483,7 @@ public class CameraSelector : MonoBehaviour
             RestoreMaterial(selectedObject);
 
         selectedObject = obj;
-        Debug.Log("[CameraSelector] Selected object: " + obj.name);
+        Plugin.LogInfo("[CameraSelector] Selected object: " + obj.name);
 
         selectionMode = SelectionMode.Move;
 
@@ -481,12 +499,15 @@ public class CameraSelector : MonoBehaviour
         if (moveArrows != null)
             DeleteArrows();
 
+        globalArrows = PlayerPrefs.GetInt("GlobalArrows", 1) == 1;
+
         moveArrows = new Transform[3];
         for (int i = 0; i < 3; i++)
         {
             GameObject arrow = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            arrow.GetComponent<Renderer>().material = new Material(DefaultReferenceManager.Instance.masterShader);
             arrow.transform.localScale = new Vector3(0.5f, 1f, 0.5f);
+            arrow.transform.parent = arrowHolder.transform;
+            arrow.GetComponent<Renderer>().material = new Material(DefaultReferenceManager.Instance.masterShader);
             arrow.GetComponent<Collider>().isTrigger = true;
             arrow.GetOrAddComponent<NavMeshModifier>().ignoreFromBuild = true;
             arrow.name = "MoveArrow_" + i;
@@ -525,6 +546,9 @@ public class CameraSelector : MonoBehaviour
 
         Vector3 pos = selectedObject.transform.position;
 
+        arrowHolder.transform.position = selectedObject.transform.position;
+        arrowHolder.transform.rotation = Quaternion.identity;
+
         moveArrows[0].position = pos + Vector3.right * moveArrows[0].localScale.y * 2;
         moveArrows[0].rotation = Quaternion.Euler(0, 0, 90);
 
@@ -541,6 +565,9 @@ public class CameraSelector : MonoBehaviour
 
         foreach (var arrow in moveArrows)
             arrow.localScale = Vector3.one * uniformScale;
+
+        if (!globalArrows)
+            arrowHolder.transform.rotation = selectedObject.transform.rotation;
     }
 
     Vector3 GetMouseWorldPos()

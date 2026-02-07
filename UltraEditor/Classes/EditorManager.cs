@@ -29,7 +29,7 @@ public class EditorManager : MonoBehaviour
     public CameraSelector cameraSelector;
     public GameObject blocker;
 
-    bool editorOpen = false;
+    public bool editorOpen = false;
     bool destroyedLastFrame = false;
     static public bool advancedInspector = false;
     static public bool friendlyAdvancedInspector = false;
@@ -2394,6 +2394,7 @@ public class EditorManager : MonoBehaviour
 
     public void SetAlert(string str, string title = "Error!", Color? col = null)
     {
+        if (!editorOpen) return;
         GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
         alert.GetComponent<Animator>().speed = 1f;
         alert.SetActive(false);
