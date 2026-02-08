@@ -730,7 +730,7 @@ public static class SceneJsonSaver
         }
 
         // CheckPoint/CheckpointObject
-        /*foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
         {
             while (obj.GetComponent<CheckpointObject>() != null)
                 GameObject.Destroy(obj.GetComponent<CheckpointObject>());
@@ -757,7 +757,7 @@ public static class SceneJsonSaver
             scene.objects.Add(so);
 
             GameObject.Destroy(obj.GetComponent<CheckpointObject>());
-        }*/
+        }
 
         // CheckpointObject children-less cases
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
@@ -937,6 +937,8 @@ public static class SceneJsonSaver
             var data = new JObject();
             if (obj.affectedEnemiesIds.Count > 0) data["affectedEnemies"] = new JArray(obj.affectedEnemiesIds);
             data["sandified"] = obj.sandified;
+            data["attackEnemies"] = obj.attackEnemies;
+            data["ignorePlayer"] = obj.ignorePlayer;
             data["boss"] = obj.boss;
             data["bossName"] = obj.bossName;
             data["radiance"] = obj.radiance;
@@ -1270,6 +1272,8 @@ public static class SceneJsonSaver
                     {
                         if (data.TryGetValue("affectedEnemies", out var ae)) foreach (var e in (JArray)ae) if (e != null) em.addId(e.ToString());
                         if (data.TryGetValue("sandified", out var s)) em.sandified = ParseBool(s);
+                        if (data.TryGetValue("attackEnemies", out var ate)) em.attackEnemies = ParseBool(ate);
+                        if (data.TryGetValue("ignorePlayer", out var ip)) em.ignorePlayer = ParseBool(ip);
                         if (data.TryGetValue("boss", out var b)) em.boss = ParseBool(b);
                         if (data.TryGetValue("bossName", out var bn)) em.bossName = bn.ToString();
                         if (data.TryGetValue("radiance", out var r)) em.radiance = ParseFloat(r);

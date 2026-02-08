@@ -43,7 +43,6 @@ public static class EditorVariablesList
         NewInspectorVariable("type", typeof(Light), "Type");
         NewInspectorVariable("color", typeof(Light), "Color");
 
-        NewInspectorVariable("rooms", typeof(CheckPoint), "Rooms");
         NewInspectorVariable("checkpointRooms", typeof(CheckpointObject), "Rooms");
 
         NewInspectorVariable("notInstakill", typeof(DeathZone), "Not instakill");

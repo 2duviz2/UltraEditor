@@ -976,6 +976,8 @@ public class EditorManager : MonoBehaviour
                             {
                                 Component c = cameraSelector.selectedObject.AddComponent(componentType);
                                 InitializeDefaultFields(c);
+                                if (cameraSelector.selectedObject.name == "Cube")
+                                    cameraSelector.selectedObject.name = componentName;
 
                                 if (EditorComponentsList.IsTrigger(c))
                                 {

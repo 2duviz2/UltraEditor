@@ -18,6 +18,12 @@ public class EnemyModifier : SavableObject
     [EditorVar("Sandified")]
     public bool sandified = false;
 
+    [EditorVar("Attack enemies")]
+    public bool attackEnemies = false;
+
+    [EditorVar("Ignore player")]
+    public bool ignorePlayer = false;
+
     [EditorVar("Radiance")]
     public float radiance = 0;
 
@@ -51,20 +57,26 @@ public class EnemyModifier : SavableObject
             done = true;
             foreach (var obj in affectedEnemies)
             {
-                var e = obj.GetComponent<EnemyIdentifier>();
-                if (e == null && e.transform.childCount > 0)
-                    e = obj.GetComponentInChildren<EnemyIdentifier>();
+                if (obj == null) continue;
+                var e = obj.GetComponent<EnemyIdentifier>() ?? obj.GetComponentInChildren<EnemyIdentifier>(true);
                 if (e != null)
                 {
                     if (radiance != 0)
                         e.gameObject.AddComponent<RadianceWaiter>().radianceTier = radiance;
                     e.sandified = sandified;
+                    e.attackEnemies = attackEnemies;
+                    e.prioritizeEnemiesUnlessAttacked = attackEnemies;
+                    e.ignorePlayer = ignorePlayer;
                     e.BossBar(boss);
                     if (!string.IsNullOrEmpty(bossName))
                     {
                         var field = AccessTools.Field(e.GetType(), "overrideFullName");
                         field?.SetValue(e, bossName);
                     }
+                }
+                else
+                {
+                    Plugin.LogError($"EnemyIdentifier not found in {obj.name}");
                 }
             }
         }

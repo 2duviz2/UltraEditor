@@ -29,7 +29,7 @@ public class GlitchEffect : SavableObject
     public static GlitchEffect Create(GameObject target) =>
         target.AddComponent<GlitchEffect>();
 
-    float timePassed = 0;
+    float timePassed = 1000;
 
     public override void Create()
     {

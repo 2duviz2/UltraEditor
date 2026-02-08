@@ -252,7 +252,7 @@ public class MaterialChoser : MonoBehaviour
             });
             float localStep = 1f / (maxScale / 10f);
             localStep = MathF.Max(localStep, 0.1f);
-            if (PlayerPrefs.GetInt("PerformanceLighting") == 0 && !EditorManager.canOpenEditor)
+            if (PlayerPrefs.GetInt("PerformanceLighting") == 0 && !EditorManager.Instance.editorOpen)
                 SubdivideToUnitSize(mesh, localStep);
             GetComponent<MeshFilter>().mesh = mesh;
             return;

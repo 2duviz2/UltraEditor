@@ -205,8 +205,10 @@ public class Billboard : MonoBehaviour
     {
         if (EditorManager.Instance == null) DeleteAll();
         if (!EditorManager.Instance.editorCanvas.activeInHierarchy) DeleteAll();
+        if (target == null) return;
 
         Camera camera = EditorManager.Instance.editorCamera;
+        if (camera == null) return;
         transform.LookAt(camera.transform);
 
         Renderer renderer = GetComponent<Renderer>();

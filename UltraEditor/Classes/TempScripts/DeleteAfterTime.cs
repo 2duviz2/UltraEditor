@@ -8,7 +8,7 @@ public class DeleteAfterTime : MonoBehaviour
 
     public void Update()
     {
-        time -= Time.unscaledDeltaTime;
+        time -= Time.deltaTime;
         if (time <= 0)
             Destroy(gameObject);
     }
