@@ -624,6 +624,8 @@ public class EditorManager : MonoBehaviour
             cameraSelector.SelectObject(newObj);
 
             if (Input.GetKey(Plugin.altKey)) newObj.SetActive(false);
+
+            SetAlert("Object duplicated!", "Info!", new Color(1, 0.5f, 0.25f));
         }
     }
 
@@ -985,9 +987,15 @@ public class EditorManager : MonoBehaviour
                                     {
                                         cameraSelector.selectedObject.GetComponent<Collider>().isTrigger = true;
                                         cameraSelector.selectedObject.layer = LayerMask.NameToLayer("Invisible");
+
+                                        NavMeshModifier mod = cameraSelector.selectedObject.AddComponent<NavMeshModifier>();
+                                        mod.ignoreFromBuild = true;
+
                                         SetAlert("Collider has been set to be a trigger and layer to Invisible.", "Info!", new Color(1, 0.5f, 0.25f));
-                                        if (c is SavableObject)
+                                        if (c is SavableObject cSave)
+                                        {
                                             Destroy(cameraSelector.selectedObject.GetComponent<CubeObject>());
+                                        }
                                     }
                                 }
 
@@ -1178,6 +1186,8 @@ public class EditorManager : MonoBehaviour
         string valueStr = value != null ? value.ToString() : "null";
         if (type == typeof(Color))
             valueStr = value != null ? (new Vector3(((Color)value).r * 255f, ((Color)value).g * 255f, ((Color)value).b * 255f)).ToString() : "null";
+        if (type == typeof(Vector3))
+            valueStr = valueStr.Replace("(", "").Replace(")", "");
         if (type == typeof(bool))
         {
             CreateInspectorItem(fieldName, InspectorItemType.Button, valueStr, value).AddListener(() =>
