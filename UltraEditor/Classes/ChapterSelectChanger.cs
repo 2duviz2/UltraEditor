@@ -49,7 +49,8 @@ public class ChapterSelectChanger : MonoBehaviour
 
                 chapter.gameObject.SetActive(true);
 
-                GameObject newTopLeft = new GameObject("TopLeftChapterSelect", typeof(RectTransform), typeof(VerticalLayoutGroup), typeof(ObjectActivateInSequence));
+                GameObject newTopLeft = new GameObject("TopLeftChapterSelect", typeof(RectTransform), typeof(VerticalLayoutGroup));
+                newTopLeft.SetActive(false);
                 newTopLeft.transform.SetParent(chapter.transform.parent);
                 topLeftCS = newTopLeft;
                 GameObject newTopRight = new GameObject("TopRightChapterSelect", typeof(RectTransform), typeof(VerticalLayoutGroup));
@@ -59,9 +60,10 @@ public class ChapterSelectChanger : MonoBehaviour
                 newBottomMiddle.transform.SetParent(chapter.transform.parent);
                 bottomMiddleCS = newBottomMiddle;
 
-                ObjectActivateInSequence objectActivateInSequence = topLeftCS.GetComponent<ObjectActivateInSequence>();
+                ObjectActivateInSequence objectActivateInSequence = topLeftCS.AddComponent<ObjectActivateInSequence>();
                 objectActivateInSequence.delay = 0.025f;
                 objectActivateInSequence.objectsToActivate = new GameObject[] { };
+                topLeftCS.SetActive(true);
 
                 topLeftCS.GetComponent<RectTransform>().localPosition = new Vector2(-200, 200);
                 topRightCS.GetComponent<RectTransform>().localPosition = new Vector2(200, 212);
