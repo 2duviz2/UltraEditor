@@ -36,6 +36,8 @@ public class EditorManager : MonoBehaviour
     public static bool logShit = false;
     public static bool canOpenEditor = false;
 
+    public static float sensitivity = 50;
+
     static string tempScene = ExampleScenes.GetDefaultScene();
 
     public void Awake()
@@ -179,6 +181,8 @@ public class EditorManager : MonoBehaviour
 
     public static void Create()
     {
+        sensitivity = PrefsManager.Instance.GetFloatLocal("mouseSensitivity", 50);
+
         if (Instance == null)
         {
             DeleteScene();

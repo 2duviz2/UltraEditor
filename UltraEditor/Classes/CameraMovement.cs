@@ -5,7 +5,7 @@ using UnityEngine;
 public class CameraMovement : MonoBehaviour
 {
     public float movementSpeed = 30f;
-    public float mouseSensitivity = 3f;
+    public float mouseSensitivity = 2f;
     public float shiftMultiplier = 3f;
     (int x, int y) savedMousePos = new(0, 0);
 
@@ -48,8 +48,8 @@ public class CameraMovement : MonoBehaviour
         }
         if (Input.GetMouseButton(1))
         {
-            float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity;
-            float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity;
+            float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity * (EditorManager.sensitivity / 50f);
+            float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity * (EditorManager.sensitivity / 50f);
             transform.Rotate(Vector3.up, mouseX, Space.World);
             transform.Rotate(Vector3.right, -mouseY, Space.Self);
             MouseController.SetCursorPos(savedMousePos.x, savedMousePos.y);
