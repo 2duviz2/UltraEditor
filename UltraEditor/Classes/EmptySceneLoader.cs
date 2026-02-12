@@ -30,13 +30,6 @@ public class EmptySceneLoader : MonoBehaviour
     /// <summary> Forces the editor to load a data string as soon as the scene loads, only happens if forceSave is "?". </summary>
     public static string forceSaveData = "";
 
-    public static string pTime = "";
-    public static string pKills = "";
-    public static string pStyle = "";
-    public static bool forceLevelCanOpenEditor = false;
-    public static string forceLevelLayer = "CUSTOM LEVEL";
-    public static string forceLevelImage = "null";
-
     /// <summary> Forces the editor to set a scene name, only happens if forceSave is "?". </summary>
     public static string forceLevelName = "";
 
@@ -53,17 +46,15 @@ public class EmptySceneLoader : MonoBehaviour
             if (_loaded)
                 return;
         }
-
         DontDestroyOnLoad((Instance = this).gameObject);
 
+        // istg why does this crash the game when u dont do this
         Addressables.LoadAssetAsync<GameObject>("FirstRoom").WaitForCompletion();
 
-        Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");
+        // load asset bundle :3 meow rawr
+        Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");
 
-        byte[] data = new byte[stream.Length];
-        stream.Read(data, 0, data.Length);
-
-        AssetBundleCreateRequest assetRequest = AssetBundle.LoadFromMemoryAsync(data);
+        AssetBundleCreateRequest assetRequest = AssetBundle.LoadFromStreamAsync(bundleStream);
         assetRequest.completed += (_) =>
         {
             Plugin.LogInfo("Loaded Empty Scene bundle.");
@@ -95,7 +86,7 @@ public class EmptySceneLoader : MonoBehaviour
         if (SceneHelper.CurrentScene != "UltraEditor") Property(typeof(SceneHelper), "LastScene", SceneHelper.CurrentScene);
         Property(typeof(SceneHelper), "CurrentScene", EditorManager.EditorSceneName);
 
-        var sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
+        AsyncOperation sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
         while (!sceneload.isDone)
@@ -105,6 +96,21 @@ public class EmptySceneLoader : MonoBehaviour
 
         Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
 
+        // duviz why
+        yield return LoadEditor();
+    }
+
+    public static string pTime = "";
+    public static string pKills = "";
+    public static string pStyle = "";
+    public static bool forceLevelCanOpenEditor = false;
+    public static string forceLevelLayer = "CUSTOM LEVEL";
+    public static string forceLevelImage = "null";
+
+    /// <summary> Loads the actual editor or level once you enter the scene. </summary>
+    /// <remarks>(THIS IS WRITTEN BY DUVIZ NOT BY ME PLEASE THIS WASNT ME)</remarks>
+    public IEnumerator LoadEditor()
+    {
         if (forceEditor)
         {
             EditorManager.canOpenEditor = false;
@@ -146,7 +152,7 @@ public class EmptySceneLoader : MonoBehaviour
             }
             List<GameObject> secrets = [];
             int ind = 0;
-            foreach (var secret in FindObjectsOfType<Bonus>(true))
+            foreach (Bonus secret in FindObjectsOfType<Bonus>(true))
             {
                 secret.secretNumber = ind;
                 secrets.Add(secret.gameObject);
@@ -172,8 +178,7 @@ public class EmptySceneLoader : MonoBehaviour
             ShopZone[] sz = FindObjectsOfType<ShopZone>(true);
             foreach (var s in sz)
             {
-                if (s.tipOfTheDay != null)
-                    s.tipOfTheDay.text = StockMapInfo.Instance.tipOfTheDay.tip;
+                s.tipOfTheDay?.text = StockMapInfo.Instance.tipOfTheDay.tip;
             }
             StockMapInfo.Instance.assets.LargeText = StockMapInfo.Instance.levelName.ToUpper();
             LevelNamePopup.Instance.Invoke("Start", 0);
@@ -186,10 +191,9 @@ public class EmptySceneLoader : MonoBehaviour
         MusicManager.Instance.cleanTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.bossTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.GetComponent<AudioSource>().outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
-
-        yield break;
     }
 
+    /// <summary> Tries to open the editor. </summary>
     public void OpenEditor()
     {
         if (SceneHelper.PendingScene != null) return;
@@ -198,23 +202,7 @@ public class EmptySceneLoader : MonoBehaviour
         EditorManager.Create();
     }
 
-    [HarmonyPatch]
-    public class Patches
-    {
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(SceneHelper), "RestartScene")]
-        public static bool RestartMissionPatch()
-        {
-            if (SceneHelper.CurrentScene == EditorManager.EditorSceneName)
-            {
-                Instance.LoadLevel();
-                return false;
-            }
-
-            return true;
-        }
-    }
-
+    // gah could i PLEASE add a publicizer
     #region tools
     /// <summary> Gets or Sets a field regardless if its private or not. </summary>
     /// <param name="InstanceOrType">Instance or type of the field. (use an instance or non-static fields, and a type for static fields.)</param>

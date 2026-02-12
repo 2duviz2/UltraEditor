@@ -1,28 +1,26 @@
 ﻿namespace UltrakillStupid.Patches;
 
 using HarmonyLib;
+using UltraEditor.Classes;
 
-[HarmonyPatch(typeof(GetMissionName))]
-[HarmonyPatch("GetMissionNameOnly")]
-internal class GetMissionNamePatch
+[HarmonyPatch]
+public static class SceneHelperPatch
 {
-    public static bool Prefix(int missionNum, ref string __result)
+    /// <summary> Reload the empty scene when you restart mission in it. </summary>
+    [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), "RestartScene")]
+    public static bool RestartMissionPatch()
     {
-        if (SceneHelper.CurrentScene == "UltraEditor")
+        if (SceneHelper.CurrentScene == EditorManager.EditorSceneName)
         {
-            __result = MapInfoBase.Instance.levelName;
+            EmptySceneLoader.Instance.LoadLevel();
             return false;
         }
 
         return true;
     }
-}
 
-[HarmonyPatch(typeof(GetMissionName))]
-[HarmonyPatch("GetMissionNumberOnly")]
-internal class GetMissionNamePatch2
-{
-    public static bool Prefix(int missionNum, ref string __result)
+    [HarmonyPrefix] [HarmonyPatch(typeof(GetMissionName), "GetMissionNumberOnly")]
+    public static bool FixMissionNum(ref string __result)
     {
         if (SceneHelper.CurrentScene == "UltraEditor")
         {
@@ -32,13 +30,22 @@ internal class GetMissionNamePatch2
 
         return true;
     }
-}
 
-[HarmonyPatch(typeof(GetMissionName))]
-[HarmonyPatch("GetMission")]
-internal class GetMissionNamePatch3
-{
-    public static bool Prefix(int missionNum, ref string __result)
+    [HarmonyPrefix]
+    [HarmonyPatch(typeof(GetMissionName), "GetMissionNameOnly")]
+    public static bool FixMissionNameOnly(ref string __result)
+    {
+        if (SceneHelper.CurrentScene == "UltraEditor")
+        {
+            __result = MapInfoBase.Instance.levelName;
+            return false;
+        }
+
+        return true;
+    }
+
+    [HarmonyPrefix] [HarmonyPatch(typeof(GetMissionName), "GetMission")]
+    public static bool FixMissionName(ref string __result)
     {
         if (SceneHelper.CurrentScene == "UltraEditor")
         {
