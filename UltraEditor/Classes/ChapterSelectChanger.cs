@@ -13,6 +13,9 @@ public class ChapterSelectChanger : MonoBehaviour
 
     int frameCount = 0;
 
+    public void Awake() =>
+        DontDestroyOnLoad(gameObject);
+
     public void Update()
     {
         if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.CurrentThreadIsMainThread())
@@ -175,7 +178,7 @@ public class ChapterSelectChanger : MonoBehaviour
                 copyChapterButton2.GetComponent<Button>().onClick = new();
                 copyChapterButton2.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    GameObject loadLevelCanvas = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("OpenLevelCanvas"));
+                    GameObject loadLevelCanvas = Instantiate(BundlesManager.levelCanvas);
                     EditorManager.StaticLoadPopup(loadLevelCanvas);
                 });
 
@@ -193,7 +196,7 @@ public class ChapterSelectChanger : MonoBehaviour
                 copyChapterButton2.GetComponent<Button>().onClick = new();
                 copyChapterButton2.GetComponent<Button>().onClick.AddListener(() =>
                 {
-                    GameObject loadLevelCanvas = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("ExploreLevelsCanvas"));
+                    GameObject loadLevelCanvas = Instantiate(BundlesManager.exploreLevelsCanvas);
                 });
 
                 l1 = objectActivateInSequence.objectsToActivate.ToList();

@@ -98,7 +98,7 @@ public class Plugin : BaseUnityPlugin
         {
             if (PlayerPrefs.GetString("UltraEditor_LastPlayedVersion") != GetVersion().ToString())
             {
-                Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("WelcomeCanvas"));
+                Instantiate(BundlesManager.welcomeCanvas);
                 PlayerPrefs.SetString("UltraEditor_LastPlayedVersion", GetVersion().ToString());
             }
             seenWelcomeMessage = true;
