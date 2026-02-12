@@ -85,6 +85,9 @@ public class Plugin : BaseUnityPlugin
     public void Start()
     {
         GameObject obj = new("ChapterSelectChanger", typeof(ChapterSelectChanger));
+
+        // load all the folders for the assets window
+        AssetsWindowManager.LoadFolders();
     }
 
     public void Update()
