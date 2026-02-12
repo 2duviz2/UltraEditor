@@ -105,14 +105,14 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    public static T Ass<T>(string path) { return Addressables.LoadAssetAsync<T>((object)path).WaitForCompletion(); }
-    public static T Ast<T>(string path) where T : UnityEngine.Object
+    /*public static T Ass<T>(string path) { return Addressables.LoadAssetAsync<T>((object)path).WaitForCompletion(); }
+    public static T Ast<T>(string path) where T : UnityEngine.Object // moved to AddressablesHelper
     {
-        var obj = Resources.Load<T>(path);
+        T obj = Resources.Load<T>(path);
         if (obj == null)
             LogError($"Resources.Load failed for '{path}'");
         return obj;
-    }
+    }*/
     public static void LogInfo(object data, string stackTrace = null)
     {
         instance.Logger?.LogInfo(stackTrace != null

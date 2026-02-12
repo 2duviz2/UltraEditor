@@ -12,6 +12,7 @@ using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
+using UltraEditor.Libraries;
 using Unity.AI.Navigation;
 using UnityEngine;
 using UnityEngine.Events;
@@ -492,7 +493,7 @@ public class EditorManager : MonoBehaviour
         }
         else if (dir == "AltarBlueOff")
         {
-            obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
+            obj = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
 
             //            |Cube       |SkullBlue
             obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
@@ -500,7 +501,7 @@ public class EditorManager : MonoBehaviour
         }
         else if (dir == "AltarRedOff")
         {
-            obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
+            obj = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
 
             //            |Cube       |SkullBlue
             obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
@@ -521,7 +522,7 @@ public class EditorManager : MonoBehaviour
         }
         else if (dir == "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab(Active)")
         {
-            obj = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
+            obj = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
 
             obj.transform.GetComponent<DisabledEnemiesChecker>().enabled = false;
             //            |SuicideTree4
@@ -535,7 +536,7 @@ public class EditorManager : MonoBehaviour
         else
         {
             // Spawn the object like normal
-            obj = Instantiate(Plugin.Ass<GameObject>(dir));
+            obj = Instantiate(AddressablesHelper.Ass<GameObject>(dir));
         }
 
         obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;

@@ -3,6 +3,7 @@
 using System;
 using System.Reflection;
 using UltraEditor.Classes.Canvas;
+using UltraEditor.Libraries;
 using UnityEngine;
 
 public static class SkyboxManager
@@ -75,7 +76,7 @@ public static class SkyboxManager
                     {
                         if (tex != null)
                         {
-                            var skyboxMat = new Material(Plugin.Ass<Shader>("Assets/Shaders/Special/Skybox_Panoramic.shader"));
+                            var skyboxMat = new Material(AddressablesHelper.Ass<Shader>("Assets/Shaders/Special/Skybox_Panoramic.shader"));
                             skyboxMat.mainTexture = tex;
                             RenderSettings.skybox = skyboxMat;
                         }
@@ -91,7 +92,7 @@ public static class SkyboxManager
                     return;
             }
         }
-        Material skyboxMaterial = Plugin.Ass<Material>(path);
+        Material skyboxMaterial = AddressablesHelper.Ass<Material>(path);
         if (skyboxMaterial != null)
         {
             RenderSettings.skybox = skyboxMaterial;

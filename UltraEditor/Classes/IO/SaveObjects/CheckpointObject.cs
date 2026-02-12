@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UltraEditor.Classes.Editor;
+using UltraEditor.Libraries;
 using UnityEngine;
 
 public class CheckpointObject : SavableObject
@@ -44,7 +45,7 @@ public class CheckpointObject : SavableObject
         {
             yield return new WaitForEndOfFrame();
         }
-        GameObject so = Instantiate(Plugin.Ass<GameObject>("Assets/Prefabs/Levels/Checkpoint.prefab"), transform);
+        GameObject so = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Checkpoint.prefab"), transform);
         so.transform.localPosition = Vector3.zero;
         so.transform.localEulerAngles = Vector3.zero;
         so.transform.localScale = Vector3.one;

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using UltraEditor.Classes.Canvas;
+using UltraEditor.Libraries;
 using UnityEngine;
 
 public class MaterialChoser : MonoBehaviour
@@ -376,7 +377,7 @@ public class MaterialChoser : MonoBehaviour
 
     Material GetSandboxMaterial(string path)
     {
-        GameObject temporalCube = Instantiate(Plugin.Ass<GameObject>($"Assets/Prefabs/Sandbox/{path}.prefab"));
+        GameObject temporalCube = Instantiate(AddressablesHelper.Ass<GameObject>($"Assets/Prefabs/Sandbox/{path}.prefab"));
         Material mat = new Material(temporalCube.GetComponent<Renderer>().material);
 
         Destroy(temporalCube);
@@ -386,6 +387,6 @@ public class MaterialChoser : MonoBehaviour
 
     Material GetPathMaterial(string path)
     {
-        return new Material(Plugin.Ass<Material>($"Assets/Materials/{path}.mat"));
+        return new Material(AddressablesHelper.Ass<Material>($"Assets/Materials/{path}.mat"));
     }
 }

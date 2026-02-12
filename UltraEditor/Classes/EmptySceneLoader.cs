@@ -8,6 +8,7 @@ using System.IO;
 using System.Reflection;
 using TMPro;
 using UltraEditor.Classes.IO.SaveObjects;
+using UltraEditor.Libraries;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
@@ -49,7 +50,7 @@ public class EmptySceneLoader : MonoBehaviour
         DontDestroyOnLoad((Instance = this).gameObject);
 
         // istg why does this crash the game when u dont do this
-        Addressables.LoadAssetAsync<GameObject>("FirstRoom").WaitForCompletion();
+        AddressablesHelper.Ass<GameObject>("FirstRoom");
 
         // load asset bundle :3 meow rawr
         Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");
