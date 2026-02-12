@@ -53,6 +53,6 @@ public class ArenaObject : SavableObject
     bool IsEnemyRoot(GameObject enemy)
     {
         return (enemy.transform.parent == null);
-        return (enemy.transform.parent == null || (enemy.transform.parent.GetComponent<CubeObject>() == null && enemy.transform.parent.GetComponent<ActivateNextWave>() == null && enemy.transform.parent.GetComponent<NextArenaObject>() == null));
+        //return (enemy.transform.parent == null || (enemy.transform.parent.GetComponent<CubeObject>() == null && enemy.transform.parent.GetComponent<ActivateNextWave>() == null && enemy.transform.parent.GetComponent<NextArenaObject>() == null));
     }
 }

@@ -14,11 +14,12 @@ public class AssetItem : MonoBehaviour
 
     public void Start()
     {
-        if (assetPath == "")
+        if (string.IsNullOrEmpty(assetPath))
             assetPath = assetItemObject.name;
         else
             assetNameText.text = assetName;
-        GetComponent<Button>().onClick.AddListener(() =>
+        
+        GetComponent<Button>()?.onClick.AddListener(() =>
         {
             EditorManager.Instance.SpawnAsset(assetPath);
         });
