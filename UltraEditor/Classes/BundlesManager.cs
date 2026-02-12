@@ -4,40 +4,47 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-public class BundlesManager : MonoBehaviour
+public static class BundlesManager
 {
     public static AssetBundle editorBundle;
 
-    public void Awake()
+    public static GameObject editorCanvas, levelCanvas, exploreLevelsCanvas, welcomeCanvas;
+
+    public static Shader ghostDottedOutline;
+
+    public static GameObject cloudPrefab, pyramidMesh, duvizPlushPrefab, duvizPlushFixedPrefab;
+
+    public static void Load()
     {
-        DontDestroyOnLoad(this.gameObject);
+        Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.editorcanvas.bundle");
 
-        var assembly = Assembly.GetExecutingAssembly();
-
-        string resourceName = "UltraEditor.Assets.editorcanvas.bundle";
-
-        using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+        AssetBundleCreateRequest request = AssetBundle.LoadFromStreamAsync(bundleStream);
+        request.completed += (op) => 
         {
-            if (stream == null)
+            editorBundle = request.assetBundle;
+            if (editorBundle == null)
             {
-                Plugin.LogError($"Embedded resource '{resourceName}' not found!");
+                Plugin.LogError("Failed to load AssetBundle from memory!");
                 return;
             }
 
-            byte[] data = new byte[stream.Length];
-            stream.Read(data, 0, data.Length);
-
-            editorBundle = AssetBundle.LoadFromMemory(data);
-            if (editorBundle != null)
-                Plugin.LogInfo("Loaded embedded AssetBundle!");
-            else
-                Plugin.LogError("Failed to load AssetBundle from memory!");
-        }
+            LoadAssets();
+            Plugin.LogInfo("Loaded embedded AssetBundle!");
+        };
     }
 
-    public void OnDestroy()
+    public static void LoadAssets()
     {
-        editorBundle?.Unload(false);
-    }
+        editorCanvas = editorBundle.LoadAsset<GameObject>("Assets/Prefabs/EditorCanvas.prefab");
+        exploreLevelsCanvas = editorBundle.LoadAsset<GameObject>("ExploreLevelsCanvas");
+        welcomeCanvas = editorBundle.LoadAsset<GameObject>("WelcomeCanvas");
+        levelCanvas = editorBundle.LoadAsset<GameObject>("OpenLevelCanvas");
 
+        ghostDottedOutline = editorBundle.LoadAsset<Shader>("GhostDottedOutline");
+
+        cloudPrefab = editorBundle.LoadAsset<GameObject>("Cloud");
+        pyramidMesh = editorBundle.LoadAsset<GameObject>("PyramidMesh");
+        duvizPlushPrefab = editorBundle.LoadAsset<GameObject>("DuvizPlush");
+        duvizPlushFixedPrefab = editorBundle.LoadAsset<GameObject>("DuvizPlushFixed");
+    }
 }

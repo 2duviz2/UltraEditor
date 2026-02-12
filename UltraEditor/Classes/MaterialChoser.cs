@@ -100,7 +100,7 @@ public class MaterialChoser : MonoBehaviour
                 Destroy(tempObj);
                 if ((shapes)shape == shapes.Pyramid)
                 {
-                    tempObj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("PyramidMesh"));
+                    tempObj = Instantiate(BundlesManager.pyramidMesh);
                     mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
                     Destroy(tempObj);
                 }

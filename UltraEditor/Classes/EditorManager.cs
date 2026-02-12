@@ -264,7 +264,7 @@ public class EditorManager : MonoBehaviour
             return;
         }
 
-        GameObject prefab = BundlesManager.editorBundle.LoadAsset<GameObject>("EditorCanvas");
+        GameObject prefab = BundlesManager.editorCanvas;
 
         if (prefab == null)
         {
@@ -488,7 +488,7 @@ public class EditorManager : MonoBehaviour
         // Exclusive exceptions
         if (dir == "ImCloudingIt")
         {
-            obj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("Cloud"));
+            obj = Instantiate(BundlesManager.cloudPrefab);
         }
         else if (dir == "AltarBlueOff")
         {
@@ -583,9 +583,9 @@ public class EditorManager : MonoBehaviour
             if (realPath == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
                 blahaj = SpawnAsset("Assets/Prefabs/Fishing/Fishes/Shark Fish.prefab", false, false);
             else if (realPath == "DuvizPlush")
-                blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlush"));
+                blahaj = Instantiate(BundlesManager.duvizPlushPrefab);
             else if (realPath == "DuvizPlushFixed")
-                blahaj = Instantiate(BundlesManager.editorBundle.LoadAsset<GameObject>("DuvizPlushFixed"));
+                blahaj = Instantiate(BundlesManager.duvizPlushFixedPrefab);
             obj.transform.localEulerAngles = Vector3.zero;
             blahaj.transform.SetParent(obj.transform);
             blahaj.transform.localPosition = Vector3.zero;

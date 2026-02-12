@@ -168,7 +168,7 @@ public class CameraSelector : MonoBehaviour
 
     Material CreateGhostMaterial(Color color, float thickness = 30f)
     {
-        var shader = BundlesManager.editorBundle.LoadAsset<Shader>("GhostDottedOutline");
+        var shader = BundlesManager.ghostDottedOutline;
         var mat = new Material(shader);
 
         mat.SetColor("_Color", color);

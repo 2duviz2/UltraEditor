@@ -71,6 +71,7 @@ public class Plugin : BaseUnityPlugin
         LogInfo("Hello, the Instagram community!");
         System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
+        BundlesManager.Load();
         EditorVariablesList.SetupEditorVariables();
         EditorComponentsList.SetupEditorComponents();
 
@@ -83,9 +84,7 @@ public class Plugin : BaseUnityPlugin
 
     public void Start()
     {
-        GameObject obj = new GameObject("BundlesManager");
-        obj.AddComponent<BundlesManager>();
-        obj.AddComponent<ChapterSelectChanger>();
+        GameObject obj = new("ChapterSelectChanger", typeof(ChapterSelectChanger));
     }
 
     public void Update()
