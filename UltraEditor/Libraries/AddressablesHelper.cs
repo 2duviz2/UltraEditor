@@ -6,10 +6,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
+using UnityEngine.ResourceManagement.ResourceLocations;
 
 /// <summary> Helper class for addressables. </summary>
 public static class AddressablesHelper
 {
+    #region Keys
+
     /// <summary> IResourceLocator for the AddressablesMainContentCatalog. </summary>
     public static IResourceLocator MainAddressablesLocator =>
         Addressables.ResourceLocators.FirstOrDefault(loc => loc.LocatorId == "AddressablesMainContentCatalog");
@@ -23,11 +26,15 @@ public static class AddressablesHelper
     {
         List<string> keys = [];
         foreach (object key in GetAddressableKeys())
-            if (MainAddressablesLocator.Locate(key, typeof(GameObject), out _/*We dont need the IResourceLocation*/) && !keys.Contains(key))
-                keys.Add(key.ToString());
-
+            if (MainAddressablesLocator.Locate(key, typeof(GameObject), out IList<IResourceLocation> locs) && !keys.Contains(locs[0].PrimaryKey))
+                keys.Add(locs[0].PrimaryKey);
+        
+        keys.Sort();
         return keys;
     }
+
+    #endregion
+    #region Asset Loading
 
     /// <summary> Cache list of all used addressable assets. </summary>
     public static Dictionary<string, object> CachedAddressableAssets = [];
@@ -46,4 +53,6 @@ public static class AddressablesHelper
 
         return asset;
     }
+
+    #endregion
 }
