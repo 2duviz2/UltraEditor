@@ -18,7 +18,8 @@ public class AssetFolder : MonoBehaviour
         
         GetComponent<Button>()?.onClick.AddListener(() =>
         {
-            //EditorManager.Instance.SpawnAsset(assetPath);
+            AssetsWindowManager.Instance.CurrentFolder = folderPath;
+            AssetsWindowManager.Instance.Refresh();
         });
     }
 }

@@ -55,4 +55,14 @@ public static class AddressablesHelper
     }
 
     #endregion
+
+    /// <summary> How many times a char occurs in string. </summary>
+    public static int Occurrences(this string str, char lookUp)
+    {
+        int count = 0;
+        foreach (char c in str)
+            if (c == lookUp) count++;
+
+        return count;
+    }
 }

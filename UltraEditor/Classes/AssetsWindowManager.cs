@@ -19,24 +19,6 @@ public class AssetsWindowManager : MonoSingleton<AssetsWindowManager>
     [HideInInspector]
     public string CurrentFolder;
 
-    /// <summary> A dictionary of folder paths and a list of all the key's of the assets inside that folder. </summary>
-    public static Dictionary<string, List<string>> Folders = [];
-
-    /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
-    public static void LoadFolders()
-    {
-        List<string> keys = AddressablesHelper.GetPrefabAddressableKeys();
-        List<string> GetAssetsInFolder(string folder) =>
-            [.. keys.Where(key => key.StartsWith(folder) && !key[folder.Length..].Contains('/'))];
-
-        foreach (string key in keys)
-        {
-            string folder = Path.GetDirectoryName(key).Replace('\\', '/') + "/";
-            if (!Folders.ContainsKey(folder))
-                Folders.Add(folder, GetAssetsInFolder(folder));
-        }
-    }
-
     /// <summary> Setup the window. </summary>
     public void Start()
     {
@@ -50,8 +32,12 @@ public class AssetsWindowManager : MonoSingleton<AssetsWindowManager>
         if (!Folders.TryGetValue(CurrentFolder, out List<string> keys))
             return;
 
+        // delete children
+        for (int i = 2; i < transform.childCount; i++) 
+            Destroy(transform.GetChild(i).gameObject);
+
         // load folders in this current folder
-        foreach (string folder in Folders.Keys.Where(key => key.StartsWith(CurrentFolder)))
+        foreach (string folder in Folders.Keys.Where(key => key.StartsWith(CurrentFolder) && key[CurrentFolder.Length..].Occurrences('/') == 1))
         {
             AssetFolder newAssetFolder = Instantiate(FolderTemplate, transform);
             newAssetFolder.folderPath = folder;
@@ -68,6 +54,25 @@ public class AssetsWindowManager : MonoSingleton<AssetsWindowManager>
             newAssetItem.assetPath = key;
 
             newAssetItem.gameObject.SetActive(true);
+        }
+    }
+
+    /// <summary> A dictionary of folder paths and a list of all the key's of the assets inside that folder. </summary>
+    public static Dictionary<string, List<string>> Folders = [];
+
+    /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
+    public static void LoadFolders()
+    {
+        List<string> keys = AddressablesHelper.GetPrefabAddressableKeys();
+        List<string> GetAssetsInFolder(string folder) =>
+            [.. keys.Where(key => key.StartsWith(folder) && !key[folder.Length..].Contains('/'))];
+
+        Folders.Add("Assets/", []);
+        foreach (string key in keys)
+        {
+            string folder = Path.GetDirectoryName(key).Replace('\\', '/') + "/";
+            if (!Folders.ContainsKey(folder))
+                Folders.Add(folder, GetAssetsInFolder(folder));
         }
     }
 }
