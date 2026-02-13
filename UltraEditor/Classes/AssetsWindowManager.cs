@@ -63,7 +63,7 @@ public class AssetsWindowManager : MonoSingleton<AssetsWindowManager>
     /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
     public static void LoadFolders()
     {
-        List<string> keys = AddressablesHelper.GetPrefabAddressableKeys();
+        List<string> keys = AssHelper.GetPrefabAddressableKeys();
         List<string> GetAssetsInFolder(string folder) =>
             [.. keys.Where(key => key.StartsWith(folder) && !key[folder.Length..].Contains('/'))];
 

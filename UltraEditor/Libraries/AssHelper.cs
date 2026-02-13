@@ -1,15 +1,15 @@
 ﻿namespace UltraEditor.Libraries;
 
-using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
-/// <summary> Helper class for addressables. </summary>
-public static class AddressablesHelper
+/// <summary> Helper class for AddreSSable ASSets. </summary>
+public static class AssHelper
 {
     #region Keys
 
@@ -56,13 +56,23 @@ public static class AddressablesHelper
 
     #endregion
 
-    /// <summary> How many times a char occurs in string. </summary>
-    public static int Occurrences(this string str, char lookUp)
+    extension(string str)
     {
-        int count = 0;
-        foreach (char c in str)
-            if (c == lookUp) count++;
+        /// <summary> How many times a char occurs in string. </summary>
+        public int Occurrences(char lookUp)
+        {
+            int count = 0;
+            foreach (char c in str)
+                if (c == lookUp) count++;
 
-        return count;
+            return count;
+        }
+
+        /// <summary> The indexes of every occurence of a char in a string. </summary>
+        public IEnumerable<int> Occurences(char lookUp)
+        {
+            for (int i = 0; i < str.Length; i++)
+                if (str[i] == lookUp) yield return i;
+        }
     }
 }

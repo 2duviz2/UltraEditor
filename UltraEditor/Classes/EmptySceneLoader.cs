@@ -50,7 +50,7 @@ public class EmptySceneLoader : MonoBehaviour
         DontDestroyOnLoad((Instance = this).gameObject);
 
         // istg why does this crash the game when u dont do this
-        AddressablesHelper.Ass<GameObject>("FirstRoom");
+        AssHelper.Ass<GameObject>("FirstRoom");
 
         // load asset bundle :3 meow rawr
         Stream bundleStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("UltraEditor.Assets.emptyscene.bundle");

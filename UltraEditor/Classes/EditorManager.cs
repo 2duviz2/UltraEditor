@@ -493,7 +493,7 @@ public class EditorManager : MonoBehaviour
         }
         else if (dir == "AltarBlueOff")
         {
-            obj = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
+            obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
 
             //            |Cube       |SkullBlue
             obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
@@ -501,7 +501,7 @@ public class EditorManager : MonoBehaviour
         }
         else if (dir == "AltarRedOff")
         {
-            obj = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
+            obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
 
             //            |Cube       |SkullBlue
             obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
@@ -522,7 +522,7 @@ public class EditorManager : MonoBehaviour
         }
         else if (dir == "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab(Active)")
         {
-            obj = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
+            obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
 
             obj.transform.GetComponent<DisabledEnemiesChecker>().enabled = false;
             //            |SuicideTree4
@@ -536,7 +536,7 @@ public class EditorManager : MonoBehaviour
         else
         {
             // Spawn the object like normal
-            obj = Instantiate(AddressablesHelper.Ass<GameObject>(dir));
+            obj = Instantiate(AssHelper.Ass<GameObject>(dir));
         }
 
         obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;

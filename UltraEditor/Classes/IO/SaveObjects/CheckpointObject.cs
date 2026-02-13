@@ -45,7 +45,7 @@ public class CheckpointObject : SavableObject
         {
             yield return new WaitForEndOfFrame();
         }
-        GameObject so = Instantiate(AddressablesHelper.Ass<GameObject>("Assets/Prefabs/Levels/Checkpoint.prefab"), transform);
+        GameObject so = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Checkpoint.prefab"), transform);
         so.transform.localPosition = Vector3.zero;
         so.transform.localEulerAngles = Vector3.zero;
         so.transform.localScale = Vector3.one;

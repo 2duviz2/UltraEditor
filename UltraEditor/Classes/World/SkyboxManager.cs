@@ -76,7 +76,7 @@ public static class SkyboxManager
                     {
                         if (tex != null)
                         {
-                            var skyboxMat = new Material(AddressablesHelper.Ass<Shader>("Assets/Shaders/Special/Skybox_Panoramic.shader"));
+                            var skyboxMat = new Material(AssHelper.Ass<Shader>("Assets/Shaders/Special/Skybox_Panoramic.shader"));
                             skyboxMat.mainTexture = tex;
                             RenderSettings.skybox = skyboxMat;
                         }
@@ -92,7 +92,7 @@ public static class SkyboxManager
                     return;
             }
         }
-        Material skyboxMaterial = AddressablesHelper.Ass<Material>(path);
+        Material skyboxMaterial = AssHelper.Ass<Material>(path);
         if (skyboxMaterial != null)
         {
             RenderSettings.skybox = skyboxMaterial;

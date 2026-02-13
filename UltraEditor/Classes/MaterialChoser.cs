@@ -377,7 +377,7 @@ public class MaterialChoser : MonoBehaviour
 
     Material GetSandboxMaterial(string path)
     {
-        GameObject temporalCube = Instantiate(AddressablesHelper.Ass<GameObject>($"Assets/Prefabs/Sandbox/{path}.prefab"));
+        GameObject temporalCube = Instantiate(AssHelper.Ass<GameObject>($"Assets/Prefabs/Sandbox/{path}.prefab"));
         Material mat = new Material(temporalCube.GetComponent<Renderer>().material);
 
         Destroy(temporalCube);
@@ -387,6 +387,6 @@ public class MaterialChoser : MonoBehaviour
 
     Material GetPathMaterial(string path)
     {
-        return new Material(AddressablesHelper.Ass<Material>($"Assets/Materials/{path}.mat"));
+        return new Material(AssHelper.Ass<Material>($"Assets/Materials/{path}.mat"));
     }
 }
