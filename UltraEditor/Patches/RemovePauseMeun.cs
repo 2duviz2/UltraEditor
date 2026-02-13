@@ -7,5 +7,5 @@ using UltraEditor.Classes;
 public class RemovePauseMeun
 {
     public static bool Prefix() =>
-        !EditorManager.Instance?.editorOpen ?? false;
+        !EditorManager.Instance?.editorOpen ?? true;
 }
