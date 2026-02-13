@@ -3,9 +3,10 @@
 using HarmonyLib;
 using UltraEditor.Classes;
 
-[HarmonyPatch(typeof(OptionsManager), nameof(OptionsManager.Pause))]
+[HarmonyPatch]
 public class RemovePauseMeun
 {
-    public static bool Prefix() =>
+    [HarmonyPrefix] [HarmonyPatch(typeof(OptionsManager), nameof(OptionsManager.Pause))]
+    public static bool DontFuckingExistYouFuckAssMenu() =>
         !EditorManager.Instance?.editorOpen ?? true;
 }
