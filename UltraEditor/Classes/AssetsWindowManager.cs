@@ -7,6 +7,7 @@ using TMPro;
 using UltraEditor.Classes.Canvas;
 using UltraEditor.Libraries;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary> Manages/Handles everything for the assets window. </summary>
 public class AssetsWindowManager : MonoBehaviour
@@ -74,6 +75,12 @@ public class AssetsWindowManager : MonoBehaviour
             newAssetItem.assetName = Path.GetFileNameWithoutExtension(key);
             newAssetItem.assetPath = key;
 
+            // get item color based on the key-folder its in
+            string keyFolder = Path.GetDirectoryName(key).Replace('\\', '/') + '/';
+            Plugin.LogInfo(keyFolder);
+            if (ItemColorListeners.TryGetValue(keyFolder, out Color col))
+                newAssetItem.GetComponent<Image>().color = col;
+
             newAssetItem.gameObject.SetActive(true);
         }
 
@@ -82,8 +89,24 @@ public class AssetsWindowManager : MonoBehaviour
         StartCoroutine(transform.parent.Find("Scrollbar").GetComponent<ResetScrollbar>().Reset());
     }
 
+    #region Loading
+
     /// <summary> A dictionary of folder paths and a list of all the key's of the assets inside that folder. </summary>
     public static Dictionary<string, List<string>> Folders = [];
+
+    /// <summary> Dictionary of listeners to decide the color of a item asset in the assets window based on the key-folder the asset is in. </summary>
+    public static Dictionary<string, Color> ItemColorListeners = [];
+
+    /// <summary> Loads everything important ahead of time meow rawr miaow :333 </summary>
+    public static void Load()
+    {
+        // folders
+        LoadFolders();
+        LoadDefaultAssets();
+
+        // we want items in specific key-folders to be colored differently cuz it looks cool, so load those listeners too :3
+        ItemColorListeners.Add("Assets/Prefabs/Enemies/", new(1f, 0.2f, 0.2f));
+    }
 
     /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
     public static void LoadFolders()
@@ -110,8 +133,6 @@ public class AssetsWindowManager : MonoBehaviour
         List<string> GetAssetsInFolder(string folder) =>
             [.. keys.Where(key => key.StartsWith(folder) && !key[folder.Length..].Contains('/'))
                 .Concat(folder == "Assets/" ? GetAssetsInFolder("") : [])]; // this is just for the assets folder since theres assets with no folder :P
-
-        LoadDefaultAssets();
     }
 
     /// <summary> Oh god please help </summary>
@@ -254,4 +275,6 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Levels/BonusSuperCharge.prefab",
             "Assets/Prefabs/Levels/DualWieldPowerup.prefab",
         ]);
+
+    #endregion
 }
