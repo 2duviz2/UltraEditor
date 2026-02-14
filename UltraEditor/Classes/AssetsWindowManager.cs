@@ -115,8 +115,7 @@ public class AssetsWindowManager : MonoBehaviour
     }
 
     /// <summary> Oh god please help </summary>
-    public static void LoadDefaultAssets()
-    {
+    public static void LoadDefaultAssets() =>
         Folders.Add("Assets/UltraEditor/", [
             "Assets/Prefabs/Enemies/Zombie.prefab",
             "Assets/Prefabs/Enemies/Projectile Zombie.prefab",
@@ -255,5 +254,4 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Levels/BonusSuperCharge.prefab",
             "Assets/Prefabs/Levels/DualWieldPowerup.prefab",
         ]);
-    }
 }
