@@ -1,5 +1,6 @@
 ﻿namespace UltraEditor.Classes.Canvas;
 
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -15,5 +16,14 @@ internal class ResetScrollbar : MonoBehaviour
     public void ResetPos()
     {
         GetComponent<Scrollbar>().value = value;
+    }
+
+    public IEnumerator Reset()
+    {
+        yield return null;
+        yield return null;
+        yield return null;
+        yield return null;
+        ResetPos();
     }
 }
