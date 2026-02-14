@@ -176,6 +176,9 @@ public class EditorManager : MonoBehaviour
                     Destroy(obj);
                 }
             }
+            foreach (var obj in FindObjectsOfType<DestroyOnCheckpointRestart>())
+                if (obj != null)
+                    Destroy(obj.gameObject);
             Billboard.DeleteAll();
         }
     }
