@@ -108,7 +108,7 @@ public class AssetsWindowManager : MonoBehaviour
         RegisterItemColorListener(new(0f, 0.9f, 1f), "Assets/Prefabs/Levels/Interactive/", "AltarBlueOff", "AltarRedOff");
         RegisterItemColorListener(new(0.25f, 1f, 0.75f), "Assets/Prefabs/Levels/Obstacles/");
         RegisterItemColorListener(new(0.5f, 0.4f, 1f), "Assets/Prefabs/Levels/Decorations/");
-        RegisterItemColorListener(new(0.4f, 0f, 0.4f), "Assets/Prefabs/Levels/Door/");
+        RegisterItemColorListener(new(1f, 0f, 0.4f), "Assets/Prefabs/Levels/Doors/");
         RegisterItemColorListener(new(1f, 0.2f, 0.2f), "Assets/Prefabs/Enemies/");
     }
 
