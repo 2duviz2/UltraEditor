@@ -76,9 +76,8 @@ public class AssetsWindowManager : MonoBehaviour
             newAssetItem.assetPath = key;
 
             // get item color based on the key-folder its in
-            string keyFolder = Path.GetDirectoryName(key).Replace('\\', '/') + '/';
-            Plugin.LogInfo(keyFolder);
-            if (ItemColorListeners.TryGetValue(keyFolder, out Color col))
+            string keyFolder = Path.GetDirectoryName(key).Replace('\\', '/') + '/'; // key folders is the folder, based off of the key :3
+            if (ItemColorListeners.TryGetValue(keyFolder, out Color col) || ItemColorListeners.TryGetValue(key, out col))
                 newAssetItem.GetComponent<Image>().color = col;
 
             newAssetItem.gameObject.SetActive(true);
@@ -105,8 +104,17 @@ public class AssetsWindowManager : MonoBehaviour
         LoadDefaultAssets();
 
         // we want items in specific key-folders to be colored differently cuz it looks cool, so load those listeners too :3
-        ItemColorListeners.Add("Assets/Prefabs/Enemies/", new(1f, 0.2f, 0.2f));
+        RegisterItemColorListener(new(1f, 1f, 0f), "Assets/Prefabs/Levels/Special Rooms/", "Assets/Prefabs/Levels/", "Bonus");
+        RegisterItemColorListener(new(0f, 0.9f, 1f), "Assets/Prefabs/Levels/Interactive/", "AltarBlueOff", "AltarRedOff");
+        RegisterItemColorListener(new(0.25f, 1f, 0.75f), "Assets/Prefabs/Levels/Obstacles/");
+        RegisterItemColorListener(new(0.5f, 0.4f, 1f), "Assets/Prefabs/Levels/Decorations/");
+        RegisterItemColorListener(new(0.4f, 0f, 0.4f), "Assets/Prefabs/Levels/Door/");
+        RegisterItemColorListener(new(1f, 0.2f, 0.2f), "Assets/Prefabs/Enemies/");
     }
+
+    /// <summary> Registers a new pair of ItemColorListeners. </summary>
+    public static void RegisterItemColorListener(Color col, params List<string> keyFolders) =>
+        keyFolders.ForEach(kF => ItemColorListeners.Add(kF, col));
 
     /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
     public static void LoadFolders()
