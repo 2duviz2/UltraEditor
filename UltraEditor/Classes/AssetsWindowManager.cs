@@ -35,6 +35,7 @@ public class AssetsWindowManager : MonoBehaviour
     public void Start()
     {
         CurrentFolder = "Assets/UltraEditor/"; // start in the assets folder
+        GetComponentInParent<Animator>().speed *= 2f; // faster :3
         Refresh();
     }
 
