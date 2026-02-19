@@ -10,7 +10,7 @@ public class FogTrigger : SavableObject
     public bool fogEnabled = true;
 
     [EditorVar("Color")]
-    public Vector3 color = Vector3.oneVector;
+    public Vector3 color = Vector3.oneVector * 255f;
 
     [EditorVar("Min distance")]
     public float minDistance = 0;

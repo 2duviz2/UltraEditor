@@ -84,6 +84,8 @@ public class SkullActivatorObject : SavableObject
                 foreach (var obj in toActivate)
                 {
                     Door d = obj.GetComponent<Door>();
+                    if (d == null)
+                        d = obj.GetComponentInChildren<Door>(true);
                     if (d != null)
                     {
                         List<Door> drs = [.. ipz.doors];
@@ -94,6 +96,8 @@ public class SkullActivatorObject : SavableObject
                 foreach (var obj in toDeactivate)
                 {
                     Door d = obj.GetComponent<Door>();
+                    if (d == null)
+                        d = obj.GetComponentInChildren<Door>(true);
                     if (d != null)
                     {
                         List<Door> drs = [.. ipz.reverseDoors];
@@ -122,11 +126,11 @@ public class SkullActivatorObject : SavableObject
     {
         foreach (var obj in toActivate)
             if (obj != null)
-                if (obj.GetComponent<Door>() == null || triggerAltars.Length > 1)
+                if ((obj.GetComponent<Door>() == null && obj.GetComponentInChildren<Door>(true) == null) || triggerAltars.Length > 1)
                     obj.SetActive(a);
         foreach (var obj in toDeactivate)
             if (obj != null)
-                if (obj.GetComponent<Door>() == null || triggerAltars.Length > 1)
+                if ((obj.GetComponent<Door>() == null && obj.GetComponentInChildren<Door>(true) == null) || triggerAltars.Length > 1)
                     obj.SetActive(!a);
     }
 
