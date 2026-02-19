@@ -507,7 +507,7 @@ public static class SceneJsonSaver
 
     static JsonSerializerSettings jsonSettings = new JsonSerializerSettings
     {
-        Formatting = Formatting.Indented,
+        Formatting = Formatting.None,
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Include
     };
@@ -542,6 +542,7 @@ public static class SceneJsonSaver
 
     public static string GetSceneJson()
     {
+        LoadingHelper.idIndex = 0;
         LoadingHelper.cachedIds = [];
 
         Plugin.LogInfo("Creating scene...");
@@ -946,6 +947,22 @@ public static class SceneJsonSaver
             scene.objects.Add(so);
         }
 
+        // FogTrigger
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<FogTrigger>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+
+            var so = new SerializedObject { type = "FogTrigger", common = SerializeCommon(obj) };
+            var data = new JObject();
+            data["fogEnabled"] = obj.fogEnabled;
+            data["fogDisabledOnTrigger"] = obj.disableOnTrigger;
+            data["fogColor"] = JArray.FromObject(V3(obj.color));
+            data["fogMinDist"] = obj.minDistance;
+            data["fogMaxDist"] = obj.maxDistance;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
         return JsonConvert.SerializeObject(scene, jsonSettings);
     }
 
@@ -1277,6 +1294,19 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("boss", out var b)) em.boss = ParseBool(b);
                         if (data.TryGetValue("bossName", out var bn)) em.bossName = bn.ToString();
                         if (data.TryGetValue("radiance", out var r)) em.radiance = ParseFloat(r);
+                    }
+                }
+                else if (typeName == "FogTrigger")
+                {
+                    if (workingObject.GetComponent<FogTrigger>() == null) FogTrigger.Create(workingObject);
+                    var em = workingObject.GetComponent<FogTrigger>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("fogEnabled", out var s)) em.fogEnabled = ParseBool(s);
+                        if (data.TryGetValue("fogDisabledOnTrigger", out var s2)) em.disableOnTrigger = ParseBool(s2);
+                        if (data.TryGetValue("fogColor", out var s3)) em.color = ParseV3(s3);
+                        if (data.TryGetValue("fogMinDist", out var s4)) em.minDistance = ParseFloat(s4);
+                        if (data.TryGetValue("fogMaxDist", out var s5)) em.maxDistance = ParseFloat(s5);
                     }
                 }
                 else if (typeName == "HUDMessageObject")

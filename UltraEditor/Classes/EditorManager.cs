@@ -176,10 +176,11 @@ public class EditorManager : MonoBehaviour
                     Destroy(obj);
                 }
             }
-            foreach (var obj in FindObjectsOfType<DestroyOnCheckpointRestart>())
+            foreach (var obj in FindObjectsOfType<DestroyOnCheckpointRestart>().ToList())
                 if (obj != null)
                     Destroy(obj.gameObject);
             Billboard.DeleteAll();
+            RenderSettings.fog = false;
         }
     }
 
@@ -621,6 +622,9 @@ public class EditorManager : MonoBehaviour
 
             newObj.name = newObj.name.Replace("(Clone)", "");
 
+            if (newObj.GetComponent<SpawnedObject>() != null)
+                newObj.GetComponent<SpawnedObject>().ID = ""; // fuck you ID :3
+
             if (cameraSelector.selectedObject.transform.parent != null)
                 newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
             newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
@@ -986,7 +990,7 @@ public class EditorManager : MonoBehaviour
                             {
                                 Component c = cameraSelector.selectedObject.AddComponent(componentType);
                                 InitializeDefaultFields(c);
-                                if (cameraSelector.selectedObject.name == "Cube")
+                                if (cameraSelector.selectedObject.name is "Cube" or "Invisible cube")
                                     cameraSelector.selectedObject.name = componentName;
 
                                 if (EditorComponentsList.IsTrigger(c))

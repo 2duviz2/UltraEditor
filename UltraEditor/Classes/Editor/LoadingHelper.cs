@@ -23,14 +23,12 @@ public static class LoadingHelper
     {
         foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
         {
-            string id = GetIdOfObj(obj.gameObject);
-            cachedIds.Add((id, obj.gameObject));
+            GetIdOfObj(obj.gameObject, seeking : true);
             continue;
         }
         foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
         {
-            string id = GetIdOfObj(obj.gameObject);
-            cachedIds.Add((id, obj.gameObject));
+            GetIdOfObj(obj.gameObject, seeking: true);
             continue;
         }
     }
@@ -41,9 +39,6 @@ public static class LoadingHelper
     /// <param name="ids">A list of ids to search for</param>
     public static GameObject[] GetObjectsWithIds(List<string> ids)
     {
-        if (cachedIds.Count == 0)
-            RebuiltCacheForIDs();
-
         List<GameObject> foundObjects = [];
         foreach (var e in ids)
         {
@@ -68,12 +63,36 @@ public static class LoadingHelper
         return [.. foundObjects];
     }
 
+    public static uint idIndex = 0;
+
     /// <summary> Returns an ID for the object </summary>
     /// <param name="obj"> GameObject to get the ID from </param>
     /// <param name="offset"> In case you want to add offset to the position like when using checkpoints </param>
-    public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
+    public static string GetIdOfObj(GameObject obj, Vector3? offset = null, bool seeking = false)
     {
         if (obj == null) return "";
-        return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
+        idIndex++;
+        var r = "";
+        var foundCache = cachedIds.FirstOrDefault(x => x.Item2 == obj);
+        if (foundCache.Item2 != null)
+        {
+            r = foundCache.Item1;
+            cachedIds.Add((r, obj));
+            return r;
+        }
+        var idText = "";
+        if (obj.GetComponent<SavableObject>() != null)
+        {
+            if (obj.GetComponent<SpawnedObject>() != null && obj.GetComponent<SpawnedObject>().ID != "")
+            {
+                r = obj.GetComponent<SpawnedObject>().ID;
+                cachedIds.Add((r, obj));
+                return r;
+            }
+            idText = $"({idIndex})";
+        }
+        r = idText + obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
+        cachedIds.Add((r, obj));
+        return r;
     }
 }

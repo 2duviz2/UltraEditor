@@ -90,8 +90,7 @@ public class EmptySceneLoader : MonoBehaviour
         AsyncOperation sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
-        while (!sceneload.isDone)
-        { Plugin.LogInfo("waiting for sceneload to complete"); yield return null; }
+        while (!sceneload.isDone) yield return null;
 
         Plugin.LogInfo("Scene loaded!");
 
