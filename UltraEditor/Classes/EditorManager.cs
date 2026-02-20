@@ -160,6 +160,8 @@ public class EditorManager : MonoBehaviour
     public static TMP_Text MissionNameText = null;
     public static string EditorSceneName = "UltraEditor";
     static NavMeshSurface navMeshSurface;
+    static GameObject backupFirstRoom;
+    public static GameObject currentFirstRoom;
     public static void DeleteScene(bool force = false)
     {
         if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)))
@@ -181,6 +183,29 @@ public class EditorManager : MonoBehaviour
                     Destroy(obj.gameObject);
             Billboard.DeleteAll();
             RenderSettings.fog = false;
+
+            PlayerLoadoutTarget playerLoadout = FindObjectOfType<PlayerLoadoutTarget>();
+
+            if (playerLoadout != null)
+            {
+                if (backupFirstRoom == null)
+                {
+                    backupFirstRoom = Instantiate(playerLoadout.gameObject);
+                    backupFirstRoom.SetActive(false);
+                    currentFirstRoom = playerLoadout.gameObject;
+                }
+                else
+                {
+                    Destroy(currentFirstRoom);
+                    currentFirstRoom = Instantiate(backupFirstRoom);
+                    currentFirstRoom.SetActive(true);
+                }
+
+                OnLevelStart onLevelStart = OnLevelStart.Instance;
+
+                if (onLevelStart != null)
+                    onLevelStart.activated = false;
+            }
         }
     }
 

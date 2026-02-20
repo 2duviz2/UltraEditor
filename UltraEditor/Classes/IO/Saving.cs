@@ -717,6 +717,11 @@ public static class SceneJsonSaver
         {
             var so = new SerializedObject { type = "LevelInfoObject", common = SerializeCommon(obj) };
             var data = new JObject();
+            obj.activateOnDoorOpenIds.Clear();
+            if (obj.activateOnDoorOpen != null)
+                foreach (var e in obj.activateOnDoorOpen)
+                    if (e != null)
+                        obj.addToActivateId(LoadingHelper.GetIdOfObj(e));
             data["ambientColor"] = JArray.FromObject(V3(obj.ambientColor));
             data["intensityMultiplier"] = obj.intensityMultiplier;
             data["changeLighting"] = obj.changeLighting;
@@ -726,6 +731,7 @@ public static class SceneJsonSaver
             data["levelName"] = obj.levelName;
             data["skybox"] = (int)obj.skybox;
             data["skyboxUrl"] = obj.customSkyboxUrl;
+            if (obj.activateOnDoorOpenIds != null && obj.activateOnDoorOpenIds.Count > 0) data["toActivateIds"] = new JArray(obj.activateOnDoorOpenIds);
             so.data = data;
             scene.objects.Add(so);
         }
@@ -1354,6 +1360,8 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("levelName", out var ln)) li.levelName = ln.ToString();
                         if (data.TryGetValue("skybox", out var sx)) li.skybox = (SkyboxManager.Skybox)Enum.GetValues(typeof(SkyboxManager.Skybox)).GetValue(ParseInt(sx));
                         if (data.TryGetValue("skyboxUrl", out var su)) { li.customSkyboxUrl = su?.ToString(); li.UpdateSkybox(true); }
+                        if (data.TryGetValue("toActivateIds", out var tarr))
+                            foreach (var e in (JArray)tarr) if (e != null) li.addToActivateId(e.ToString());
                     }
                 }
                 else

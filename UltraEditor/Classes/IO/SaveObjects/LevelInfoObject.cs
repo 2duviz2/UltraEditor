@@ -1,5 +1,7 @@
 ﻿namespace UltraEditor.Classes.IO.SaveObjects;
 
+using System.Collections.Generic;
+using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.World;
 using Unity.AI.Navigation;
 using UnityEngine;
@@ -17,12 +19,17 @@ public class LevelInfoObject : SavableObject
     SkyboxManager.Skybox currentSkybox = SkyboxManager.Skybox.BlackSky;
     public string customSkyboxUrl = "";
     public string currentSkyboxUrl = "";
+    [EditorVar("Activate on door open")]
+    public GameObject[] activateOnDoorOpen = [];
+    public List<string> activateOnDoorOpenIds = [];
 
     public static LevelInfoObject Create(GameObject target)
     {
         LevelInfoObject levelInfoObject = target.AddComponent<LevelInfoObject>();
         return levelInfoObject;
     }
+
+    public void addToActivateId(string id) => activateOnDoorOpenIds.Add(id);
 
     public override void Create()
     {
@@ -33,6 +40,8 @@ public class LevelInfoObject : SavableObject
         if (changeLighting)
             updateLight();
         UpdateSkybox(true);
+
+        activateOnDoorOpen = LoadingHelper.GetObjectsWithIds(activateOnDoorOpenIds);
     }
 
     public void updateLight()
@@ -54,10 +63,28 @@ public class LevelInfoObject : SavableObject
         }
     }
 
+    OnLevelStart onLevelStart = null;
+
     public override void Tick()
     {
         if (changeLighting)
             updateLight();
         UpdateSkybox();
+        if (Time.timeScale != 0)
+        {
+            if (onLevelStart == null)
+                onLevelStart = OnLevelStart.Instance;
+
+            if (onLevelStart != null)
+            {
+                onLevelStart.onStart = new()
+                {
+                    toActivateObjects = activateOnDoorOpen,
+                    toDisActivateObjects = [],
+                    onActivate = new(),
+                    onDisActivate = new()
+                };
+            }
+        }
     }
 }
