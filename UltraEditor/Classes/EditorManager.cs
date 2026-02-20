@@ -39,7 +39,7 @@ public class EditorManager : MonoBehaviour
 
     public static float sensitivity = 50;
 
-    static string tempScene = ExampleScenes.GetDefaultScene();
+    static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 
     public void Awake()
     {

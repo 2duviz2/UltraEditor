@@ -71,23 +71,23 @@ public static class LoadingHelper
     {
         if (!obj) return string.Empty;
 
+        idIndex++;
+
         if (cachedIds.TryGetValue(obj, out var cached))
             return cached;
 
-        idIndex++;
-
         string idText = string.Empty;
+        var spawned = obj.GetComponent<SpawnedObject>();
+        if (spawned && spawned.ID != "")
+        {
+            cachedIds[obj] = spawned.ID;
+            return spawned.ID;
+        }
+
         var savable = obj.GetComponent<SavableObject>();
 
         if (savable != null)
         {
-            var spawned = obj.GetComponent<SpawnedObject>();
-            if (spawned && !string.IsNullOrEmpty(spawned.ID))
-            {
-                cachedIds[obj] = spawned.ID;
-                return spawned.ID;
-            }
-
             idText = "(" + idIndex + ")";
         }
 

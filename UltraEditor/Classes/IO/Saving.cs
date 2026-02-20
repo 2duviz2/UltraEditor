@@ -969,6 +969,19 @@ public static class SceneJsonSaver
             scene.objects.Add(so);
         }
 
+        // GravityTrigger
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GravityTrigger>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+
+            var so = new SerializedObject { type = "GravityTrigger", common = SerializeCommon(obj) };
+            var data = new JObject();
+            data["gravity"] = JArray.FromObject(V3(obj.gravity));
+            data["disabledOnTrigger"] = obj.disableOnTrigger;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
         return JsonConvert.SerializeObject(scene, jsonSettings);
     }
 
@@ -1313,6 +1326,16 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("fogColor", out var s3)) em.color = ParseV3(s3);
                         if (data.TryGetValue("fogMinDist", out var s4)) em.minDistance = ParseFloat(s4);
                         if (data.TryGetValue("fogMaxDist", out var s5)) em.maxDistance = ParseFloat(s5);
+                    }
+                }
+                else if (typeName == "GravityTrigger")
+                {
+                    if (workingObject.GetComponent<GravityTrigger>() == null) GravityTrigger.Create(workingObject);
+                    var em = workingObject.GetComponent<GravityTrigger>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("gravity", out var s3)) em.gravity = ParseV3(s3);
+                        if (data.TryGetValue("disabledOnTrigger", out var s2)) em.disableOnTrigger = ParseBool(s2);
                     }
                 }
                 else if (typeName == "HUDMessageObject")
