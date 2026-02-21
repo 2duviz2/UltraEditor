@@ -190,6 +190,7 @@ public class EditorManager : MonoBehaviour
             {
                 if (backupFirstRoom == null)
                 {
+                    playerLoadout.gameObject.GetComponent<FirstRoomPrefab>().finalDoor.GetOrAddComponent<NavMeshModifier>().ignoreFromBuild = true;
                     backupFirstRoom = Instantiate(playerLoadout.gameObject);
                     backupFirstRoom.SetActive(false);
                     currentFirstRoom = playerLoadout.gameObject;
@@ -605,6 +606,15 @@ public class EditorManager : MonoBehaviour
 
         if (dir == "Bonus" || dir == "Assets/Prefabs/Levels/BonusDualWield Variant.prefab" || dir == "Assets/Prefabs/Levels/BonusSuperCharge.prefab")
             obj.GetComponent<Bonus>().secretNumber = 100000;
+
+        // Yay drones fix
+        if (dir == "Assets/Prefabs/Enemies/Drone.prefab")
+        {
+            KeepInBounds kib = obj.GetComponent<KeepInBounds>();
+
+            kib.previousRealPosition = obj.transform.position;
+            kib.previousTracedPosition = obj.transform.position;
+        }
 
         // Manage the blahaj and plushies
         if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")

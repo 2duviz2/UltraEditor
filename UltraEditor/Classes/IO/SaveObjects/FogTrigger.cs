@@ -3,7 +3,7 @@
 using Unity.AI.Navigation;
 using UnityEngine;
 
-[EditorComp("Changes the fog's color and distance when touched.")]
+[EditorComp("Changes the fog's color and distance when touched. Speed will make the fade faster (a speed of 10 takes longer than 20)")]
 public class FogTrigger : SavableObject
 {
     [EditorVar("Fog enabled")]
@@ -17,6 +17,9 @@ public class FogTrigger : SavableObject
 
     [EditorVar("Max distance")]
     public float maxDistance = 100;
+
+    [EditorVar("Fade speed")]
+    public float fadeSpeed = 50;
 
     [EditorVar("Disable on trigger")]
     public bool disableOnTrigger = true;
@@ -34,14 +37,26 @@ public class FogTrigger : SavableObject
     public void OnTriggerEnter(Collider other)
     {
         if (other.tag == "Player")
+            UpdateFog();
+    }
+
+    public void UpdateFog()
+    {
+        if (fogEnabled)
         {
-            RenderSettings.fog = fogEnabled;
             RenderSettings.fogColor = new Color(color.x / 255f, color.y / 255f, color.z / 255f);
             RenderSettings.fogMode = FogMode.Linear;
-            RenderSettings.fogStartDistance = minDistance;
-            RenderSettings.fogEndDistance = maxDistance;
-            if (disableOnTrigger)
-                gameObject.SetActive(false);
         }
+
+        if (RenderSettings.fog != fogEnabled)
+        {
+            if (fogEnabled)
+                FogFadeController.instance.FadeIn(minDistance, maxDistance, fadeSpeed: fadeSpeed);
+            else
+                FogFadeController.instance.FadeOut(fadeSpeed: fadeSpeed);
+        }
+
+        if (disableOnTrigger)
+            gameObject.SetActive(false);
     }
 }

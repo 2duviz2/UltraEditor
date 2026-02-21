@@ -186,6 +186,7 @@ public class EmptySceneLoader : MonoBehaviour
             SteamController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
         }
 
+        StatsManager.Instance.gameObject.AddComponent<FogFadeController>();
         ChallengeManager.Instance.challengePanel.transform.parent.Find("ChallengeText").GetComponent<TMP_Text>().text = "(NO CHALLENGE)";
         MusicManager.Instance.battleTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.cleanTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;

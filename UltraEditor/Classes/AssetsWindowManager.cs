@@ -14,6 +14,9 @@ public class AssetsWindowManager : MonoBehaviour
 {
     public static AssetsWindowManager Instance;
 
+    /// <summary> Serves to put the warning about internal assets when changing folder for the first time </summary>
+    public static bool HasChangedFolder;
+
     /// <summary> Hidden AssetItem template. </summary>
     public AssetItem Template;
 
@@ -47,6 +50,8 @@ public class AssetsWindowManager : MonoBehaviour
 
         CurrentFolder = CurrentFolder[..end];
         Refresh();
+
+        if (!HasChangedFolder) WarnAboutFolders();
     }
 
     /// <summary> Refreshes the items in the assets window. </summary>
@@ -87,6 +92,12 @@ public class AssetsWindowManager : MonoBehaviour
         AssetsFolderPathText.text = CurrentFolder;
 
         StartCoroutine(transform.parent.Find("Scrollbar").GetComponent<ResetScrollbar>().Reset());
+    }
+
+    public void WarnAboutFolders()
+    {
+        HasChangedFolder = true;
+        EditorManager.Instance.SetAlert("External assets can break your game and force you to restart if you don't know what you're doing, please experiment with pacience.", "Warning!");
     }
 
     #region Loading
@@ -178,7 +189,7 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Enemies/Cancerous Rodent.prefab",
             "Assets/Prefabs/Enemies/Very Cancerous Rodent.prefab",
             "Assets/Prefabs/Enemies/Mandalore.prefab",
-            "Assets/Prefabs/Enemies/Wicked.prefab",
+            //"Assets/Prefabs/Enemies/Wicked.prefab", duviz why server no work
             "Assets/Prefabs/Enemies/Big Johninator.prefab",
             "Assets/Prefabs/Enemies/Flesh Prison.prefab",
             "Assets/Prefabs/Enemies/Flesh Prison 2.prefab",
@@ -208,6 +219,8 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Levels/Interactive/ChandelierFerry.prefab",
             "Assets/Prefabs/Fishing/Fish Pickup Template.prefab",
             "DuvizPlushFixed",
+            "Assets/Prefabs/Items/Florp Throwable.prefab",
+            "Assets/Prefabs/Items/KITR.prefab",
             "Assets/Prefabs/Levels/Interactive/ElectricityBox.prefab",
             "Assets/Prefabs/Sandbox/Procedural Water Brush.prefab",
             "Assets/Prefabs/Sandbox/Lava.prefab",

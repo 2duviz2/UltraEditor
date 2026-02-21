@@ -965,6 +965,7 @@ public static class SceneJsonSaver
             data["fogColor"] = JArray.FromObject(V3(obj.color));
             data["fogMinDist"] = obj.minDistance;
             data["fogMaxDist"] = obj.maxDistance;
+            data["fogFadeSpeed"] = obj.fadeSpeed;
             so.data = data;
             scene.objects.Add(so);
         }
@@ -1326,6 +1327,7 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("fogColor", out var s3)) em.color = ParseV3(s3);
                         if (data.TryGetValue("fogMinDist", out var s4)) em.minDistance = ParseFloat(s4);
                         if (data.TryGetValue("fogMaxDist", out var s5)) em.maxDistance = ParseFloat(s5);
+                        if (data.TryGetValue("fogFadeSpeed", out var s6)) em.fadeSpeed = ParseFloat(s6);
                     }
                 }
                 else if (typeName == "GravityTrigger")
