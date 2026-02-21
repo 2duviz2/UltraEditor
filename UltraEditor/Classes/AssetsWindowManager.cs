@@ -344,8 +344,24 @@ public class AssetsWindowManager : MonoBehaviour
     {
         if (preview == null) yield break;
 
+#if EXPORTMODE
+        yield break;
+#endif
+
         if (cachedPreviews.TryGetValue(path, out Sprite cachedAsset))
-            preview.sprite =  cachedAsset;
+        {
+            preview.sprite = cachedAsset;
+            yield break;
+        }
+
+        var spr = BundlesManager.editorBundle.LoadAsset<Sprite>(path.Replace("/", "-"));
+
+        if (spr != null)
+        {
+            preview.sprite = spr;
+            cachedPreviews[path] = preview.sprite;
+            yield break;
+        }
 
         GameObject previewObj = EditorManager.Instance.SpawnAsset(path, isLoading: true);
 
@@ -413,4 +429,136 @@ public class AssetsWindowManager : MonoBehaviour
     }
 
     #endregion
+
+#if EXPORTMODE
+    GameObject previewObj;
+    string previewPath = "NONE";
+    List<string> paths = [];
+
+    public int r = 0;
+    public int g = 0;
+    public int b = 0;
+
+    public void Update()
+    {
+        PreviewCamera.backgroundColor = new Color(r, g, b, 1);
+        PreviewCamera.Render();
+
+        if (Input.GetKeyDown(KeyCode.T)) PreviewCamera.transform.rotation = Quaternion.identity;
+        if (Input.GetKeyDown(KeyCode.T)) PreviewCamera.transform.position = new Vector3(0, -10000, 0);
+        if (Input.GetKeyDown(KeyCode.R)) r = (r + 1) % 2;
+        if (Input.GetKeyDown(KeyCode.G)) g = (g + 1) % 2;
+        if (Input.GetKeyDown(KeyCode.B)) b = (b + 1) % 2;
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            Folders.TryGetValue(CurrentFolder, out List<string> keys);
+            if (keys != null) paths = keys;
+        }
+
+        if (previewObj == null || Input.GetKeyDown(KeyCode.X))
+        {
+            PreviewCamera.backgroundColor = new Color(0, 0, 0, 0);
+            PreviewCamera.Render();
+            if (previewObj != null)
+                SpriteExporter.ExportTexture(RenderTextureToSprite(PreviewTexture), previewPath.Replace("/", "-"));
+            NextPreview();
+        }
+
+        if (Input.GetKeyDown(KeyCode.C))
+            NextPreview();
+
+        if (previewObj == null) return;
+
+        float speed = 10 * (Input.GetKey(KeyCode.LeftShift) ? 3 : 1f) * Mathf.Min(Time.unscaledDeltaTime, 0.1f);
+        float horizontal = Input.GetAxisRaw("Horizontal") * speed;
+        float vertical = Input.GetAxisRaw("Vertical") * speed;
+        float ascend = (Input.GetKey(KeyCode.E) ? 1 : 0 - (Input.GetKey(KeyCode.Q) ? 1 : 0)) * speed;
+        PreviewCamera.transform.Translate(new Vector3(horizontal, ascend, vertical));
+
+        float xRot1 = Input.GetKey(KeyCode.L) ? 45 : 0;
+        float xRot2 = Input.GetKey(KeyCode.J) ? -45 : 0;
+
+        float yRot1 = Input.GetKey(KeyCode.I) ? 45 : 0;
+        float yRot2 = Input.GetKey(KeyCode.K) ? -45 : 0;
+
+        float zRot1 = Input.GetKey(KeyCode.O) ? 45 : 0;
+        float zRot2 = Input.GetKey(KeyCode.U) ? -45 : 0;
+
+        PreviewCamera.transform.Rotate((xRot1 + xRot2) * Time.unscaledDeltaTime, (yRot1 + yRot2) * Time.unscaledDeltaTime, (zRot1 + zRot2) * Time.unscaledDeltaTime);
+    }
+
+    public void NextPreview()
+    {
+        PreviewCamera.cullingMask = CameraController.Instance.cam.cullingMask;
+        if (previewObj != null)
+            Destroy(previewObj);
+        if (paths.Count == 0) return;
+        previewPath = paths[0];
+        NewPreview(paths[0]);
+        paths.RemoveAt(0);
+    }
+
+    public void NewPreview(string path)
+    {
+        if (path.Contains("Puppet")) return;
+        previewObj = EditorManager.Instance.SpawnAsset(path, isLoading: true);
+
+        Bounds b = GetBoundsRecursive(previewObj);
+        Vector3 center = b.center;
+        float size = Mathf.Max(b.extents.x, b.extents.y, b.extents.z);
+
+        float distance = 5;
+        if (size > 5)
+            distance = 15;
+
+        previewObj.transform.position = new Vector3(0, -10000, distance);
+        if (size > 5)
+            previewObj.transform.Rotate(0, 180, 0);
+        PreviewCamera.transform.position = new Vector3(0, -10000, 0);
+        PreviewCamera.transform.rotation = Quaternion.identity;
+
+        foreach (Transform child in previewObj.transform)
+        {
+            if (child.name.Contains("SpawnEffect")){
+                Destroy(child.gameObject);
+                break;
+            }
+        }
+    }
+
+    public void OnGUI()
+    {
+        if (PreviewTexture == null) return;
+
+        float maxHeight = Screen.height;
+        float maxWidth = Screen.width;
+        float aspect = (float)PreviewTexture.width / PreviewTexture.height;
+        float drawHeight = Mathf.Min(maxHeight, maxWidth / aspect);
+        float drawWidth = drawHeight * aspect;
+
+        Rect bgRect = new Rect(
+            0,
+            0,
+            Screen.width,
+            Screen.height
+        );
+        Color oldColor = GUI.color;
+        GUI.color = Color.black;
+        GUI.DrawTexture(bgRect, Texture2D.whiteTexture);
+        GUI.color = oldColor;
+
+        Rect rect = new Rect(
+            (Screen.width - drawWidth) / 2f,
+            (Screen.height - drawHeight) / 2f,
+            drawWidth,
+            drawHeight
+        );
+
+        Rect textRect = new Rect(0,0, 300, 300);
+
+        GUI.DrawTexture(rect, PreviewTexture, ScaleMode.ScaleToFit, true);
+        GUI.Label(textRect, $"Current: {previewPath}");
+    }
+#endif
 }
