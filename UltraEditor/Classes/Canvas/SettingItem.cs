@@ -9,7 +9,7 @@ public class SettingItem : MonoBehaviour
     public bool defaultValue = false;
     public TMP_Text valueText;
 
-    public void Start()
+    public void Awake()
     {
         UpdateValueText();
     }

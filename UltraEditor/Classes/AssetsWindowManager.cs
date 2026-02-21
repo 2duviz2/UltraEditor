@@ -1,5 +1,7 @@
 ﻿namespace UltraEditor.Classes;
 
+using GameConsole.Commands;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -16,6 +18,15 @@ public class AssetsWindowManager : MonoBehaviour
 
     /// <summary> Serves to put the warning about internal assets when changing folder for the first time </summary>
     public static bool HasChangedFolder;
+
+    /// <summary> Camera used to generate the previews inside the UltraEditor folder </summary>
+    public Camera PreviewCamera;
+
+    /// <summary> Preview render texture for the camera </summary>
+    public RenderTexture PreviewTexture;
+
+    /// <summary> Preview light :3 </summary>
+    public Light PreviewLight;
 
     /// <summary> Hidden AssetItem template. </summary>
     public AssetItem Template;
@@ -39,6 +50,7 @@ public class AssetsWindowManager : MonoBehaviour
     {
         CurrentFolder = "Assets/UltraEditor/"; // start in the assets folder
         GetComponentInParent<Animator>().speed *= 2f; // faster :3
+        CreatePreviewCamera();
         Refresh();
     }
 
@@ -52,6 +64,27 @@ public class AssetsWindowManager : MonoBehaviour
         Refresh();
 
         if (!HasChangedFolder) WarnAboutFolders();
+    }
+
+    /// <summary> Creates a preview of the camera idk lmao </summary>
+    public void CreatePreviewCamera()
+    {
+        PreviewTexture = new RenderTexture(100, 100, 16);
+
+        GameObject cam = new GameObject("Preview camera");
+        PreviewCamera = cam.AddComponent<Camera>();
+        PreviewCamera.transform.position = new Vector3(0, -10000, 0);
+        PreviewCamera.cullingMask = LayerMask.GetMask("Invisible");
+        PreviewCamera.forceIntoRenderTexture = true;
+        PreviewCamera.targetTexture = PreviewTexture;
+        PreviewCamera.enabled = false;
+        PreviewCamera.clearFlags = CameraClearFlags.SolidColor;
+        PreviewCamera.backgroundColor = new Color(0, 0, 0, 0);
+        PreviewLight = PreviewCamera.gameObject.AddComponent<Light>();
+        PreviewLight.type = LightType.Spot;
+        PreviewLight.range = 250;
+        PreviewLight.spotAngle = 120;
+        PreviewLight.cullingMask = LayerMask.GetMask("Invisible");
     }
 
     /// <summary> Refreshes the items in the assets window. </summary>
@@ -87,6 +120,11 @@ public class AssetsWindowManager : MonoBehaviour
                 newAssetItem.GetComponent<Image>().color = col;
 
             newAssetItem.gameObject.SetActive(true);
+
+            if (CurrentFolder == "Assets/UltraEditor/" && EditorManager.canOpenEditor)
+                SetPreview(newAssetItem.assetItemPreview, key);
+            else
+                newAssetItem.assetItemPreview.gameObject.SetActive(false);
         }
 
         AssetsFolderPathText.text = CurrentFolder;
@@ -201,6 +239,7 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Enemies/CentaurRocketLauncher.prefab",
             "Assets/Prefabs/Enemies/Brain.prefab",
             "Assets/Prefabs/Enemies/CentaurTower.prefab",
+            "Assets/Prefabs/Enemies/CentaurMortar.prefab",
             "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab",
             "Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab",
             "AltarBlueOff",
@@ -297,6 +336,81 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Levels/BonusSuperCharge.prefab",
             "Assets/Prefabs/Levels/DualWieldPowerup.prefab",
         ]);
+
+    public void SetPreview(Image preview, string path) => StartCoroutine(WaitForPreview(preview, path));
+
+    public static Dictionary<string, Sprite> cachedPreviews = [];
+    IEnumerator WaitForPreview(Image preview, string path)
+    {
+        if (preview == null) yield break;
+
+        if (cachedPreviews.TryGetValue(path, out Sprite cachedAsset))
+            preview.sprite =  cachedAsset;
+
+        GameObject previewObj = EditorManager.Instance.SpawnAsset(path, isLoading: true);
+
+        SetLayerRecursively(previewObj, LayerMask.NameToLayer("Invisible"));
+
+        Bounds b = GetBoundsRecursive(previewObj);
+        Vector3 center = b.center;
+        float size = Mathf.Max(b.extents.x, b.extents.y, b.extents.z);
+
+        float distance = 5;
+        if (size > 5)
+            distance = 15;
+
+        previewObj.transform.position = new Vector3(0, -10000, distance);
+        if (size > 5)
+            previewObj.transform.Rotate(0, 180, 0);
+
+        PreviewCamera.enabled = false;
+        PreviewCamera.Render();
+
+        preview.sprite = RenderTextureToSprite(PreviewTexture);
+
+        cachedPreviews[path] = preview.sprite;
+
+        DestroyImmediate(previewObj);
+    }
+
+    public Bounds GetBoundsRecursive(GameObject go)
+    {
+        var renderers = go.GetComponentsInChildren<Renderer>(true);
+        if (renderers.Length == 0)
+            return new Bounds(go.transform.position, Vector3.one);
+
+        Bounds bounds = renderers[0].bounds;
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        return bounds;
+    }
+
+    public static void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+            SetLayerRecursively(child.gameObject, layer);
+    }
+
+    public static Sprite RenderTextureToSprite(RenderTexture rt)
+    {
+        RenderTexture prev = RenderTexture.active;
+        RenderTexture.active = rt;
+
+        Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGBA32, false);
+        tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
+        tex.Apply();
+        tex.filterMode = FilterMode.Point;
+
+        RenderTexture.active = prev;
+
+        return Sprite.Create(
+            tex,
+            new Rect(0, 0, tex.width, tex.height),
+            new Vector2(0.5f, 0.5f)
+        );
+    }
 
     #endregion
 }
