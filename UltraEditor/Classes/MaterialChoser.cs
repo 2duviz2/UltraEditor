@@ -63,6 +63,8 @@ public class MaterialChoser : MonoBehaviour
     {
         Cube,
         Pyramid,
+        InsideOutCube,
+        InsideOutPyramid,
         /*Sphere,
         Capsule,
         Plane,*/
@@ -99,11 +101,15 @@ public class MaterialChoser : MonoBehaviour
                     : PrimitiveType.Cube);
                 Mesh mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
                 Destroy(tempObj);
-                if ((shapes)shape == shapes.Pyramid)
+                if ((shapes)shape is shapes.Pyramid or shapes.InsideOutPyramid)
                 {
                     tempObj = Instantiate(BundlesManager.pyramidMesh);
                     mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
                     Destroy(tempObj);
+                }
+                if ((shapes)shape is shapes.InsideOutCube or shapes.InsideOutPyramid)
+                {
+                    mesh2 = CreateInsideOutMesh(mesh2);
                 }
                 GetComponent<MeshFilter>().mesh = mesh2;
 
@@ -373,6 +379,51 @@ public class MaterialChoser : MonoBehaviour
         m.SetUVs(0, uvs);
         m.SetTriangles(tris, 0);
         m.RecalculateBounds();
+    }
+
+    Mesh CreateInsideOutMesh(Mesh original)
+    {
+        Mesh m = Instantiate(original);
+
+        Vector3[] vertices = m.vertices;
+        Vector3[] normals = m.normals;
+        int[] triangles = m.triangles;
+
+        int vCount = vertices.Length;
+        int tCount = triangles.Length;
+
+        Vector3[] newVertices = new Vector3[vCount * 2];
+        Vector3[] newNormals = new Vector3[vCount * 2];
+        int[] newTriangles = new int[tCount * 2];
+
+        for (int i = 0; i < vCount; i++)
+        {
+            newVertices[i] = vertices[i];
+            newNormals[i] = normals[i];
+        }
+
+        for (int i = 0; i < tCount; i++)
+            newTriangles[i] = triangles[i];
+
+        for (int i = 0; i < vCount; i++)
+        {
+            newVertices[i + vCount] = vertices[i];
+            newNormals[i + vCount] = -normals[i];
+        }
+
+        for (int i = 0; i < tCount; i += 3)
+        {
+            newTriangles[i + tCount] = triangles[i] + vCount;
+            newTriangles[i + tCount + 1] = triangles[i + 2] + vCount;
+            newTriangles[i + tCount + 2] = triangles[i + 1] + vCount;
+        }
+
+        m.vertices = newVertices;
+        m.normals = newNormals;
+        m.triangles = newTriangles;
+        m.RecalculateBounds();
+
+        return m;
     }
 
     Material GetSandboxMaterial(string path)

@@ -18,6 +18,7 @@
 		</RestoreAdditionalProjectSources>
 	</PropertyGroup>
 
+    <!-- This constant makes the editor be on "Screenshot" mode -->
     <!-- <PropertyGroup>
       <DefineConstants>EXPORTMODE</DefineConstants>
     </PropertyGroup> -->
