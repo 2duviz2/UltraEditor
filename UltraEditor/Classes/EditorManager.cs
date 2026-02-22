@@ -657,13 +657,10 @@ public class EditorManager : MonoBehaviour
 
             newObj.name = newObj.name.Replace("(Clone)", "");
 
-            if (newObj.GetComponent<SpawnedObject>() != null)
-                newObj.GetComponent<SpawnedObject>().ID = ""; // fuck you ID :3
+            newObj.GetComponent<SpawnedObject>()?.ID = ""; // fuck you ID :3
 
             foreach (Transform c in newObj.transform)
-                if (c != null)
-                    if (c.GetComponent<SpawnedObject>() != null)
-                        c.GetComponent<SpawnedObject>().ID = ""; // fuck you ID v2
+                c?.GetComponent<SpawnedObject>()?.ID = ""; // fuck you ID v2
 
             if (cameraSelector.selectedObject.transform.parent != null)
                 newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
