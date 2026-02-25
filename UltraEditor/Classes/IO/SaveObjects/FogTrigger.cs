@@ -51,9 +51,9 @@ public class FogTrigger : SavableObject
         if (RenderSettings.fog != fogEnabled)
         {
             if (fogEnabled)
-                FogFadeController.instance.FadeIn(minDistance, maxDistance, fadeSpeed: fadeSpeed);
+                FogFadeController.Instance.FadeIn(minDistance, maxDistance, fadeSpeed: fadeSpeed);
             else
-                FogFadeController.instance.FadeOut(fadeSpeed: fadeSpeed);
+                FogFadeController.Instance.FadeOut(fadeSpeed: fadeSpeed);
         }
 
         if (disableOnTrigger)
