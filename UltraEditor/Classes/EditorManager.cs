@@ -566,7 +566,7 @@ public class EditorManager : MonoBehaviour
         else
         {
             // Spawn the object like normal
-            obj = Instantiate(AssHelper.Ass<GameObject>(dir));
+            obj = Instantiate(AssHelper.Ass<GameObject>(PrefabFixer.FixKey(dir)));
         }
 
         obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
@@ -2475,10 +2475,7 @@ public class EditorManager : MonoBehaviour
         alert.SetActive(false);
     }
 
-    public static void Log(string str)
-    {
-        Plugin.LogInfo($"[EditorManager] {str}");
-    }
+    public static void Log(string str) => Plugin.LogInfo($"[EditorManager] {str}");
 
     public static AudioClip activateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech On");
     public static AudioClip inactivateObject = BundlesManager.editorBundle.LoadAsset<AudioClip>("Speech Sleep");
