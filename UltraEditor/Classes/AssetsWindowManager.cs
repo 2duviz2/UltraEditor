@@ -55,7 +55,7 @@ public class AssetsWindowManager : MonoBehaviour
             return;
 
         // delete children
-        for (int i = 2; i < transform.childCount; i++) 
+        for (int i = 2; i < transform.childCount; i++)
             Destroy(transform.GetChild(i).gameObject);
 
         // load folders in this current folder
@@ -96,20 +96,33 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> Dictionary of listeners to decide the color of a item asset in the assets window based on the key-folder the asset is in. </summary>
     public static Dictionary<string, Color> ItemColorListeners = [];
 
+    /// <summary> A list of blacklisted assets that should not appear in the assets window. </summary>
+    public static List<string> BlacklistedKeys = [];
+
     /// <summary> Loads everything important ahead of time meow rawr miaow :333 </summary>
     public static void Load()
     {
-        // folders
-        LoadFolders();
-        LoadDefaultAssets();
-
         // we want items in specific key-folders to be colored differently cuz it looks cool, so load those listeners too :3
         RegisterItemColorListener(new(1f, 1f, 0f), "Assets/Prefabs/Levels/Special Rooms/", "Assets/Prefabs/Levels/", "Bonus");
         RegisterItemColorListener(new(0f, 0.9f, 1f), "Assets/Prefabs/Levels/Interactive/", "AltarBlueOff", "AltarRedOff");
         RegisterItemColorListener(new(0.25f, 1f, 0.75f), "Assets/Prefabs/Levels/Obstacles/");
         RegisterItemColorListener(new(0.5f, 0.4f, 1f), "Assets/Prefabs/Levels/Decorations/");
-        RegisterItemColorListener(new(0.4f, 0f, 0.4f), "Assets/Prefabs/Levels/Doors/");
+        RegisterItemColorListener(new(0.4f, 0f, 0.4f), "Assets/Prefabs/Levels/Door/");
         RegisterItemColorListener(new(1f, 0.2f, 0.2f), "Assets/Prefabs/Enemies/");
+
+        // we dont want certain assets to be visible in the window
+        BlacklistedKeys.AddRange(
+        [
+            "FirstRoom",
+            "FirstRoom Pit",
+            "FirstRoom Player Only",
+            "FirstRoom Prime",
+            "FirstRoom Secret",
+        ]);
+
+        // folders
+        LoadFolders();
+        LoadDefaultAssets();
     }
 
     /// <summary> Registers a new pair of ItemColorListeners. </summary>
@@ -119,7 +132,7 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
     public static void LoadFolders()
     {
-        List<string> keys = AssHelper.GetPrefabAddressableKeys();
+        List<string> keys = AssHelper.GetPrefabAddressableKeys(key => !BlacklistedKeys.Contains(key.ToString()));
 
         foreach (string key in keys)
         {

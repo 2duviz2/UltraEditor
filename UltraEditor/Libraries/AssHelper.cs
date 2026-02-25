@@ -1,7 +1,7 @@
 ﻿namespace UltraEditor.Libraries;
 
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -22,13 +22,13 @@ public static class AssHelper
         MainAddressablesLocator?.Keys ?? [];
 
     /// <summary> Grabs a list of every prefabs addressable key, filtering out for dupes. </summary>
-    public static List<string> GetPrefabAddressableKeys()
+    public static List<string> GetPrefabAddressableKeys(Func<IResourceLocation, bool> Search = null)
     {
         List<string> keys = [];
         foreach (object key in GetAddressableKeys())
-            if (MainAddressablesLocator.Locate(key, typeof(GameObject), out IList<IResourceLocation> locs) && !keys.Contains(locs[0].PrimaryKey))
+            if (MainAddressablesLocator.Locate(key, typeof(GameObject), out IList<IResourceLocation> locs) && !keys.Contains(locs[0].PrimaryKey) && (Search?.Invoke(locs[0]) ?? true))
                 keys.Add(locs[0].PrimaryKey);
-        
+
         keys.Sort();
         return keys;
     }
