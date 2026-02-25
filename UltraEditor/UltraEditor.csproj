@@ -5,7 +5,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>UltraEditor</AssemblyName>
 		<Description>WIP in-game level editor for ultrakill</Description>
-		<Version>0.0.8</Version>
+		<Version>0.1.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<LangVersion>latest</LangVersion>
 		<NoWarn>CS0649, CS0414</NoWarn>
@@ -17,6 +17,11 @@
 			https://nuget.bepinex.dev/v3/index.json
 		</RestoreAdditionalProjectSources>
 	</PropertyGroup>
+
+    <!-- This constant makes the editor be on "Screenshot" mode -->
+    <!-- <PropertyGroup>
+      <DefineConstants>EXPORTMODE</DefineConstants>
+    </PropertyGroup> -->
 
 	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
 		<PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
@@ -32,9 +37,16 @@
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
 		<PackageReference Include="UnityEngine.Modules" Version="2022.3.29" />
 
+      <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+
 		<!-- Ultrakill DLL'S -->
 		<Reference Include="Assembly-CSharp">
 			<HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
+            <Private>false</Private>
+            <CopyLocal>false</CopyLocal>
 		</Reference>
 		<Reference Include="plog">
 			<HintPath>$(ManagedPath)\plog.dll</HintPath>
@@ -59,6 +71,8 @@
 		<Reference Include="Unity.ResourceManager OwO">
 			<HintPath>$(ManagedPath)\Unity.ResourceManager.dll</HintPath>
 		</Reference>
+
+      <Publicize Include="Assembly-CSharp" />
 	</ItemGroup>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

@@ -39,7 +39,7 @@ public class EditorManager : MonoBehaviour
 
     public static float sensitivity = 50;
 
-    static string tempScene = ExampleScenes.GetDefaultScene();
+    static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 
     public void Awake()
     {
@@ -160,6 +160,8 @@ public class EditorManager : MonoBehaviour
     public static TMP_Text MissionNameText = null;
     public static string EditorSceneName = "UltraEditor";
     static NavMeshSurface navMeshSurface;
+    static GameObject backupFirstRoom;
+    public static GameObject currentFirstRoom;
     public static void DeleteScene(bool force = false)
     {
         if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)))
@@ -176,10 +178,35 @@ public class EditorManager : MonoBehaviour
                     Destroy(obj);
                 }
             }
-            foreach (var obj in FindObjectsOfType<DestroyOnCheckpointRestart>())
+            foreach (var obj in FindObjectsOfType<DestroyOnCheckpointRestart>().ToList())
                 if (obj != null)
                     Destroy(obj.gameObject);
             Billboard.DeleteAll();
+            RenderSettings.fog = false;
+
+            PlayerLoadoutTarget playerLoadout = FindObjectOfType<PlayerLoadoutTarget>();
+
+            if (playerLoadout != null)
+            {
+                if (backupFirstRoom == null)
+                {
+                    playerLoadout.gameObject.GetComponent<FirstRoomPrefab>().finalDoor.GetOrAddComponent<NavMeshModifier>().ignoreFromBuild = true;
+                    backupFirstRoom = Instantiate(playerLoadout.gameObject);
+                    backupFirstRoom.SetActive(false);
+                    currentFirstRoom = playerLoadout.gameObject;
+                }
+                else
+                {
+                    Destroy(currentFirstRoom);
+                    currentFirstRoom = Instantiate(backupFirstRoom);
+                    currentFirstRoom.SetActive(true);
+                }
+
+                OnLevelStart onLevelStart = OnLevelStart.Instance;
+
+                if (onLevelStart != null)
+                    onLevelStart.activated = false;
+            }
         }
     }
 
@@ -580,6 +607,15 @@ public class EditorManager : MonoBehaviour
         if (dir == "Bonus" || dir == "Assets/Prefabs/Levels/BonusDualWield Variant.prefab" || dir == "Assets/Prefabs/Levels/BonusSuperCharge.prefab")
             obj.GetComponent<Bonus>().secretNumber = 100000;
 
+        // Yay drones fix
+        if (dir == "Assets/Prefabs/Enemies/Drone.prefab")
+        {
+            KeepInBounds kib = obj.GetComponent<KeepInBounds>();
+
+            kib.previousRealPosition = obj.transform.position;
+            kib.previousTracedPosition = obj.transform.position;
+        }
+
         // Manage the blahaj and plushies
         if (dir == "Assets/Prefabs/Fishing/Fish Pickup Template.prefab")
         {
@@ -620,6 +656,11 @@ public class EditorManager : MonoBehaviour
             GameObject newObj = Instantiate(cameraSelector.selectedObject);
 
             newObj.name = newObj.name.Replace("(Clone)", "");
+
+            newObj.GetComponent<SpawnedObject>()?.ID = ""; // fuck you ID :3
+
+            foreach (Transform c in newObj.transform)
+                c?.GetComponent<SpawnedObject>()?.ID = ""; // fuck you ID v2
 
             if (cameraSelector.selectedObject.transform.parent != null)
                 newObj.transform.SetParent(cameraSelector.selectedObject.transform.parent);
@@ -986,7 +1027,7 @@ public class EditorManager : MonoBehaviour
                             {
                                 Component c = cameraSelector.selectedObject.AddComponent(componentType);
                                 InitializeDefaultFields(c);
-                                if (cameraSelector.selectedObject.name == "Cube")
+                                if (cameraSelector.selectedObject.name is "Cube" or "Invisible cube")
                                     cameraSelector.selectedObject.name = componentName;
 
                                 if (EditorComponentsList.IsTrigger(c))

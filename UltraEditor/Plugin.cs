@@ -14,7 +14,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string GUID = "duviz.ultrakill.ultraeditor";
     public const string Name = "UltraEditor";
-    public const string Version = "0.0.9";
+    public const string Version = "0.1.0";
 
     public static Plugin instance;
     public plog.Logger Log;
@@ -30,6 +30,8 @@ public class Plugin : BaseUnityPlugin
     public static KeyCode ctrlKey = KeyCode.LeftControl;
     public static KeyCode shiftKey = KeyCode.LeftShift;
     public static KeyCode altKey = KeyCode.LeftAlt;
+
+    const string LastPlayedVersionPlayerPrefs = "UltraEditor_LastPlayedVersion";
 
     static bool seenWelcomeMessage = false;
 
@@ -68,7 +70,7 @@ public class Plugin : BaseUnityPlugin
     public void Awake()
     {
         instance = this;
-        LogInfo("Hello, the Instagram community!");
+        LogInfo("Hi :3");
         System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
         BundlesManager.Load();
@@ -99,23 +101,27 @@ public class Plugin : BaseUnityPlugin
 
         if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !seenWelcomeMessage)
         {
-            if (PlayerPrefs.GetString("UltraEditor_LastPlayedVersion") != GetVersion().ToString())
+            if (PlayerPrefs.GetString(LastPlayedVersionPlayerPrefs) != GetVersion().ToString())
             {
                 Instantiate(BundlesManager.welcomeCanvas);
-                PlayerPrefs.SetString("UltraEditor_LastPlayedVersion", GetVersion().ToString());
+                PlayerPrefs.SetString(LastPlayedVersionPlayerPrefs, GetVersion().ToString());
             }
             seenWelcomeMessage = true;
         }
     }
 
-    /*public static T Ass<T>(string path) { return Addressables.LoadAssetAsync<T>((object)path).WaitForCompletion(); }
-    public static T Ast<T>(string path) where T : UnityEngine.Object // moved to AddressablesHelper
+    [Obsolete("Use AddressablesHelper")]
+    public static T Ass<T>(string path) { return Addressables.LoadAssetAsync<T>((object)path).WaitForCompletion(); }
+    [Obsolete("Use AddressablesHelper")]
+    public static T Ast<T>(string path) where T : UnityEngine.Object
     {
         T obj = Resources.Load<T>(path);
         if (obj == null)
-            LogError($"Resources.Load failed for '{path}'");
+            LogError($"Resources.Load failed for \"{path}\"");
         return obj;
-    }*/
+    }
+
+    #region Logging
     public static void LogInfo(object data, string stackTrace = null)
     {
         instance.Logger?.LogInfo(stackTrace != null
@@ -132,6 +138,7 @@ public class Plugin : BaseUnityPlugin
 
         (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString(), stackTrace: stackTrace);
     }
+    #endregion
 
     public static Version GetVersion()
     {

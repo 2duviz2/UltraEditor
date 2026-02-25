@@ -1,7 +1,6 @@
 ﻿namespace UltraEditor.Classes.Editor;
 
 using System.Collections.Generic;
-using System.Linq;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 
@@ -17,20 +16,19 @@ public static class LoadingHelper
     }
 
     /// <summary> Cached ids, reset when loading a new scene </summary>
-    public static List<(string, GameObject)> cachedIds = [];
+    public static Dictionary<GameObject, string> cachedIds = [];
+    public static Dictionary<string, GameObject> reverseCachedIds = [];
 
     public static void RebuiltCacheForIDs()
     {
         foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
         {
-            string id = GetIdOfObj(obj.gameObject);
-            cachedIds.Add((id, obj.gameObject));
+            GetIdOfObj(obj.gameObject, seeking : true);
             continue;
         }
         foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
         {
-            string id = GetIdOfObj(obj.gameObject);
-            cachedIds.Add((id, obj.gameObject));
+            GetIdOfObj(obj.gameObject, seeking: true);
             continue;
         }
     }
@@ -41,16 +39,13 @@ public static class LoadingHelper
     /// <param name="ids">A list of ids to search for</param>
     public static GameObject[] GetObjectsWithIds(List<string> ids)
     {
-        if (cachedIds.Count == 0)
-            RebuiltCacheForIDs();
-
         List<GameObject> foundObjects = [];
         foreach (var e in ids)
         {
-            (string, GameObject) cached = cachedIds.FirstOrDefault(x => x.Item1 == e);
-            if (cached.Item2 != null)
+            reverseCachedIds.TryGetValue(e, out var cached);
+            if (cached != null)
             {
-                foundObjects.Add(cached.Item2);
+                foundObjects.Add(cached);
                 continue;
             }
             foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
@@ -59,7 +54,6 @@ public static class LoadingHelper
                 if (e == id)
                 {
                     foundObjects.Add(obj.gameObject);
-                    cachedIds.Add((id, obj.gameObject));
                     break;
                 }
             }
@@ -68,12 +62,41 @@ public static class LoadingHelper
         return [.. foundObjects];
     }
 
+    public static uint idIndex = 0;
+
     /// <summary> Returns an ID for the object </summary>
     /// <param name="obj"> GameObject to get the ID from </param>
     /// <param name="offset"> In case you want to add offset to the position like when using checkpoints </param>
-    public static string GetIdOfObj(GameObject obj, Vector3? offset = null)
+    public static string GetIdOfObj(GameObject obj, Vector3? offset = null, bool seeking = false)
     {
-        if (obj == null) return "";
-        return obj.name + (offset == null ? obj.transform.position : obj.transform.position + offset).ToString() + obj.transform.eulerAngles.ToString() + obj.transform.lossyScale;
+        if (!obj) return string.Empty;
+
+        idIndex++;
+
+        if (cachedIds.TryGetValue(obj, out var cached))
+            return cached;
+
+        string idText = string.Empty;
+        var spawned = obj.GetComponent<SpawnedObject>();
+        if (spawned && spawned.ID != "")
+        {
+            cachedIds[obj] = spawned.ID;
+            return spawned.ID;
+        }
+
+        var savable = obj.GetComponent<SavableObject>();
+
+        if (savable != null)
+        {
+            idText = "(" + idIndex + ")";
+        }
+
+        var t = obj.transform;
+        Vector3 pos = offset.HasValue ? t.position + offset.Value : t.position;
+        string result = $"{idText}{obj.name}{pos}{t.eulerAngles}{t.lossyScale}";
+
+        cachedIds[obj] = result;
+        reverseCachedIds[result] = obj;
+        return result;
     }
 }

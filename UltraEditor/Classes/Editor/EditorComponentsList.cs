@@ -26,7 +26,7 @@ public static class EditorComponentsList
         new EditorComponent(typeof(ActivateNextWave), true,
             $"When the amount of <b>dead enemies</b> inside the object reaches <b>{EditorVariablesList.GetVariableDisplay("enemyCount", typeof(ActivateNextWave))}</b>, two things can happen,\n" +
             $"If <b>{EditorVariablesList.GetVariableDisplay("lastWave", typeof(ActivateNextWave))}</b> is <b>True</b>:\n" +
-            $"    Every object in <b>{EditorVariablesList.GetVariableDisplay("toActivate", typeof(ActivateNextWave))}</b> will get enabled.\n" +
+            $"    Every object in <b>{EditorVariablesList.GetVariableDisplay("toActivate", typeof(ActivateNextWave))}</b> will get enabled. If you put a door there, please ensure that you toggle the editor off and on again to make the editor detect them.\n" +
             $"If <b>not</b>:\n" +
             $"    Every enemy in <b>{EditorVariablesList.GetVariableDisplay("nextEnemies", typeof(ActivateNextWave))} will get enabled, usually placed in another ActivateNextWave.</b>"
         );

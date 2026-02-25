@@ -90,8 +90,7 @@ public class EmptySceneLoader : MonoBehaviour
         AsyncOperation sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
-        while (!sceneload.isDone)
-        { Plugin.LogInfo("waiting for sceneload to complete"); yield return null; }
+        while (!sceneload.isDone) yield return null;
 
         Plugin.LogInfo("Scene loaded!");
 
@@ -187,6 +186,7 @@ public class EmptySceneLoader : MonoBehaviour
             SteamController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
         }
 
+        StatsManager.Instance.gameObject.AddComponent<FogFadeController>();
         ChallengeManager.Instance.challengePanel.transform.parent.Find("ChallengeText").GetComponent<TMP_Text>().text = "(NO CHALLENGE)";
         MusicManager.Instance.battleTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.cleanTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;

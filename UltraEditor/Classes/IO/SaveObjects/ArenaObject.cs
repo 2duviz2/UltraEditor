@@ -33,6 +33,7 @@ public class ArenaObject : SavableObject
 
         activateArena.enemies = LoadingHelper.GetObjectsWithIds(enemyIds);
 
+        ActivateNextWave anw = null;
         bool enemiesHaveParent = true;
         foreach (var enemy in activateArena.enemies)
         {
@@ -44,6 +45,25 @@ public class ArenaObject : SavableObject
             foreach (var enemy in activateArena.enemies)
             {
                 enemy.transform.SetParent(group.transform, true);
+            }
+        }
+        else if (enemiesHaveParent)
+        {
+            anw = activateArena.enemies[0].GetComponentInParent<ActivateNextWave>(true);
+
+            activateArena.doors = [];
+
+            if (anw != null && anw.doors != null)
+            {
+                foreach (var obj in anw.doors)
+                {
+                    if (obj != null)
+                    {
+                        List<Door> drs = [.. activateArena.doors];
+                        drs.Add(obj);
+                        activateArena.doors = [.. drs];
+                    }
+                }
             }
         }
         if (activateArena.enemies.Length > 0)

@@ -11,17 +11,12 @@ public class AssetItem : MonoBehaviour
 
     public TMP_Text assetNameText;
     public GameObject assetItemObject;
+    public Image assetItemPreview;
 
     public void Start()
     {
-        if (string.IsNullOrEmpty(assetPath))
-            assetPath = assetItemObject.name;
-        else
-            assetNameText.text = assetName;
+        assetNameText.text = assetName;
         
-        GetComponent<Button>()?.onClick.AddListener(() =>
-        {
-            EditorManager.Instance.SpawnAsset(assetPath);
-        });
+        GetComponent<Button>()?.onClick.AddListener(() => EditorManager.Instance.SpawnAsset(assetPath));
     }
 }

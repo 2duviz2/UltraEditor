@@ -40,6 +40,9 @@ public class Billboard : MonoBehaviour
 
     public static void UpdateBillboards()
     {
+#if EXPORTMODE
+        return;
+#endif
         if (entitySprite == null)
         {
             entitySprite = BundlesManager.editorBundle.LoadAsset<Sprite>("entity");

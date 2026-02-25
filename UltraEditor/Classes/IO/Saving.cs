@@ -507,7 +507,7 @@ public static class SceneJsonSaver
 
     static JsonSerializerSettings jsonSettings = new JsonSerializerSettings
     {
-        Formatting = Formatting.Indented,
+        Formatting = Formatting.None,
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Include
     };
@@ -542,6 +542,7 @@ public static class SceneJsonSaver
 
     public static string GetSceneJson()
     {
+        LoadingHelper.idIndex = 0;
         LoadingHelper.cachedIds = [];
 
         Plugin.LogInfo("Creating scene...");
@@ -716,6 +717,11 @@ public static class SceneJsonSaver
         {
             var so = new SerializedObject { type = "LevelInfoObject", common = SerializeCommon(obj) };
             var data = new JObject();
+            obj.activateOnDoorOpenIds.Clear();
+            if (obj.activateOnDoorOpen != null)
+                foreach (var e in obj.activateOnDoorOpen)
+                    if (e != null)
+                        obj.addToActivateId(LoadingHelper.GetIdOfObj(e));
             data["ambientColor"] = JArray.FromObject(V3(obj.ambientColor));
             data["intensityMultiplier"] = obj.intensityMultiplier;
             data["changeLighting"] = obj.changeLighting;
@@ -725,6 +731,7 @@ public static class SceneJsonSaver
             data["levelName"] = obj.levelName;
             data["skybox"] = (int)obj.skybox;
             data["skyboxUrl"] = obj.customSkyboxUrl;
+            if (obj.activateOnDoorOpenIds != null && obj.activateOnDoorOpenIds.Count > 0) data["toActivateIds"] = new JArray(obj.activateOnDoorOpenIds);
             so.data = data;
             scene.objects.Add(so);
         }
@@ -942,6 +949,36 @@ public static class SceneJsonSaver
             data["boss"] = obj.boss;
             data["bossName"] = obj.bossName;
             data["radiance"] = obj.radiance;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
+        // FogTrigger
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<FogTrigger>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+
+            var so = new SerializedObject { type = "FogTrigger", common = SerializeCommon(obj) };
+            var data = new JObject();
+            data["fogEnabled"] = obj.fogEnabled;
+            data["fogDisabledOnTrigger"] = obj.disableOnTrigger;
+            data["fogColor"] = JArray.FromObject(V3(obj.color));
+            data["fogMinDist"] = obj.minDistance;
+            data["fogMaxDist"] = obj.maxDistance;
+            data["fogFadeSpeed"] = obj.fadeSpeed;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
+        // GravityTrigger
+        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GravityTrigger>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+
+            var so = new SerializedObject { type = "GravityTrigger", common = SerializeCommon(obj) };
+            var data = new JObject();
+            data["gravity"] = JArray.FromObject(V3(obj.gravity));
+            data["disabledOnTrigger"] = obj.disableOnTrigger;
             so.data = data;
             scene.objects.Add(so);
         }
@@ -1279,6 +1316,30 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("radiance", out var r)) em.radiance = ParseFloat(r);
                     }
                 }
+                else if (typeName == "FogTrigger")
+                {
+                    if (workingObject.GetComponent<FogTrigger>() == null) FogTrigger.Create(workingObject);
+                    var em = workingObject.GetComponent<FogTrigger>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("fogEnabled", out var s)) em.fogEnabled = ParseBool(s);
+                        if (data.TryGetValue("fogDisabledOnTrigger", out var s2)) em.disableOnTrigger = ParseBool(s2);
+                        if (data.TryGetValue("fogColor", out var s3)) em.color = ParseV3(s3);
+                        if (data.TryGetValue("fogMinDist", out var s4)) em.minDistance = ParseFloat(s4);
+                        if (data.TryGetValue("fogMaxDist", out var s5)) em.maxDistance = ParseFloat(s5);
+                        if (data.TryGetValue("fogFadeSpeed", out var s6)) em.fadeSpeed = ParseFloat(s6);
+                    }
+                }
+                else if (typeName == "GravityTrigger")
+                {
+                    if (workingObject.GetComponent<GravityTrigger>() == null) GravityTrigger.Create(workingObject);
+                    var em = workingObject.GetComponent<GravityTrigger>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("gravity", out var s3)) em.gravity = ParseV3(s3);
+                        if (data.TryGetValue("disabledOnTrigger", out var s2)) em.disableOnTrigger = ParseBool(s2);
+                    }
+                }
                 else if (typeName == "HUDMessageObject")
                 {
                     if (workingObject.GetComponent<HUDMessageObject>() == null) HUDMessageObject.Create(workingObject);
@@ -1324,6 +1385,8 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("levelName", out var ln)) li.levelName = ln.ToString();
                         if (data.TryGetValue("skybox", out var sx)) li.skybox = (SkyboxManager.Skybox)Enum.GetValues(typeof(SkyboxManager.Skybox)).GetValue(ParseInt(sx));
                         if (data.TryGetValue("skyboxUrl", out var su)) { li.customSkyboxUrl = su?.ToString(); li.UpdateSkybox(true); }
+                        if (data.TryGetValue("toActivateIds", out var tarr))
+                            foreach (var e in (JArray)tarr) if (e != null) li.addToActivateId(e.ToString());
                     }
                 }
                 else

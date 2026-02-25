@@ -12,6 +12,7 @@ public class SpawnOnce : MonoBehaviour
 
     public void Start()
     {
+        if (PlayerPrefs.GetInt("WelcomePopup", 1) == 0) return;
         if (!spawned.Contains(nameOfSpawn))
         {
             spawned.Add(nameOfSpawn);
