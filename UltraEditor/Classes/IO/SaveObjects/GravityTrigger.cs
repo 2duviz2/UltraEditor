@@ -3,11 +3,11 @@
 using Unity.AI.Navigation;
 using UnityEngine;
 
-[EditorComp("Changes the gravity when touched.")]
+[EditorComp("Changes the gravity of the player when touched.")]
 public class GravityTrigger : SavableObject
 {
     [EditorVar("Gravity")]
-    public Vector3 gravity = new Vector3(0, -40, 0);
+    public Vector3 gravity = new(0, -40, 0);
 
     [EditorVar("Disable on trigger")]
     public bool disableOnTrigger = true;
@@ -26,7 +26,7 @@ public class GravityTrigger : SavableObject
     {
         if (other.tag == "Player")
         {
-            Physics.gravity = gravity;
+            NewMovement.Instance.SwitchGravity(gravity);
             if (disableOnTrigger)
                 gameObject.SetActive(false);
         }

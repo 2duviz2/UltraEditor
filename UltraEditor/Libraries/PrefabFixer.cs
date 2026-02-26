@@ -8,7 +8,7 @@ public static class PrefabFixer
     {
         ["Assets/Prefabs/Enemies/Projectile Zombie.prefab"] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Stray.prefab",
         ["Assets/Prefabs/Enemies/ShotgunHusk.prefab"] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Soldier.prefab",
-        ["Assets/Prefabs/Enemies/Super Projectile Zombie.prefab"] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Schism.prefab",
+        ["Assets/Prefabs/Enemies/Super Projectile Zombie.prefab"] = "Assets/Prefabs/Enemies/Schism.prefab",
         ["Assets/Prefabs/Enemies/Zombie.prefab"] = "Assets/Prefabs/Enemies/Rewrite/Zombie/Filth.prefab",
         ["Assets/Prefabs/Enemies/Mass.prefab"] = "Assets/Prefabs/Enemies/Rewrite/Statue/Mass.prefab",
         ["Assets/Prefabs/Enemies/Flesh Prison.prefab"] = "Assets/Prefabs/Enemies/Rewrite/Statue/Flesh Prison.prefab",

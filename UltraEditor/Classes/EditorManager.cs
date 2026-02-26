@@ -72,7 +72,7 @@ public class EditorManager : MonoBehaviour
             Billboard.UpdateBillboards();
         }
 
-        if (editorOpen)
+        if (editorOpen && !NewMovement.Instance.gameObject.activeInHierarchy)
         {
             Time.timeScale = 0f;
             Cursor.lockState = CursorLockMode.None;
@@ -183,6 +183,7 @@ public class EditorManager : MonoBehaviour
                     Destroy(obj.gameObject);
             Billboard.DeleteAll();
             RenderSettings.fog = false;
+            NewMovement.Instance.ResetGravity(true);
 
             PlayerLoadoutTarget playerLoadout = FindObjectOfType<PlayerLoadoutTarget>();
 
@@ -272,7 +273,7 @@ public class EditorManager : MonoBehaviour
             else
             {
                 editorCamera.transform.position = NewMovement.Instance.transform.position;
-                editorCamera.transform.rotation = NewMovement.Instance.transform.rotation;
+                editorCamera.transform.eulerAngles = new Vector3(NewMovement.Instance.transform.eulerAngles.x, NewMovement.Instance.transform.eulerAngles.y, 0);
             }
 
             if (editorOpen && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
