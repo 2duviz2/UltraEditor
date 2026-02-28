@@ -2221,7 +2221,7 @@ public class EditorManager : MonoBehaviour
                     else if (phase == 2)
                         workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
                     else if (phase == 3)
-                        workingObject.GetComponent<CubeObject>().shape = (MaterialChoser.shapes)Enum.GetValues(typeof(MaterialChoser.shapes)).GetValue(int.Parse(line));
+                        workingObject.GetComponent<CubeObject>().shape = (MaterialChoser.Shapes)Enum.GetValues(typeof(MaterialChoser.Shapes)).GetValue(int.Parse(line));
                 }
 
                 if (lineIndex == 10 && scriptType == "PrefabObject")

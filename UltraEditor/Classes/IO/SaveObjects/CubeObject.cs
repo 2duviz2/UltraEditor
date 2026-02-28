@@ -6,10 +6,10 @@ public class CubeObject : SavableObject
 {
     public MaterialChoser.materialTypes matType;
     public float matTiling = 0.25f;
-    public MaterialChoser.shapes shape;
+    public MaterialChoser.Shapes shape;
     MaterialChoser.materialTypes _matType;
     float _matTiling = 0.25f;
-    MaterialChoser.shapes _shape;
+    MaterialChoser.Shapes _shape;
     public bool _fixMaterialTiling = false;
     public bool fixMaterialTiling;
     public bool _isTrigger = false;
@@ -22,8 +22,7 @@ public class CubeObject : SavableObject
         set
         {
             _isTrigger = value;
-            if (GetComponent<Collider>() != null)
-                GetComponent<Collider>().isTrigger = _isTrigger;
+            GetComponent<Collider>()?.isTrigger = _isTrigger;
         }
     }
     public string customTextureUrl = "";

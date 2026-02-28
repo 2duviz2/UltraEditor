@@ -1108,7 +1108,7 @@ public static class SceneJsonSaver
                     {
                         if (data.TryGetValue("matTiling", out var mtil)) cube.matTiling = ParseFloat(mtil);
                         if (data.TryGetValue("isTrigger", out var istr)) cube.isTrigger = ParseBool(istr);
-                        if (data.TryGetValue("shape", out var shp)) cube.shape = (MaterialChoser.shapes)Enum.GetValues(typeof(MaterialChoser.shapes)).GetValue(ParseInt(shp));
+                        if (data.TryGetValue("shape", out var shp)) cube.shape = (MaterialChoser.Shapes)Enum.GetValues(typeof(MaterialChoser.Shapes)).GetValue(ParseInt(shp));
                         if (data.TryGetValue("fixTiling", out var fx)) cube.fixMaterialTiling = ParseBool(fx);
                         if (data.TryGetValue("customUrl", out var cu)) cube.customTextureUrl = cu?.ToString();
                     }

@@ -5,13 +5,14 @@ using System.Collections.Generic;
 using UltraEditor.Classes.Canvas;
 using UltraEditor.Libraries;
 using UnityEngine;
+using static UltraEditor.Classes.MaterialChoser;
 
 public class MaterialChoser : MonoBehaviour
 {
     public Vector2 tile = Vector2.one;
     public Vector2 offset = Vector2.one;
-    private Vector3 lastScale = Vector3.one;
-    private Mesh mesh;
+    public Vector3 lastScale = Vector3.one;
+    public Mesh mesh;
 
     public enum materialTypes
     {
@@ -59,15 +60,17 @@ public class MaterialChoser : MonoBehaviour
         Metal8,
     }
 
-    public enum shapes
+    public enum Shapes
     {
         Cube,
         Pyramid,
         InsideOutCube,
         InsideOutPyramid,
-        /*Sphere,
+        InsideOutSphere,
+        InsideOutCapsule,
+        Sphere,
         Capsule,
-        Plane,*/
+        Plane
     }
 
     public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -77,47 +80,55 @@ public class MaterialChoser : MonoBehaviour
         return obj;
     }
 
-    shapes lastShape = shapes.Cube;
-    public void ProcessMaterial(materialTypes type, float tiling = 0.25f, shapes? shape = null, bool fixMaterialTiling = false, string customTexture = "")
+    public Shapes Shape = Shapes.Cube;
+    public void ProcessMaterial(materialTypes type, float tiling = 0.25f, Shapes? shape = null, bool fixMaterialTiling = false, string customTexture = "")
     {
-        var renderer = GetComponent<Renderer>();
+        Renderer renderer = GetComponent<Renderer>();
         if (!renderer) return;
 
-        var collider = GetComponent<Collider>();
+        Collider collider = GetComponent<Collider>();
         if (collider) collider.enabled = true;
 
         Material newMat = null;
         lastScale = Vector3.zero;
 
         if (shape != null)
-            if ((shapes)shape != lastShape)
+            if ((Shapes)shape != Shape)
             {
-                lastShape = (shapes)shape;
-                GameObject tempObj = GameObject.CreatePrimitive(
-                      (shapes)shape == shapes.Cube ? PrimitiveType.Cube
-                    /*: (shapes)shape == shapes.Sphere ? PrimitiveType.Sphere
-                    : (shapes)shape == shapes.Capsule ? PrimitiveType.Capsule
-                    : (shapes)shape == shapes.Plane ? PrimitiveType.Plane*/
-                    : PrimitiveType.Cube);
+                Shape = shape.Value;
+                GameObject tempObj = GameObject.CreatePrimitive(Shape.GetPrimitiveType());
+
                 Mesh mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
                 Destroy(tempObj);
-                if ((shapes)shape is shapes.Pyramid or shapes.InsideOutPyramid)
+
+                if (Shape is Shapes.Pyramid or Shapes.InsideOutPyramid)
                 {
                     tempObj = Instantiate(BundlesManager.pyramidMesh);
                     mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
                     Destroy(tempObj);
                 }
-                if ((shapes)shape is shapes.InsideOutCube or shapes.InsideOutPyramid)
-                {
+
+                if (Shape.ToString().StartsWith("InsideOut"))
                     mesh2 = CreateInsideOutMesh(mesh2);
-                }
+
                 GetComponent<MeshFilter>().mesh = mesh2;
 
                 mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
                 GetComponent<MeshFilter>().mesh = mesh;
+
+                if (Shape != Shapes.Cube && collider)
+                {
+                    bool isTrigger = collider.isTrigger;
+                    Destroy(collider);
+
+                    MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
+                    meshCollider.convex = true;
+                    meshCollider.sharedMesh = mesh;
+                    meshCollider.isTrigger = isTrigger;
+                }
             }
 
-        if (customTexture != "")
+        if (!string.IsNullOrEmpty(customTexture))
         {
             newMat = GetSandboxMaterial("Procedural Cube");
             Plugin.instance.StartCoroutine(ImageGetter.GetTextureFromURL(customTexture, tex =>
@@ -138,7 +149,7 @@ public class MaterialChoser : MonoBehaviour
             ContinueProccess(type, tiling, shape, fixMaterialTiling, "", newMat, renderer);
     }
 
-    public void ContinueProccess(materialTypes type, float tiling = 0.25f, shapes? shape = null, bool fixMaterialTiling = false, string customTexture = "", Material newMat = null, Renderer renderer = null)
+    public void ContinueProccess(materialTypes type, float tiling = 0.25f, Shapes? shape = null, bool fixMaterialTiling = false, string customTexture = "", Material newMat = null, Renderer renderer = null)
     {
         if (customTexture != "")
             customTexture = "";
@@ -188,11 +199,6 @@ public class MaterialChoser : MonoBehaviour
             newMat = GetPathMaterial("Environment/Layer 7/WarningStripes");
         else if (type == materialTypes.WhiteWood)
             newMat = GetPathMaterial("Environment/Layer 7/Wood");
-        else if (type == materialTypes.NoCollision)
-        {
-            newMat = new Material(DefaultReferenceManager.Instance.masterShader);
-            GetComponent<Collider>().enabled = false;
-        }
         else if (type == materialTypes.UnbreakableGlass)
             newMat = GetPathMaterial("GlassUnbreakable");
         else if (type == materialTypes.LightGlow)
@@ -229,6 +235,11 @@ public class MaterialChoser : MonoBehaviour
             newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 7");
         else if (type == materialTypes.Metal8)
             newMat = GetPathMaterial("Environment/Metal/Pattern 1/Metal Pattern 1 8");
+        else if (type == materialTypes.NoCollision)
+        {
+            newMat = new Material(DefaultReferenceManager.Instance.masterShader);
+            GetComponent<Collider>().enabled = false;
+        }
 
         if (newMat == null) return;
         renderer.material = newMat;
@@ -240,7 +251,7 @@ public class MaterialChoser : MonoBehaviour
 
     public void UpdateOffset()
     {
-        var renderer = GetComponent<Renderer>();
+        Renderer renderer = GetComponent<Renderer>();
         if (!renderer) return;
 
         renderer.material.SetTextureOffset("_MainTex", offset);
@@ -280,8 +291,8 @@ public class MaterialChoser : MonoBehaviour
 
     void UpdateUVs()
     {
-        var uvs = new Vector2[mesh.vertices.Length];
-        var vertices = mesh.vertices;
+        Vector2[] uvs = new Vector2[mesh.vertices.Length];
+        Vector3[] vertices = mesh.vertices;
 
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -302,86 +313,7 @@ public class MaterialChoser : MonoBehaviour
         mesh.uv = uvs;
     }
 
-    /// <summary> This function took 2 fucking hours to make just for my SSD to die so here's the backup from the exported DLL :3 </summary>
-    private void SubdivideToUnitSize(Mesh m, float unit = 1f)
-    {
-        Vector3[] oldVerts = m.vertices;
-        Vector3[] oldNormals = m.normals;
-        Vector2[] oldUVs = m.uv;
-        int[] oldTris = m.triangles;
-        List<Vector3> verts = new List<Vector3>();
-        List<Vector3> normals = new List<Vector3>();
-        List<Vector2> uvs = new List<Vector2>();
-        List<int> tris = new List<int>();
-        for (int i = 0; i < oldTris.Length; i += 3)
-        {
-            int ia = oldTris[i];
-            int ib = oldTris[i + 1];
-            int ic = oldTris[i + 2];
-            Vector3 a = oldVerts[ia];
-            Vector3 b = oldVerts[ib];
-            Vector3 c = oldVerts[ic];
-            Vector3 na = oldNormals[ia];
-            Vector3 nb = oldNormals[ib];
-            Vector3 nc = oldNormals[ic];
-            Vector2 uva = oldUVs[ia];
-            Vector2 uvb = oldUVs[ib];
-            Vector2 uvc = oldUVs[ic];
-            float maxEdge = Mathf.Max(new float[]
-            {
-                Vector3.Distance(a, b),
-                Vector3.Distance(b, c),
-                Vector3.Distance(c, a)
-            });
-            int steps = Mathf.Max(1, Mathf.CeilToInt(maxEdge / unit));
-            int[,] indexGrid = new int[steps + 1, steps + 1];
-            for (int y = 0; y <= steps; y++)
-            {
-                for (int x = 0; x <= steps - y; x++)
-                {
-                    float u = (float)x / (float)steps;
-                    float v = (float)y / (float)steps;
-                    float w = 1f - u - v;
-                    Vector3 pos = a * w + b * u + c * v;
-                    Vector3 normal = (na * w + nb * u + nc * v).normalized;
-                    Vector2 uv = uva * w + uvb * u + uvc * v;
-                    int idx = verts.Count;
-                    verts.Add(pos);
-                    normals.Add(normal);
-                    uvs.Add(uv);
-                    indexGrid[x, y] = idx;
-                }
-            }
-            for (int y2 = 0; y2 < steps; y2++)
-            {
-                for (int x2 = 0; x2 < steps - y2; x2++)
-                {
-                    int i2 = indexGrid[x2, y2];
-                    int i3 = indexGrid[x2 + 1, y2];
-                    int i4 = indexGrid[x2, y2 + 1];
-                    tris.Add(i2);
-                    tris.Add(i3);
-                    tris.Add(i4);
-                    bool flag = x2 + y2 < steps - 1;
-                    if (flag)
-                    {
-                        int i5 = indexGrid[x2 + 1, y2 + 1];
-                        tris.Add(i3);
-                        tris.Add(i5);
-                        tris.Add(i4);
-                    }
-                }
-            }
-        }
-        m.Clear();
-        m.SetVertices(verts);
-        m.SetNormals(normals);
-        m.SetUVs(0, uvs);
-        m.SetTriangles(tris, 0);
-        m.RecalculateBounds();
-    }
-
-    Mesh CreateInsideOutMesh(Mesh original)
+    public Mesh CreateInsideOutMesh(Mesh original)
     {
         Mesh m = Instantiate(original);
 
@@ -426,18 +358,116 @@ public class MaterialChoser : MonoBehaviour
         return m;
     }
 
+    /// <summary> This function took 2 fucking hours to make just for my SSD to die so here's the backup from the exported DLL :3 </summary>
+    private void SubdivideToUnitSize(Mesh m, float unit = 1f)
+    {
+        Vector3[] oldVerts = m.vertices;
+        Vector3[] oldNormals = m.normals;
+        Vector2[] oldUVs = m.uv;
+        int[] oldTris = m.triangles;
+        List<Vector3> verts = [];
+        List<Vector3> normals = [];
+        List<Vector2> uvs = [];
+        List<int> tris = [];
+        for (int i = 0; i < oldTris.Length; i += 3)
+        {
+            int ia = oldTris[i];
+            int ib = oldTris[i + 1];
+            int ic = oldTris[i + 2];
+            Vector3 a = oldVerts[ia];
+            Vector3 b = oldVerts[ib];
+            Vector3 c = oldVerts[ic];
+            Vector3 na = oldNormals[ia];
+            Vector3 nb = oldNormals[ib];
+            Vector3 nc = oldNormals[ic];
+            Vector2 uva = oldUVs[ia];
+            Vector2 uvb = oldUVs[ib];
+            Vector2 uvc = oldUVs[ic];
+            float maxEdge = Mathf.Max(
+            [
+                Vector3.Distance(a, b),
+                Vector3.Distance(b, c),
+                Vector3.Distance(c, a)
+            ]);
+
+            int steps = Mathf.Max(1, Mathf.CeilToInt(maxEdge / unit));
+            int[,] indexGrid = new int[steps + 1, steps + 1];
+            for (int y = 0; y <= steps; y++)
+            {
+                for (int x = 0; x <= steps - y; x++)
+                {
+                    float u = (float)x / steps;
+                    float v = (float)y / steps;
+                    float w = 1f - u - v;
+                    Vector3 pos = a * w + b * u + c * v;
+                    Vector3 normal = (na * w + nb * u + nc * v).normalized;
+                    Vector2 uv = uva * w + uvb * u + uvc * v;
+                    int idx = verts.Count;
+                    verts.Add(pos);
+                    normals.Add(normal);
+                    uvs.Add(uv);
+                    indexGrid[x, y] = idx;
+                }
+            }
+
+            for (int y2 = 0; y2 < steps; y2++)
+            {
+                for (int x2 = 0; x2 < steps - y2; x2++)
+                {
+                    int i2 = indexGrid[x2, y2];
+                    int i3 = indexGrid[x2 + 1, y2];
+                    int i4 = indexGrid[x2, y2 + 1];
+                    tris.Add(i2);
+                    tris.Add(i3);
+                    tris.Add(i4);
+
+                    if (x2 + y2 < steps - 1)
+                    {
+                        int i5 = indexGrid[x2 + 1, y2 + 1];
+                        tris.Add(i3);
+                        tris.Add(i5);
+                        tris.Add(i4);
+                    }
+                }
+            }
+        }
+        m.Clear();
+        m.SetVertices(verts);
+        m.SetNormals(normals);
+        m.SetUVs(0, uvs);
+        m.SetTriangles(tris, 0);
+        m.RecalculateBounds();
+    }
+
     Material GetSandboxMaterial(string path)
     {
         GameObject temporalCube = Instantiate(AssHelper.Ass<GameObject>($"Assets/Prefabs/Sandbox/{path}.prefab"));
-        Material mat = new Material(temporalCube.GetComponent<Renderer>().material);
+        Material mat = new(temporalCube.GetComponent<Renderer>().material);
 
         Destroy(temporalCube);
 
         return mat;
     }
 
-    Material GetPathMaterial(string path)
+    Material GetPathMaterial(string path) =>
+        new(AssHelper.Ass<Material>($"Assets/Materials/{path}.mat"));
+}
+
+public static class ShapesExtensions
+{
+    extension(Shapes shape)
     {
-        return new Material(AssHelper.Ass<Material>($"Assets/Materials/{path}.mat"));
+        public PrimitiveType GetPrimitiveType() =>
+            shape switch
+            {
+                Shapes.Cube => PrimitiveType.Cube,
+                Shapes.Sphere => PrimitiveType.Sphere,
+                Shapes.Capsule => PrimitiveType.Capsule,
+                Shapes.Plane => PrimitiveType.Plane,
+                Shapes.InsideOutCube => PrimitiveType.Cube,
+                Shapes.InsideOutSphere => PrimitiveType.Sphere,
+                Shapes.InsideOutCapsule => PrimitiveType.Capsule,
+                _ => PrimitiveType.Cube
+            };
     }
 }
