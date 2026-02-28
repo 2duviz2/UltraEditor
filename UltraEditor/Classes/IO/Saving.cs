@@ -977,8 +977,21 @@ public static class SceneJsonSaver
 
             var so = new SerializedObject { type = "GravityTrigger", common = SerializeCommon(obj) };
             var data = new JObject();
-            data["gravity"] = JArray.FromObject(V3(obj.gravity));
-            data["disabledOnTrigger"] = obj.disableOnTrigger;
+            data["ToOrbit"] = JArray.FromObject(V3(obj.gravity));
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
+        // OrbitTrigger
+        foreach (OrbitTrigger obj in ReverseArray(GameObject.FindObjectsOfType<OrbitTrigger>(true)))
+        {
+            if (obj.GetComponent<SavableObject>() == null) continue;
+
+            SerializedObject so = new() { type = "OrbitTrigger", common = SerializeCommon(obj) };
+            JObject data = [];
+            if (obj.ToOrbit.Length > 0)
+                data["ToOrbit"] = new JArray(obj.ToOrbit.Select(obj => LoadingHelper.GetIdOfObj(obj)).ToList());
+            data["GravityStrength"] = obj.GravityStrength;
             so.data = data;
             scene.objects.Add(so);
         }
@@ -1338,6 +1351,20 @@ public static class SceneJsonSaver
                     {
                         if (data.TryGetValue("gravity", out var s3)) em.gravity = ParseV3(s3);
                         if (data.TryGetValue("disabledOnTrigger", out var s2)) em.disableOnTrigger = ParseBool(s2);
+                    }
+                }
+                else if (typeName == "OrbitTrigger")
+                {
+                    if (workingObject.GetComponent<OrbitTrigger>() == null) 
+                        workingObject.AddComponent<OrbitTrigger>();
+
+                    OrbitTrigger ot = workingObject.GetComponent<OrbitTrigger>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("ToOrbit", out JToken meow))
+                            ot.ToOrbit = LoadingHelper.GetObjectsWithIds([.. ((JArray)meow).Select(e => e.ToString())]);
+                        if (data.TryGetValue("GravityStrength", out JToken rawr))
+                            ot.GravityStrength = rawr.ToObject<float>();
                     }
                 }
                 else if (typeName == "HUDMessageObject")
