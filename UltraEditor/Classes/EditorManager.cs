@@ -8,7 +8,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using TMPro;
-using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
@@ -45,7 +44,7 @@ public class EditorManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
             return;
         }
         Instance = this;
@@ -90,19 +89,19 @@ public class EditorManager : MonoBehaviour
         {
             if (Input.GetKey(Plugin.ctrlKey) && Input.GetKey(Plugin.shiftKey) && friendlyAdvancedInspector)
                 DeleteScene(true);
-            else if (IsObjectEditable())
-                deleteObject();
+            else if (CanModifyObject())
+                DeleteSelectedObject();
         }
 
-        if (Plugin.isToggleEnabledKeyPressed() && IsObjectEditable() && editorCanvas.activeSelf)
-            toggleObject();
+        if (Plugin.isToggleEnabledKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
+            ToggleSelectedObject();
 
-        if (Plugin.isDuplicateKeyPressed() && IsObjectEditable() && editorCanvas.activeSelf)
-            duplicateObject();
+        if (Plugin.isDuplicateKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
+            DuplicateSelectedObject();
 
         if (Input.GetKey(Plugin.createCubeKey) && editorCanvas.activeSelf)
         {
-            createCube(true, false);
+            CreateCube(true, false);
         }
 
         cameraSelector.enabled = (!blocker.activeSelf || cameraSelector.dragging) && editorCamera.gameObject.activeSelf;
@@ -114,9 +113,9 @@ public class EditorManager : MonoBehaviour
                     $"{(holdingObject ? holdingObject.name : "null")} & " +
                     $"{(holdingTarget ? holdingTarget.name : "null")}");
 
-            if (holdingObject != null && holdingTarget != null && holdingObject != holdingTarget)
+            if (holdingObject && holdingTarget && holdingObject != holdingTarget)
             {
-                if (IsObjectEditable(holdingTarget) || advancedInspector)
+                if (CanModifyObject(holdingObject))
                 {
                     if (logShit)
                         Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
@@ -129,16 +128,19 @@ public class EditorManager : MonoBehaviour
                 }
             }
 
-            else if (holdingObject != holdingTarget && holdingObject != null)
+            else if (holdingObject != holdingTarget && holdingObject)
             {
-                if (logShit)
-                    Plugin.LogInfo($"Released object: {holdingObject.name} from target");
-                holdingObject.transform.SetParent(null);
-                cameraSelector.selectedObject = holdingTarget;
-                lastSelected = null;
-                UpdateHierarchy();
-                holdingObject = null;
-                holdingTarget = null;
+                if (CanModifyObject(holdingObject))
+                {
+                    if (logShit)
+                        Plugin.LogInfo($"Released object: {holdingObject.name} from target");
+                    holdingObject.transform.SetParent(null);
+                    cameraSelector.selectedObject = holdingTarget;
+                    lastSelected = null;
+                    UpdateHierarchy();
+                    holdingObject = null;
+                    holdingTarget = null;
+                }
             }
         }
 
@@ -318,6 +320,7 @@ public class EditorManager : MonoBehaviour
         editorCamera.transform.position = Camera.main.transform.position;
         editorCamera.depth = 100;
         editorCamera.fieldOfView = 105;
+        editorCamera.farClipPlane = 4000;
         editorCamera.backgroundColor = Color.black;
         cameraSelector = cameraObj.GetComponent<CameraSelector>();
         blocker = editorCanvas.transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
@@ -387,17 +390,17 @@ public class EditorManager : MonoBehaviour
         // Edit
         editB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
         {
-            toggleObject();
+            ToggleSelectedObject();
         });
 
         editB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
         {
-            deleteObject();
+            DeleteSelectedObject();
         });
 
         editB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
         {
-            duplicateObject();
+            DuplicateSelectedObject();
         });
 
         editB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
@@ -408,32 +411,32 @@ public class EditorManager : MonoBehaviour
         // Add
         addB.GetChild(1).GetComponent<Button>().onClick.AddListener(() =>
         {
-            createCube();
+            CreateCube();
         });
 
         addB.GetChild(2).GetComponent<Button>().onClick.AddListener(() =>
         {
-            createCube(true);
+            CreateCube(true);
         });
 
         addB.GetChild(3).GetComponent<Button>().onClick.AddListener(() =>
         {
-            createCube(true, false);
+            CreateCube(true, false);
         });
 
         addB.GetChild(4).GetComponent<Button>().onClick.AddListener(() =>
         {
-            createFloor(new Vector3(25, 1, 25));
+            CreateCubeFloor(new Vector3(25, 1, 25));
         });
 
         addB.GetChild(5).GetComponent<Button>().onClick.AddListener(() =>
         {
-            createFloor(new Vector3(25, 10, 1));
+            CreateCubeFloor(new Vector3(25, 10, 1));
         });
 
         addB.GetChild(6).GetComponent<Button>().onClick.AddListener(() =>
         {
-            createCube(pos: new Vector3(0.00f, 90.00f, 4.25f), layer: "Invisible", objName: "Invisible cube", matType: MaterialChoser.materialTypes.NoCollision);
+            CreateCube(pos: new Vector3(0.00f, 90.00f, 4.25f), layer: "Invisible", objName: "Invisible cube", matType: MaterialChoser.materialTypes.NoCollision);
         });
 
         addB.GetChild(7).GetComponent<Button>().onClick.AddListener(() =>
@@ -564,6 +567,12 @@ public class EditorManager : MonoBehaviour
             obj.transform.GetChild(2).gameObject.SetActive(true);
             obj.name += " (Active)";
         }
+        else if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab")
+        {
+            obj = new GameObject("Checkpoint");
+            var c = CheckpointObject.Create(obj);
+            c.Create();
+        }
         else
         {
             // Spawn the object like normal
@@ -608,11 +617,13 @@ public class EditorManager : MonoBehaviour
         if (dir == "Bonus" || dir == "Assets/Prefabs/Levels/BonusDualWield Variant.prefab" || dir == "Assets/Prefabs/Levels/BonusSuperCharge.prefab")
             obj.GetComponent<Bonus>().secretNumber = 100000;
 
-        // Yay drones fix
-        if (dir == "Assets/Prefabs/Enemies/Drone.prefab")
-        {
-            KeepInBounds kib = obj.GetComponent<KeepInBounds>();
+        // Yay drones/providence fix
+        KeepInBounds kib = obj.GetComponent<KeepInBounds>();
+        if (!kib)
+            kib = obj.GetComponentInChildren<KeepInBounds>();
 
+        if (kib)
+        {
             kib.previousRealPosition = obj.transform.position;
             kib.previousTracedPosition = obj.transform.position;
         }
@@ -649,7 +660,7 @@ public class EditorManager : MonoBehaviour
         return obj;
     }
 
-    void duplicateObject()
+    void DuplicateSelectedObject()
     {
         if (cameraSelector.selectedObject != null)
         {
@@ -679,7 +690,7 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    void deleteObject()
+    void DeleteSelectedObject()
     {
         if (cameraSelector.selectedObject != null)
         {
@@ -697,7 +708,7 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    void toggleObject()
+    void ToggleSelectedObject()
     {
         if (cameraSelector.selectedObject != null)
         {
@@ -707,7 +718,7 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    public GameObject createCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
+    public GameObject CreateCube(bool createRigidbody = false, bool useGravity = true, Vector3? pos = null, string layer = "Default", string objName = "Cube", MaterialChoser.materialTypes matType = MaterialChoser.materialTypes.MasterShader)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         cube.name = objName;
@@ -735,7 +746,7 @@ public class EditorManager : MonoBehaviour
         return cube;
     }
 
-    void createFloor(Vector3 scale)
+    void CreateCubeFloor(Vector3 scale)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f + Vector3.down * 1f;
@@ -838,40 +849,34 @@ public class EditorManager : MonoBehaviour
 
         GameObject[] objectsToHierarch = rootObjects;
 
-        if (cameraSelector.selectedObject != null)
-        {
-            string path = GetHierarchyPath(cameraSelector.selectedObject);
-
-            CreateHierarchyItem(null, $"< {cameraSelector.selectedObject.name}", path, true, new Color(0.5f, 1, 0.5f, cameraSelector.selectedObject.activeSelf ? 1 : 0.5f));
-
-            List<GameObject> objectsToHierarchList = new List<GameObject>();
-
-            foreach (Transform obj in cameraSelector.selectedObject.GetComponentInChildren<Transform>())
-            {
-                if (obj.parent == cameraSelector.selectedObject.transform)
-                {
-                    objectsToHierarchList.Add(obj.gameObject);
-                }
-            }
-
-            objectsToHierarch = objectsToHierarchList.ToArray();
-        }
-
         foreach (GameObject obj in objectsToHierarch)
         {
-            if (cameraSelector.selectedObject == null && (SceneHelper.CurrentScene == EditorSceneName || !advancedInspector))
-            {
+            if (SceneHelper.CurrentScene == EditorSceneName || !advancedInspector)
                 if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                     continue;
-            }
 
             if (obj == editorCamera.gameObject || obj == this.gameObject || obj == editorCanvas.gameObject) continue;
 
-            CreateHierarchyItem(obj);
+            Hierarch(obj, 0);
         }
 
         UpdateInspector();
         Billboard.UpdateBillboards();
+    }
+
+    void Hierarch(GameObject obj, float parent)
+    {
+        CreateHierarchyItem(obj, parent * 10);
+
+        if (!collapseStatus.ContainsKey(obj))
+            collapseStatus[obj] = false;
+        if (collapseStatus[obj])
+        {
+            foreach (Transform child in obj.transform)
+            {
+                Hierarch(child.gameObject, parent + 1);
+            }
+        }
     }
 
     void InitializeDefaultFields(Component component)
@@ -924,7 +929,7 @@ public class EditorManager : MonoBehaviour
         }
     }
 
-    public bool IsObjectEditable(GameObject obj = null)
+    public bool CanModifyObject(GameObject obj = null)
     {
         if (obj != null)
             return (obj.GetComponent<SavableObject>() != null || advancedInspector);
@@ -958,7 +963,7 @@ public class EditorManager : MonoBehaviour
 
         if (cameraSelector.selectedObject != null)
         {
-            if (!IsObjectEditable())
+            if (!CanModifyObject())
             {
                 lastComponents = cameraSelector.selectedObject.GetComponents<Component>();
                 return;
@@ -1611,9 +1616,6 @@ public class EditorManager : MonoBehaviour
                 e.Invoke();
             });
 
-            //copyButton.SetActive(true);
-            //pasteButton.SetActive(true);
-
             copyButton.GetComponentInChildren<Button>().onClick.AddListener(() =>
             {
                 coppiedValue = value;
@@ -1724,48 +1726,49 @@ public class EditorManager : MonoBehaviour
         return null;
     }
 
-    void CreateHierarchyItem(GameObject obj, string backupName = "Null object", string backupDescription = "Null description", bool goToParent = false, Color? forceColorMultiplier = null)
+    public Dictionary<GameObject, bool> collapseStatus = [];
+
+    void CreateHierarchyItem(GameObject obj, float shrinkWidth)
     {
         GameObject content = editorCanvas.transform.GetChild(0).GetChild(2).GetChild(3).gameObject;
         GameObject templateItem = content.transform.GetChild(0).gameObject;
 
         GameObject newItem = Instantiate(templateItem, content.transform);
-        newItem.name = obj != null ? ("Item_" + obj.name) : backupName;
+        newItem.GetComponent<RectTransform>().sizeDelta = new Vector2(newItem.GetComponent<RectTransform>().sizeDelta.x - shrinkWidth, newItem.GetComponent<RectTransform>().sizeDelta.y);
         newItem.SetActive(true);
-        newItem.transform.GetChild(0).GetComponent<TMP_Text>().text = obj != null ? $"{(obj.transform.childCount > 0 ? "> " : "")}{obj.name}" : backupName;
-        newItem.transform.GetChild(1).GetComponent<TMP_Text>().text = backupDescription;
+
+        newItem.name = ("Item_" + obj.name);
+
+        newItem.transform.GetChild(0).GetComponent<TMP_Text>().text = obj.name;
+        if (obj.transform.childCount > 0)
+        {
+            if (!collapseStatus.ContainsKey(obj)) collapseStatus[obj] = false;
+
+            Transform collapseT = newItem.transform.Find(collapseStatus[obj] ? "Collapse" : "Expand");
+            Button collapseB = collapseT.GetComponent<Button>();
+            collapseT.gameObject.SetActive(true);
+
+            collapseB.onClick.AddListener(() =>
+            {
+                collapseStatus[obj] = !collapseStatus[obj];
+                lastHierarchy = [];
+            });
+        }
+
         Button button = newItem.GetComponent<Button>();
         button.onClick.RemoveAllListeners();
-        if (goToParent)
-        {
-            ClickableWithKey c = newItem.AddComponent<ClickableWithKey>();
-            c.button = button;
-        }
         button.onClick.AddListener(() =>
         {
-            if (goToParent)
+            if (Input.GetKey(Plugin.altKey))
             {
-                PlayAudio(unselectObject);
-                cameraSelector.selectedObject = cameraSelector.selectedObject.transform.parent != null ? cameraSelector.selectedObject.transform.parent.gameObject : null;
-                if (cameraSelector.selectedObject != null)
-                {
-                    cameraSelector.SelectObject(cameraSelector.selectedObject);
-                    cameraSelector.FocusOnSelected();
-                }
+                SelectObject(obj);
+                holdingObject = null;
+                holdingTarget = null;
             }
             else
             {
-                if (Input.GetKey(Plugin.altKey))
-                {
-                    SelectObject(obj);
-                    holdingObject = null;
-                    holdingTarget = null;
-                }
-                else
-                {
-                    cameraSelector.SelectObject(obj);
-                    cameraSelector.FocusOnSelected();
-                }
+                cameraSelector.SelectObject(obj);
+                cameraSelector.FocusOnSelected();
             }
         });
 
@@ -1773,17 +1776,14 @@ public class EditorManager : MonoBehaviour
 
         if (obj != null)
         {
-            if (cameraSelector.selectedObject == obj)
-                newItem.GetComponent<Image>().color = new Color(0, 0, newItem.GetComponent<Image>().color.b);
+            if (obj == cameraSelector.selectedObject)
+                newItem.GetComponent<Image>().color = newItem.GetComponent<Image>().color * new Color(0, 0, 2, 1);
 
-            if (obj.activeSelf)
+            if (obj.activeInHierarchy)
                 newItem.GetComponent<Image>().color = newItem.GetComponent<Image>().color * new Color(1, 1, 1, 1);
             else
-                newItem.GetComponent<Image>().color = newItem.GetComponent<Image>().color * new Color(1, 1, 1, 0.5f);
+                newItem.GetComponent<Image>().color = newItem.GetComponent<Image>().color * new Color(0.6f, 0.6f, 0.6f, 1f);
         }
-
-        if (forceColorMultiplier != null)
-            newItem.GetComponent<Image>().color = newItem.GetComponent<Image>().color * forceColorMultiplier.Value;
 
         bool parent = false;
         if (obj == null && cameraSelector.selectedObject != null)
@@ -1824,6 +1824,7 @@ public class EditorManager : MonoBehaviour
         {
             if (obj == null) return;
             holdingObject = obj;
+            if (!holdingTarget) holdingTarget = obj;
             if (logShit)
                 Plugin.LogInfo($"Holding object: {holdingObject.name}");
         });
@@ -1997,7 +1998,7 @@ public class EditorManager : MonoBehaviour
                     objects.Add(o);
         }
 
-        GameObject group = createCube(pos: new Vector3(0.00f, 90.00f, 4.25f), layer: "Invisible", objName: $"Group of {n}", matType: MaterialChoser.materialTypes.NoCollision);
+        GameObject group = CreateCube(pos: new Vector3(0.00f, 90.00f, 4.25f), layer: "Invisible", objName: $"Group of {n}", matType: MaterialChoser.materialTypes.NoCollision);
         foreach (var o in objects)
         {
             o.transform.SetParent(group.transform, true);

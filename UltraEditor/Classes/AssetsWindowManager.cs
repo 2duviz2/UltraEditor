@@ -52,6 +52,9 @@ public class AssetsWindowManager : MonoBehaviour
         GetComponentInParent<Animator>().speed *= 2f; // faster :3
         CreatePreviewCamera();
         Refresh();
+#if EXPORTMODE
+        gameObject.AddComponent<ExportDebug>();
+#endif
     }
 
     /// <summary> Goes back to the previous folder in the path. </summary>
@@ -218,6 +221,7 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Enemies/Stalker.prefab",
             "Assets/Prefabs/Enemies/Sisyphus.prefab",
             "Assets/Prefabs/Enemies/Ferryman.prefab",
+            "Assets/Prefabs/Enemies/MirrorReaperCyberGrind.prefab",
             "Assets/Prefabs/Enemies/SwordsMachineNonboss.prefab",
             "Assets/Prefabs/Enemies/Drone.prefab",
             "Assets/Prefabs/Enemies/Streetcleaner.prefab",
@@ -235,9 +239,15 @@ public class AssetsWindowManager : MonoBehaviour
             "Assets/Prefabs/Enemies/Mannequin.prefab",
             "Assets/Prefabs/Enemies/MannequinPoserWithEnemy.prefab",
             "Assets/Prefabs/Enemies/Minotaur.prefab",
+            "Assets/Prefabs/Enemies/Deathcatcher.prefab",
+            "Assets/Prefabs/Enemies/DeathcatcherCase.prefab",
+            "Assets/Prefabs/Enemies/DeathcatcherClosed.prefab",
             "Assets/Prefabs/Enemies/Gabriel.prefab",
             "Assets/Prefabs/Enemies/Virtue.prefab",
             "Assets/Prefabs/Enemies/Gabriel 2nd Variant.prefab",
+            "Assets/Prefabs/Enemies/Providence.prefab",
+            "Assets/Prefabs/Enemies/Power.prefab",
+            "Assets/Prefabs/Enemies/PowerWithSpawnEffect.prefab",
             "Assets/Prefabs/Enemies/Cancerous Rodent.prefab",
             "Assets/Prefabs/Enemies/Very Cancerous Rodent.prefab",
             "Assets/Prefabs/Enemies/Mandalore.prefab",

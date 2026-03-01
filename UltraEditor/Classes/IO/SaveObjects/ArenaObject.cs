@@ -41,7 +41,7 @@ public class ArenaObject : SavableObject
         }
         if (!enemiesHaveParent && activateArena.enemies.Length > 0)
         {
-            GameObject group = EditorManager.Instance.createCube(layer: "Invisible", objName: "EnemyWave", pos: activateArena.enemies[0].transform.position, matType: MaterialChoser.materialTypes.NoCollision);
+            GameObject group = EditorManager.Instance.CreateCube(layer: "Invisible", objName: "EnemyWave", pos: activateArena.enemies[0].transform.position, matType: MaterialChoser.materialTypes.NoCollision);
             foreach (var enemy in activateArena.enemies)
             {
                 enemy.transform.SetParent(group.transform, true);

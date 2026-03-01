@@ -10,7 +10,7 @@ public class DeactivateIfNonEditable : MonoBehaviour
     {
         if (EditorManager.Instance != null)
         {
-            go.SetActive(EditorManager.Instance.IsObjectEditable());
+            go.SetActive(EditorManager.Instance.CanModifyObject());
         }
     }
 }
