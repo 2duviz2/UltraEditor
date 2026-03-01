@@ -13,7 +13,7 @@ public class CameraMovement : MonoBehaviour
 
     public bool moving()
     {
-        return Input.GetMouseButton(1) && Plugin.canMove() && !EditorManager.Instance.blocker.activeSelf;
+        return Input.GetMouseButton(1) && Plugin.CanMove() && !EditorManager.Instance.blocker.activeSelf;
     }
 
     public void Awake()
@@ -33,7 +33,7 @@ public class CameraMovement : MonoBehaviour
 
     public void Update()
     {
-        if (!Plugin.canMove()) return;
+        if (!Plugin.CanMove()) return;
         if (EditorManager.Instance.blocker.activeSelf) return;
 
         float speed = movementSpeed * (Input.GetKey(KeyCode.LeftShift) ? shiftMultiplier : 1f) * Mathf.Min(Time.unscaledDeltaTime, 0.1f);

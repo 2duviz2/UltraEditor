@@ -44,7 +44,7 @@ public class CreateAction(GameObject CreatedObject) : IEditorAction
         CreatedObject.name = StoredName;
 
         Object.Destroy(Stored);
-        EditorManager.Instance.SelectObject(CreatedObject);
+        EditorManager.Instance.cameraSelector.SelectObject(CreatedObject);
     }
 
     /// <summary> When destroyed, delete the stored GameObject since we won't need it anymore. </summary>

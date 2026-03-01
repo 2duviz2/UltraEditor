@@ -185,13 +185,13 @@ public class CameraSelector : MonoBehaviour
 
     public void Update()
     {
-        if (Input.GetKeyDown(Plugin.selectCursorKey)) selectionMode = SelectionMode.Cursor;
+        if (Input.GetKeyDown(Plugin.SelectCursorKey)) selectionMode = SelectionMode.Cursor;
 
-        if (Input.GetKeyDown(Plugin.selectMoveKey)) selectionMode = SelectionMode.Move;
+        if (Input.GetKeyDown(Plugin.SelectMoveKey)) selectionMode = SelectionMode.Move;
 
-        if (Input.GetKeyDown(Plugin.selectScaleKey)) selectionMode = SelectionMode.Scale;
+        if (Input.GetKeyDown(Plugin.SelectScaleKey)) selectionMode = SelectionMode.Scale;
 
-        if (Input.GetKeyDown(Plugin.selectRotationKey)) selectionMode = SelectionMode.Rotate;
+        if (Input.GetKeyDown(Plugin.SelectRotationKey)) selectionMode = SelectionMode.Rotate;
 
         if (selectionMode == SelectionMode.Cursor)
             HandleCursorMode();
@@ -286,7 +286,7 @@ public class CameraSelector : MonoBehaviour
                 }
 
                 if (Input.GetMouseButtonDown(0))
-                    if (Input.GetKey(Plugin.altKey))
+                    if (Input.GetKey(Plugin.AltKey))
                         EditorManager.Instance.SelectObject(hitObj);
                     else
                         if (EditorManager.Instance.CanModifyObject(hitObj) || EditorManager.advancedInspector)
@@ -441,9 +441,9 @@ public class CameraSelector : MonoBehaviour
                 {
                     Vector3 target = objectStartPos + moveDir * delta * moveSpeed * 3;
                     var s = 0.25f;
-                    if (Input.GetKey(Plugin.shiftKey))
+                    if (Input.GetKey(Plugin.ShiftKey))
                         s = 1;
-                    if (Input.GetKey(Plugin.ctrlKey))
+                    if (Input.GetKey(Plugin.CtrlKey))
                         target = Snap(target, s);
                     selectedObject.transform.position = target;
                 }
@@ -451,9 +451,9 @@ public class CameraSelector : MonoBehaviour
                 {
                     Vector3 target = objectStartScale + moveDir * delta * moveSpeed * 3;
                     var s = 0.25f;
-                    if (Input.GetKey(Plugin.shiftKey))
+                    if (Input.GetKey(Plugin.ShiftKey))
                         s = 1;
-                    if (Input.GetKey(Plugin.ctrlKey))
+                    if (Input.GetKey(Plugin.CtrlKey))
                         target = Snap(target, s);
                     selectedObject.transform.localScale = target;
                 }
@@ -461,9 +461,9 @@ public class CameraSelector : MonoBehaviour
                 {
                     Vector3 target = objectStartEuler + moveDir * delta * 5;
                     var s = 15f;
-                    if (Input.GetKey(Plugin.shiftKey))
+                    if (Input.GetKey(Plugin.ShiftKey))
                         s = 45;
-                    if (Input.GetKey(Plugin.ctrlKey))
+                    if (Input.GetKey(Plugin.CtrlKey))
                         target = Snap(target, s);
                     selectedObject.transform.eulerAngles = target;
                 }

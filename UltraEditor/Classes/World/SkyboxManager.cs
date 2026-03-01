@@ -72,7 +72,7 @@ public static class SkyboxManager
             switch (skybox)
             {
                 case Skybox.Custom:
-                    Plugin.instance.StartCoroutine(ImageGetter.GetTextureFromURL(customUrl, tex =>
+                    Plugin.Instance.StartCoroutine(ImageGetter.GetTextureFromURL(customUrl, tex =>
                     {
                         if (tex != null)
                         {

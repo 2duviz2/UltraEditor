@@ -16,52 +16,52 @@ public class Plugin : BaseUnityPlugin
     public const string Name = "UltraEditor";
     public const string Version = "0.1.0";
 
-    public static Plugin instance;
+    public static Plugin Instance;
     public plog.Logger Log;
 
-    public static KeyCode editorOpenKey = KeyCode.F1;
-    public static KeyCode selectCursorKey = KeyCode.F2;
-    public static KeyCode selectMoveKey = KeyCode.F3;
-    public static KeyCode selectScaleKey = KeyCode.F4;
-    public static KeyCode selectRotationKey = KeyCode.F5;
-    public static KeyCode toggleEditorCanvasKey = KeyCode.F9;
-    public static KeyCode deleteObjectKey = KeyCode.Delete;
-    public static KeyCode createCubeKey = KeyCode.KeypadPlus;
-    public static KeyCode ctrlKey = KeyCode.LeftControl;
-    public static KeyCode shiftKey = KeyCode.LeftShift;
-    public static KeyCode altKey = KeyCode.LeftAlt;
+    public static KeyCode EditorOpenKey = KeyCode.F1;
+    public static KeyCode SelectCursorKey = KeyCode.F2;
+    public static KeyCode SelectMoveKey = KeyCode.F3;
+    public static KeyCode SelectScaleKey = KeyCode.F4;
+    public static KeyCode SelectRotationKey = KeyCode.F5;
+    public static KeyCode ToggleEditorCanvasKey = KeyCode.F9;
+    public static KeyCode DeleteObjectKey = KeyCode.Delete;
+    public static KeyCode CreateCubeKey = KeyCode.KeypadPlus;
+    public static KeyCode CtrlKey = KeyCode.LeftControl;
+    public static KeyCode ShiftKey = KeyCode.LeftShift;
+    public static KeyCode AltKey = KeyCode.LeftAlt;
 
     const string LastPlayedVersionPlayerPrefs = "UltraEditor_LastPlayedVersion";
 
     static bool seenWelcomeMessage = false;
 
-    public static bool isToggleEnabledKeyPressed() =>
-        Input.GetKey(altKey) && Input.GetKey(shiftKey) && Input.GetKeyDown(KeyCode.A);
+    public static bool IsToggleEnabledKeyPressed() =>
+        Input.GetKey(AltKey) && Input.GetKey(ShiftKey) && Input.GetKeyDown(KeyCode.A);
 
-    public static bool isDuplicateKeyPressed() =>
-        Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.D);
+    public static bool IsDuplicateKeyPressed() =>
+        Input.GetKey(CtrlKey) && Input.GetKeyDown(KeyCode.D);
 
-    public static bool isUndoPressed() =>
-        Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.Z);
+    public static bool IsUndoPressed() =>
+        Input.GetKey(CtrlKey) && Input.GetKeyDown(KeyCode.Z);
 
-    public static bool isRedoPressed() =>
-        Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.R);
+    public static bool IsRedoPressed() =>
+        Input.GetKey(CtrlKey) && Input.GetKeyDown(KeyCode.R);
 
-    public static bool isSelectPressed()
+    public static bool IsSelectPressed()
     {
-        if (Input.GetKey(altKey) && Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKey(AltKey) && Input.GetKeyDown(KeyCode.S))
         {
             return true;
         }
         return false;
     }
 
-    public static bool canMove() =>
-        !Input.GetKey(ctrlKey) && !Input.GetKey(altKey);
+    public static bool CanMove() =>
+        !Input.GetKey(CtrlKey) && !Input.GetKey(AltKey);
 
     public void Awake()
     {
-        instance = this;
+        Instance = this;
         LogInfo("Hi :3");
         System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
@@ -86,7 +86,7 @@ public class Plugin : BaseUnityPlugin
 
     public void Update()
     {
-        if (Input.GetKeyDown(editorOpenKey) && (SceneHelper.CurrentScene != EditorManager.EditorSceneName || EditorManager.canOpenEditor || EmptySceneLoader.forceLevelCanOpenEditor || (EditorManager.Instance != null && EditorManager.Instance.editorCanvas.activeInHierarchy)) && SceneHelper.PendingScene == null)
+        if (Input.GetKeyDown(EditorOpenKey) && (SceneHelper.CurrentScene != EditorManager.EditorSceneName || EditorManager.canOpenEditor || EmptySceneLoader.forceLevelCanOpenEditor || (EditorManager.Instance != null && EditorManager.Instance.editorCanvas.activeInHierarchy)) && SceneHelper.PendingScene == null)
         {
             EditorManager.Create();
         }
@@ -116,24 +116,24 @@ public class Plugin : BaseUnityPlugin
     #region Logging
     public static void LogInfo(object data, string stackTrace = null)
     {
-        instance.Logger?.LogInfo(stackTrace != null
+        Instance.Logger?.LogInfo(stackTrace != null
             ? $"{data}\n{stackTrace}"
             : data);
 
-        (instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString(), stackTrace: stackTrace);
+        (Instance.Log ??= new("ULTRAEDITOR"))?.Info(data.ToString(), stackTrace: stackTrace);
     }
     public static void LogError(object data, string stackTrace = null)
     {
-        instance.Logger?.LogError(stackTrace != null
+        Instance.Logger?.LogError(stackTrace != null
             ? $"{data}\n{stackTrace}"
             : data);
 
-        (instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString(), stackTrace: stackTrace);
+        (Instance.Log ??= new("ULTRAEDITOR"))?.Error(data.ToString(), stackTrace: stackTrace);
     }
     #endregion
 
     public static Version GetVersion()
     {
-        return instance.Info.Metadata.Version;
+        return Instance.Info.Metadata.Version;
     }
 }

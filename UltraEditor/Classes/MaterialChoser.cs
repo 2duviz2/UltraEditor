@@ -131,7 +131,7 @@ public class MaterialChoser : MonoBehaviour
         if (!string.IsNullOrEmpty(customTexture))
         {
             newMat = GetSandboxMaterial("Procedural Cube");
-            Plugin.instance.StartCoroutine(ImageGetter.GetTextureFromURL(customTexture, tex =>
+            Plugin.Instance.StartCoroutine(ImageGetter.GetTextureFromURL(customTexture, tex =>
             {
                 if (tex != null)
                 {

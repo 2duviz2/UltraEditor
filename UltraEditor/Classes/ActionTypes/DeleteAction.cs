@@ -20,7 +20,7 @@ public class DeleteAction(GameObject Stored, bool StoredActive, Transform Stored
         Obj.name = StoredName;
 
         Object.Destroy(Stored);
-        EditorManager.Instance.SelectObject(Obj);
+        EditorManager.Instance.cameraSelector.SelectObject(Obj);
     }
 
     /// <summary> Destroys the object and remembers it for <see cref="Undo"/>. </summary>

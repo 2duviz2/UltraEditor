@@ -119,33 +119,33 @@ public class EditorManager : MonoBehaviour
                 Cursor.visible = true;
         }
 
-        if (Input.GetKeyDown(Plugin.toggleEditorCanvasKey))
+        if (Input.GetKeyDown(Plugin.ToggleEditorCanvasKey))
         {
             editorCanvas.SetActive(!editorCanvas.activeSelf);
             cameraSelector.ClearHover();
         }
 
-        if (Input.GetKeyDown(Plugin.deleteObjectKey) && editorCanvas.activeSelf)
+        if (Input.GetKeyDown(Plugin.DeleteObjectKey) && editorCanvas.activeSelf)
         {
-            if (Input.GetKey(Plugin.ctrlKey) && Input.GetKey(Plugin.shiftKey) && friendlyAdvancedInspector)
+            if (Input.GetKey(Plugin.CtrlKey) && Input.GetKey(Plugin.ShiftKey) && friendlyAdvancedInspector)
                 DeleteScene(true);
             else if (CanModifyObject())
                 DeleteSelectedObject();
         }
 
-        if (Plugin.isToggleEnabledKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
+        if (Plugin.IsToggleEnabledKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
             ToggleSelectedObject();
 
-        if (Plugin.isDuplicateKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
+        if (Plugin.IsDuplicateKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
             DuplicateSelectedObject();
 
-        if (Plugin.isUndoPressed())
+        if (Plugin.IsUndoPressed())
             Undo();
 
-        if (Plugin.isRedoPressed())
+        if (Plugin.IsRedoPressed())
             Redo();
 
-        if (Input.GetKey(Plugin.createCubeKey) && editorCanvas.activeSelf)
+        if (Input.GetKey(Plugin.CreateCubeKey) && editorCanvas.activeSelf)
         {
             CreateCube(true, false);
         }
@@ -190,7 +190,7 @@ public class EditorManager : MonoBehaviour
             }
         }
 
-        if (Plugin.isSelectPressed() && cameraSelector.selectedObject != null && editorCanvas.activeSelf)
+        if (Plugin.IsSelectPressed() && cameraSelector.selectedObject != null && editorCanvas.activeSelf)
         {
             SelectObject(cameraSelector.selectedObject);
         }
@@ -301,7 +301,7 @@ public class EditorManager : MonoBehaviour
                     Cursor.lockState = CursorLockMode.Locked;
                 }
 
-                if (Input.GetKey(Plugin.shiftKey))
+                if (Input.GetKey(Plugin.ShiftKey))
                 {
                     NewMovement.Instance.transform.position = editorCamera.transform.position;
                     NewMovement.Instance.transform.rotation = editorCamera.transform.rotation;
@@ -630,7 +630,7 @@ public class EditorManager : MonoBehaviour
         {
             PrefabObject.Create(obj, realPath);
         }
-        if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+        if (Input.GetKey(Plugin.ShiftKey) && cameraSelector.selectedObject != null)
         {
             obj.transform.SetParent(cameraSelector.selectedObject.transform);
             lastSelected = null;
@@ -641,7 +641,7 @@ public class EditorManager : MonoBehaviour
                 cameraSelector.SelectObject(obj);
         }
 
-        if (Input.GetKey(Plugin.altKey))
+        if (Input.GetKey(Plugin.AltKey))
         {
             obj.SetActive(false);
         }
@@ -730,7 +730,7 @@ public class EditorManager : MonoBehaviour
 
             cameraSelector.SelectObject(newObj);
 
-            if (Input.GetKey(Plugin.altKey)) newObj.SetActive(false);
+            if (Input.GetKey(Plugin.AltKey)) newObj.SetActive(false);
 
             SetAlert("Object duplicated!", "Info!", new Color(1, 0.5f, 0.25f));
         }
@@ -786,7 +786,7 @@ public class EditorManager : MonoBehaviour
             cube.AddComponent<Rigidbody>().useGravity = useGravity;
         cube.GetComponent<Renderer>().material = new Material(DefaultReferenceManager.Instance.masterShader);
 
-        if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+        if (Input.GetKey(Plugin.ShiftKey) && cameraSelector.selectedObject != null)
         {
             cube.transform.SetParent(cameraSelector.selectedObject.transform);
             lastSelected = null;
@@ -794,7 +794,7 @@ public class EditorManager : MonoBehaviour
         else
             cameraSelector.SelectObject(cube);
 
-        if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
+        if (Input.GetKey(Plugin.AltKey)) cube.SetActive(false);
 
         AddToUndo(new CreateAction(cube));
         return cube;
@@ -811,7 +811,7 @@ public class EditorManager : MonoBehaviour
 
         CubeObject.Create(cube, MaterialChoser.materialTypes.Default);
 
-        if (Input.GetKey(Plugin.shiftKey) && cameraSelector.selectedObject != null)
+        if (Input.GetKey(Plugin.ShiftKey) && cameraSelector.selectedObject != null)
         {
             cube.transform.SetParent(cameraSelector.selectedObject.transform);
             lastSelected = null;
@@ -1401,7 +1401,7 @@ public class EditorManager : MonoBehaviour
 
                         if (arrayType == typeof(GameObject))
                         {
-                            if (Input.GetKey(Plugin.altKey) && element != null && element is GameObject go && go)
+                            if (Input.GetKey(Plugin.AltKey) && element != null && element is GameObject go && go)
                             {
                                 cameraSelector.SelectObject(go);
                                 return;
@@ -1510,7 +1510,7 @@ public class EditorManager : MonoBehaviour
 
                         if (arrayType == typeof(GameObject))
                         {
-                            if (Input.GetKey(Plugin.altKey) && element != null && element is GameObject go && go)
+                            if (Input.GetKey(Plugin.AltKey) && element != null && element is GameObject go && go)
                             {
                                 cameraSelector.SelectObject(go);
                                 return;
@@ -1817,7 +1817,7 @@ public class EditorManager : MonoBehaviour
         button.onClick.RemoveAllListeners();
         button.onClick.AddListener(() =>
         {
-            if (Input.GetKey(Plugin.altKey))
+            if (Input.GetKey(Plugin.AltKey))
             {
                 SelectObject(obj);
                 holdingObject = null;
