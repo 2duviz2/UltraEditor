@@ -14,10 +14,14 @@ using UnityEngine.UI;
 /// <summary> Manages/Handles everything for the assets window. </summary>
 public class AssetsWindowManager : MonoBehaviour
 {
+    /// <summary> Newest static instance of the AssetsWindowManager class so other stuff can like yea shut up </summary>
     public static AssetsWindowManager Instance;
 
     /// <summary> Serves to put the warning about internal assets when changing folder for the first time </summary>
     public static bool HasChangedFolder;
+
+    /// <summary> The base folder to start in. </summary>
+    public const string StartingFolder = "Assets/UltraEditor/";
 
     /// <summary> Camera used to generate the previews inside the UltraEditor folder </summary>
     public Camera PreviewCamera;
@@ -48,7 +52,7 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> Setup the window. </summary>
     public void Start()
     {
-        CurrentFolder = "Assets/UltraEditor/"; // start in the assets folder
+        CurrentFolder = StartingFolder;
         GetComponentInParent<Animator>().speed *= 2f; // faster :3
         CreatePreviewCamera();
         Refresh();
@@ -60,19 +64,45 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> Goes back to the previous folder in the path. </summary>
     public void PreviousFolder()
     {
-        int end = CurrentFolder[..^1].LastIndexOf('/') + 1;
-        if (end == 0) return;
+        // if we're currently searching for smt then just go to Assets/UltraEditor
+        if (CurrentFolder.StartsWith("Search"))
+            CurrentFolder = StartingFolder;
+        else
+        {
+            int end = CurrentFolder[..^1].LastIndexOf('/') + 1;
+            if (end == 0) return;
 
-        CurrentFolder = CurrentFolder[..end];
+            CurrentFolder = CurrentFolder[..end];
+        }
+
         Refresh();
+        if (!HasChangedFolder)
+            WarnAboutFolders();
+    }
 
-        if (!HasChangedFolder) WarnAboutFolders();
+    /// <summary> Searches for some assets uwu </summary>
+    public void SearchFor(string search)
+    {
+        // tolower cuz like yea :3
+        search = search.ToLower();
+        // search the prefab addressables for any key that isnt black listed and whose name contains the search string
+        List<string> keys = AssHelper.GetPrefabAddressableKeys(
+            key => !BlacklistedKeys.Contains(key) // mrrrp miaow
+                    && Path.GetFileNameWithoutExtension(key.ToLower()).Contains(search));
+
+        // search the folders for any folders whose name contains the search string
+        List<string> folders = [.. Folders.Keys.Where(f => Path.GetFileNameWithoutExtension(f[..^1].ToLower()).Contains(search))];
+
+        CurrentFolder = "Search: " + search;
+        Refresh(keys, folders);
+        if (!HasChangedFolder)
+            WarnAboutFolders();
     }
 
     /// <summary> Refreshes the items in the assets window. </summary>
-    public void Refresh()
+    public void Refresh(List<string> keys = null, List<string> folders = null)
     {
-        if (!Folders.TryGetValue(CurrentFolder, out List<string> keys))
+        if (keys == null && !Folders.TryGetValue(CurrentFolder, out keys))
             return;
 
         // delete children
@@ -80,11 +110,12 @@ public class AssetsWindowManager : MonoBehaviour
             Destroy(transform.GetChild(i).gameObject);
 
         // load folders in this current folder
-        foreach (string folder in Folders.Keys.Where(key => key.StartsWith(CurrentFolder) && key[CurrentFolder.Length..].Occurrences('/') == 1))
+        folders ??= [.. Folders.Keys.Where(key => key.StartsWith(CurrentFolder) && key[CurrentFolder.Length..].Occurrences('/') == 1)];
+        foreach (string folder in folders)
         {
             AssetFolder newAssetFolder = Instantiate(FolderTemplate, transform);
             newAssetFolder.folderPath = folder;
-            newAssetFolder.folderName = folder[(folder[..^1].LastIndexOf('/')+1)..^1]; // this just gets the name of the folder it looks scary ik its cuz im bad at programming
+            newAssetFolder.folderName = Path.GetFileNameWithoutExtension(folder[..^1]);
 
             newAssetFolder.gameObject.SetActive(true);
         }
@@ -97,20 +128,19 @@ public class AssetsWindowManager : MonoBehaviour
             newAssetItem.assetPath = key;
 
             // get item color based on the key-folder its in
-            string keyFolder = Path.GetDirectoryName(key).Replace('\\', '/') + '/'; // key folders is the folder, based off of the key :3
+            string keyFolder = Path.GetDirectoryName(key).Replace('\\', '/') + '/'; // key folder is the folder, based off of the key :3
             if (ItemColorListeners.TryGetValue(keyFolder, out Color col) || ItemColorListeners.TryGetValue(key, out col))
                 newAssetItem.GetComponent<Image>().color = col;
 
             newAssetItem.gameObject.SetActive(true);
 
-            if (CurrentFolder == "Assets/UltraEditor/" && EditorManager.canOpenEditor)
+            if (CurrentFolder == StartingFolder && EditorManager.canOpenEditor)
                 newAssetItem.SetPreview(key);
             else
                 newAssetItem.assetItemPreview.gameObject.SetActive(false);
         }
 
         AssetsFolderPathText.text = CurrentFolder;
-
         StartCoroutine(transform.parent.Find("Scrollbar").GetComponent<ResetScrollbar>().Reset());
     }
 
@@ -121,7 +151,7 @@ public class AssetsWindowManager : MonoBehaviour
         EditorManager.Instance.SetAlert("Some external assets can break your game and force you to restart if you don't know what you're doing, please experiment with pacience.", "Warning!");
     }
 
-    /// <summary> Creates a preview of the camera idk lmao </summary>
+    /// <summary> Creates a camera for rendering asset previews. </summary>
     public void CreatePreviewCamera()
     {
         PreviewTexture = new(100, 100, 16);
@@ -186,7 +216,8 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> Loads all the folders and assets in that folder into the Folders dictionary. </summary>
     public static void LoadFolders()
     {
-        List<string> keys = AssHelper.GetPrefabAddressableKeys(key => !BlacklistedKeys.Contains(key.ToString()));
+        List<string> keys = AssHelper.GetPrefabAddressableKeys(key => !BlacklistedKeys.Contains(key));
+        Plugin.LogInfo("Keys: " + string.Join(", ", keys));
 
         foreach (string key in keys)
         {
@@ -205,6 +236,7 @@ public class AssetsWindowManager : MonoBehaviour
             }
         }
 
+        // gets assets in the folder by checking if the key starts with the folder path but doesnt have any further folders
         List<string> GetAssetsInFolder(string folder) =>
             [.. keys.Where(key => key.StartsWith(folder) && !key[folder.Length..].Contains('/'))
                 .Concat(folder == "Assets/" ? GetAssetsInFolder("") : [])]; // this is just for the assets folder since theres assets with no folder :P
@@ -212,7 +244,7 @@ public class AssetsWindowManager : MonoBehaviour
 
     /// <summary> Oh god please help </summary>
     public static void LoadDefaultAssets() =>
-        Folders.Add("Assets/UltraEditor/", [
+        Folders.Add(StartingFolder, [
             "Assets/Prefabs/Enemies/Zombie.prefab",
             "Assets/Prefabs/Enemies/Projectile Zombie.prefab",
             "Assets/Prefabs/Enemies/Super Projectile Zombie.prefab",

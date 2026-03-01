@@ -2,6 +2,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UltraEditor.Libraries;
 using UnityEngine;
@@ -20,7 +21,17 @@ public class AssetItem : MonoBehaviour
     {
         assetNameText.text = assetName;
         
-        GetComponent<Button>()?.onClick.AddListener(() => EditorManager.Instance.SpawnAsset(assetPath));
+        GetComponent<Button>()?.onClick.AddListener(() => 
+        {
+            // open the folder that this asset item is in if youre searching for it
+            if (AssetsWindowManager.Instance.CurrentFolder.StartsWith("Search"))
+            {
+                AssetsWindowManager.Instance.CurrentFolder = Path.GetDirectoryName(assetPath).Replace('\\', '/') + '/';
+                AssetsWindowManager.Instance.Refresh();
+            }
+
+            EditorManager.Instance.SpawnAsset(assetPath);
+        });
     }
 
     public void SetPreview(string path) =>
