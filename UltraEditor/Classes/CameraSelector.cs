@@ -151,6 +151,8 @@ public class CameraSelector : MonoBehaviour
     (int x, int y) savedMousePos = new(0, 0);
     Vector2 realMousePos = Vector2.zero;
 
+    public Vector3 startPos;
+
     public void Awake()
     {
         if (!camera)
@@ -472,6 +474,9 @@ public class CameraSelector : MonoBehaviour
                 EditorManager.Instance.UpdateInspector();
                 Cursor.visible = true;
                 Billboard.UpdateBillboards();
+                if (selectionMode == SelectionMode.Move) EditorManager.Instance.MoveAction(selectedObject, objectStartPos);
+                if (selectionMode == SelectionMode.Scale) EditorManager.Instance.ScaleAction(selectedObject, objectStartScale);
+                if (selectionMode == SelectionMode.Rotate) EditorManager.Instance.RotateAction(selectedObject, objectStartEuler);
             }
         }
     }

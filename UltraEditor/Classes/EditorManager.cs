@@ -40,6 +40,102 @@ public class EditorManager : MonoBehaviour
 
     static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 
+    public enum ActionType
+    {
+        Create,
+        Activate,
+        Delete,
+        Move,
+        Scale,
+        Rotate,
+    }
+
+    public class Action(ActionType type, List<object> data)
+    {
+        public ActionType type = type;
+        public List<object> data = data;
+    }
+
+    public List<Action> Actions = [];
+
+    public void CreateAction(GameObject createdObj)
+    {
+        Actions.Add(new Action(ActionType.Create, [createdObj]));
+    }
+
+    public void DeleteAction(GameObject obj, bool active, Transform parent, string name)
+    {
+        Actions.Add(new Action(ActionType.Delete, [obj, active, parent, name]));
+    }
+
+    public void ActivateAction(GameObject obj)
+    {
+        Actions.Add(new Action(ActionType.Activate, [obj, obj.activeSelf]));
+    }
+
+    public void MoveAction(GameObject obj, Vector3 oldPos)
+    {
+        Actions.Add(new Action(ActionType.Move, [obj, oldPos, obj.transform.position]));
+    }
+
+    public void RotateAction(GameObject obj, Vector3 oldPos)
+    {
+        Actions.Add(new Action(ActionType.Rotate, [obj, oldPos, obj.transform.position]));
+    }
+
+    public void ScaleAction(GameObject obj, Vector3 oldPos)
+    {
+        Actions.Add(new Action(ActionType.Scale, [obj, oldPos, obj.transform.position]));
+    }
+
+    public void Undo()
+    {
+        if (Actions.Count == 0) return;
+        Action lastAction = Actions[^1];
+        Actions.RemoveAt(Actions.Count - 1);
+
+        switch (lastAction.type)
+        {
+            case ActionType.Create:
+                Destroy((GameObject)lastAction.data[0]);
+                break;
+            case ActionType.Activate:
+                ((GameObject)lastAction.data[0]).SetActive(!(bool)lastAction.data[1]);
+                break;
+            case ActionType.Delete:
+                if ((Transform)lastAction.data[2] == null)
+                {
+                    GameObject obj = Instantiate((GameObject)lastAction.data[0]);
+                    obj.SetActive((bool)lastAction.data[1]);
+                    obj.name = (string)lastAction.data[3];
+                    SelectObject(obj);
+                    Destroy((GameObject)lastAction.data[0]);
+                }
+                else
+                {
+                    GameObject obj = Instantiate((GameObject)lastAction.data[0], (Transform)lastAction.data[2]);
+                    obj.SetActive((bool)lastAction.data[1]);
+                    obj.name = (string)lastAction.data[3];
+                    SelectObject(obj);
+                    Destroy((GameObject)lastAction.data[0]);
+                }
+                break;
+            case ActionType.Move:
+                ((GameObject)lastAction.data[0]).transform.position = (Vector3)lastAction.data[1];
+                break;
+            case ActionType.Scale:
+                ((GameObject)lastAction.data[0]).transform.localScale = (Vector3)lastAction.data[1];
+                break;
+            case ActionType.Rotate:
+                ((GameObject)lastAction.data[0]).transform.eulerAngles = (Vector3)lastAction.data[1];
+                break;
+            default:
+                break;
+        }
+
+        SetAlert("Undo done!", "Info!", new Color(1, 0.5f, 0.25f));
+    }
+
     public void Awake()
     {
         if (Instance != null && Instance != this)
@@ -98,6 +194,9 @@ public class EditorManager : MonoBehaviour
 
         if (Plugin.isDuplicateKeyPressed() && CanModifyObject() && editorCanvas.activeSelf)
             DuplicateSelectedObject();
+
+        if (Plugin.isUndoPressed())
+            Undo();
 
         if (Input.GetKey(Plugin.createCubeKey) && editorCanvas.activeSelf)
         {
@@ -700,6 +799,12 @@ public class EditorManager : MonoBehaviour
                 toParent = cameraSelector.selectedObject.transform.parent.gameObject;
             else
                 cameraSelector.UnselectObject();
+
+            GameObject stored = Instantiate(toDestroy);
+            stored.SetActive(false);
+            stored.name = "HIDEINHIERARCHY";
+            DeleteAction(stored, toDestroy.activeSelf, toDestroy.transform.parent, toDestroy.name);
+
             Destroy(toDestroy);
             if (toParent != null)
                 cameraSelector.SelectObject(toParent);
@@ -712,8 +817,9 @@ public class EditorManager : MonoBehaviour
     {
         if (cameraSelector.selectedObject != null)
         {
-            lastHierarchy = new GameObject[0];
+            lastHierarchy = [];
             cameraSelector.selectedObject.SetActive(!cameraSelector.selectedObject.activeSelf);
+            ActivateAction(cameraSelector.selectedObject);
             PlayAudio(cameraSelector.selectedObject.activeSelf ? activateObject : inactivateObject);
         }
     }
@@ -743,10 +849,11 @@ public class EditorManager : MonoBehaviour
 
         if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
 
+        CreateAction(cube);
         return cube;
     }
 
-    void CreateCubeFloor(Vector3 scale)
+    GameObject CreateCubeFloor(Vector3 scale)
     {
         GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
         cube.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f + Vector3.down * 1f;
@@ -764,6 +871,9 @@ public class EditorManager : MonoBehaviour
         }
         else
             cameraSelector.SelectObject(cube);
+
+        CreateAction(cube);
+        return cube;
     }
 
     void ChangeCameraCullingLayers(int layerMask)
@@ -855,6 +965,7 @@ public class EditorManager : MonoBehaviour
                 if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                     continue;
 
+            if (obj.name == "HIDEINHIERARCHY") continue;
             if (obj == editorCamera.gameObject || obj == this.gameObject || obj == editorCanvas.gameObject) continue;
 
             Hierarch(obj, 0);
