@@ -8,6 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using TMPro;
+using UltraEditor.Classes.ActionTypes;
+using UltraEditor.Classes.ActionTypes.Base;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
@@ -40,100 +42,42 @@ public class EditorManager : MonoBehaviour
 
     static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 
-    public enum ActionType
-    {
-        Create,
-        Activate,
-        Delete,
-        Move,
-        Scale,
-        Rotate,
-    }
-
     public class Action(ActionType type, List<object> data)
     {
         public ActionType type = type;
         public List<object> data = data;
     }
 
-    public List<Action> Actions = [];
+    public List<IEditorAction> UndoActions = [], RedoActions = [];
 
-    public void CreateAction(GameObject createdObj)
+    public void AddToUndo(IEditorAction act)
     {
-        Actions.Add(new Action(ActionType.Create, [createdObj]));
-    }
-
-    public void DeleteAction(GameObject obj, bool active, Transform parent, string name)
-    {
-        Actions.Add(new Action(ActionType.Delete, [obj, active, parent, name]));
-    }
-
-    public void ActivateAction(GameObject obj)
-    {
-        Actions.Add(new Action(ActionType.Activate, [obj, obj.activeSelf]));
-    }
-
-    public void MoveAction(GameObject obj, Vector3 oldPos)
-    {
-        Actions.Add(new Action(ActionType.Move, [obj, oldPos, obj.transform.position]));
-    }
-
-    public void RotateAction(GameObject obj, Vector3 oldPos)
-    {
-        Actions.Add(new Action(ActionType.Rotate, [obj, oldPos, obj.transform.position]));
-    }
-
-    public void ScaleAction(GameObject obj, Vector3 oldPos)
-    {
-        Actions.Add(new Action(ActionType.Scale, [obj, oldPos, obj.transform.position]));
+        UndoActions.Add(act);
+        RedoActions.Clear();
     }
 
     public void Undo()
     {
-        if (Actions.Count == 0) return;
-        Action lastAction = Actions[^1];
-        Actions.RemoveAt(Actions.Count - 1);
+        if (UndoActions.Count == 0) 
+            return;
 
-        switch (lastAction.type)
-        {
-            case ActionType.Create:
-                Destroy((GameObject)lastAction.data[0]);
-                break;
-            case ActionType.Activate:
-                ((GameObject)lastAction.data[0]).SetActive(!(bool)lastAction.data[1]);
-                break;
-            case ActionType.Delete:
-                if ((Transform)lastAction.data[2] == null)
-                {
-                    GameObject obj = Instantiate((GameObject)lastAction.data[0]);
-                    obj.SetActive((bool)lastAction.data[1]);
-                    obj.name = (string)lastAction.data[3];
-                    SelectObject(obj);
-                    Destroy((GameObject)lastAction.data[0]);
-                }
-                else
-                {
-                    GameObject obj = Instantiate((GameObject)lastAction.data[0], (Transform)lastAction.data[2]);
-                    obj.SetActive((bool)lastAction.data[1]);
-                    obj.name = (string)lastAction.data[3];
-                    SelectObject(obj);
-                    Destroy((GameObject)lastAction.data[0]);
-                }
-                break;
-            case ActionType.Move:
-                ((GameObject)lastAction.data[0]).transform.position = (Vector3)lastAction.data[1];
-                break;
-            case ActionType.Scale:
-                ((GameObject)lastAction.data[0]).transform.localScale = (Vector3)lastAction.data[1];
-                break;
-            case ActionType.Rotate:
-                ((GameObject)lastAction.data[0]).transform.eulerAngles = (Vector3)lastAction.data[1];
-                break;
-            default:
-                break;
-        }
+        IEditorAction lastAction = UndoActions[^1];
+        UndoActions.RemoveAt(UndoActions.Count-1);
+        RedoActions.Add(lastAction);
 
-        SetAlert("Undo done!", "Info!", new Color(1, 0.5f, 0.25f));
+        lastAction.UndoPop();
+    }
+
+    public void Redo()
+    {
+        if (RedoActions.Count == 0)
+            return;
+
+        IEditorAction nextAction = RedoActions[^1];
+        RedoActions.RemoveAt(UndoActions.Count-1);
+        UndoActions.Add(nextAction);
+
+        nextAction.RedoPop();
     }
 
     public void Awake()
@@ -197,6 +141,9 @@ public class EditorManager : MonoBehaviour
 
         if (Plugin.isUndoPressed())
             Undo();
+
+        if (Plugin.isRedoPressed())
+            Redo();
 
         if (Input.GetKey(Plugin.createCubeKey) && editorCanvas.activeSelf)
         {
@@ -803,7 +750,7 @@ public class EditorManager : MonoBehaviour
             GameObject stored = Instantiate(toDestroy);
             stored.SetActive(false);
             stored.name = "HIDEINHIERARCHY";
-            DeleteAction(stored, toDestroy.activeSelf, toDestroy.transform.parent, toDestroy.name);
+            AddToUndo(new DeleteAction(stored, toDestroy.activeSelf, toDestroy.transform.parent, toDestroy.name));
 
             Destroy(toDestroy);
             if (toParent != null)
@@ -819,7 +766,7 @@ public class EditorManager : MonoBehaviour
         {
             lastHierarchy = [];
             cameraSelector.selectedObject.SetActive(!cameraSelector.selectedObject.activeSelf);
-            ActivateAction(cameraSelector.selectedObject);
+            AddToUndo(new ActivateAction(cameraSelector.selectedObject, cameraSelector.selectedObject.activeSelf));
             PlayAudio(cameraSelector.selectedObject.activeSelf ? activateObject : inactivateObject);
         }
     }
@@ -849,7 +796,7 @@ public class EditorManager : MonoBehaviour
 
         if (Input.GetKey(Plugin.altKey)) cube.SetActive(false);
 
-        CreateAction(cube);
+        AddToUndo(new CreateAction(cube));
         return cube;
     }
 
@@ -872,7 +819,7 @@ public class EditorManager : MonoBehaviour
         else
             cameraSelector.SelectObject(cube);
 
-        CreateAction(cube);
+        AddToUndo(new CreateAction(cube));
         return cube;
     }
 

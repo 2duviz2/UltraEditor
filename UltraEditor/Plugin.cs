@@ -35,32 +35,17 @@ public class Plugin : BaseUnityPlugin
 
     static bool seenWelcomeMessage = false;
 
-    public static bool isToggleEnabledKeyPressed()
-    {
-        if (Input.GetKey(altKey) && Input.GetKey(shiftKey) && Input.GetKeyDown(KeyCode.A))
-        {
-            return true;
-        }
-        return false;
-    }
+    public static bool isToggleEnabledKeyPressed() =>
+        Input.GetKey(altKey) && Input.GetKey(shiftKey) && Input.GetKeyDown(KeyCode.A);
 
-    public static bool isDuplicateKeyPressed()
-    {
-        if (Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.D))
-        {
-            return true;
-        }
-        return false;
-    }
+    public static bool isDuplicateKeyPressed() =>
+        Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.D);
 
-    public static bool isUndoPressed()
-    {
-        if (Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.Z))
-        {
-            return true;
-        }
-        return false;
-    }
+    public static bool isUndoPressed() =>
+        Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.Z);
+
+    public static bool isRedoPressed() =>
+        Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.R);
 
     public static bool isSelectPressed()
     {
@@ -71,10 +56,8 @@ public class Plugin : BaseUnityPlugin
         return false;
     }
 
-    public static bool canMove()
-    {
-        return !Input.GetKey(ctrlKey) && !Input.GetKey(altKey);
-    }
+    public static bool canMove() =>
+        !Input.GetKey(ctrlKey) && !Input.GetKey(altKey);
 
     public void Awake()
     {

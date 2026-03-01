@@ -1,6 +1,7 @@
 ﻿namespace UltraEditor.Classes;
 
 using System.Collections.Generic;
+using UltraEditor.Classes.ActionTypes;
 using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.IO.SaveObjects;
 using Unity.AI.Navigation;
@@ -474,9 +475,9 @@ public class CameraSelector : MonoBehaviour
                 EditorManager.Instance.UpdateInspector();
                 Cursor.visible = true;
                 Billboard.UpdateBillboards();
-                if (selectionMode == SelectionMode.Move) EditorManager.Instance.MoveAction(selectedObject, objectStartPos);
-                if (selectionMode == SelectionMode.Scale) EditorManager.Instance.ScaleAction(selectedObject, objectStartScale);
-                if (selectionMode == SelectionMode.Rotate) EditorManager.Instance.RotateAction(selectedObject, objectStartEuler);
+                if (selectionMode == SelectionMode.Move) EditorManager.Instance.AddToUndo(new MoveAction(selectedObject, objectStartPos));
+                if (selectionMode == SelectionMode.Scale) EditorManager.Instance.AddToUndo(new ScaleAction(selectedObject, objectStartScale));
+                if (selectionMode == SelectionMode.Rotate) EditorManager.Instance.AddToUndo(new RotateAction(selectedObject, objectStartEuler));
             }
         }
     }
