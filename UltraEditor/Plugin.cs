@@ -42,10 +42,14 @@ public class Plugin : BaseUnityPlugin
         Input.GetKey(CtrlKey) && Input.GetKeyDown(KeyCode.D);
 
     public static bool IsUndoPressed() =>
-        Input.GetKey(CtrlKey) && Input.GetKeyDown(KeyCode.Z);
+        Input.GetKey(CtrlKey) && !Input.GetKey(ShiftKey) && Input.GetKeyDown(KeyCode.Z);
 
     public static bool IsRedoPressed() =>
-        Input.GetKey(CtrlKey) && Input.GetKeyDown(KeyCode.R);
+        Input.GetKey(CtrlKey) && 
+            (
+                (Input.GetKey(ShiftKey) && Input.GetKeyDown(KeyCode.Z))  // ctrl+shift+z
+                || Input.GetKeyDown(KeyCode.Y) // ctrl+y
+            );
 
     public static bool IsSelectPressed()
     {
