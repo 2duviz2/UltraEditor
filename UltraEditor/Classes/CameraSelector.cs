@@ -196,7 +196,7 @@ public class CameraSelector : MonoBehaviour
         if (selectionMode != SelectionMode.Cursor && selectedObject)
             HandleMoveMode();
 
-        if (selectedObject == null || !EditorManager.Instance.IsObjectEditable())
+        if (selectedObject == null || !EditorManager.Instance.CanModifyObject())
         {
             if (selectionMode != SelectionMode.Cursor)
                 DeleteArrows();
@@ -273,7 +273,7 @@ public class CameraSelector : MonoBehaviour
                 {
                     hoveredObject = hitObj;
                     var renderer = hitObj.GetComponent<Renderer>();
-                    if (renderer && (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.advancedInspector))
+                    if (renderer && (EditorManager.Instance.CanModifyObject(hitObj) || EditorManager.advancedInspector))
                     {
                         if (!originalMaterials.ContainsKey(hitObj))
                             originalMaterials[hitObj] = renderer.material;
@@ -286,7 +286,7 @@ public class CameraSelector : MonoBehaviour
                     if (Input.GetKey(Plugin.altKey))
                         EditorManager.Instance.SelectObject(hitObj);
                     else
-                        if (EditorManager.Instance.IsObjectEditable(hitObj) || EditorManager.advancedInspector)
+                        if (EditorManager.Instance.CanModifyObject(hitObj) || EditorManager.advancedInspector)
                             SelectObject(hitObj);
             }
         }
@@ -479,6 +479,9 @@ public class CameraSelector : MonoBehaviour
     public void SelectObject(GameObject obj)
     {
         EditorManager.PlayAudio(EditorManager.selectObject);
+
+        ExpandObj(obj.transform.parent);
+
         if (selectedObject != null)
             RestoreMaterial(selectedObject);
 
@@ -492,6 +495,18 @@ public class CameraSelector : MonoBehaviour
         UpdateMoveArrows();
 
         CacheMeshes();
+    }
+
+    public void ExpandObj(Transform t)
+    {
+        if (!t) return;
+
+        GameObject obj = t.gameObject;
+
+        if (obj)
+            EditorManager.Instance.collapseStatus[obj] = true;
+
+        ExpandObj(t.parent);
     }
 
     void CreateMoveArrows()

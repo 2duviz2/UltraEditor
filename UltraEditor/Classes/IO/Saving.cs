@@ -1142,6 +1142,17 @@ public static class SceneJsonSaver
                             newObj.name = workingObject.name;
                             newObj.SetActive(workingObject.activeSelf);
                             newObj.AddComponent<SpawnedObject>();
+
+                            KeepInBounds kib = newObj.GetComponent<KeepInBounds>();
+                            if (!kib)
+                                kib = newObj.GetComponentInChildren<KeepInBounds>();
+
+                            if (kib)
+                            {
+                                kib.previousRealPosition = newObj.transform.position;
+                                kib.previousTracedPosition = newObj.transform.position;
+                            }
+
                             var newSpawned = newObj.GetComponent<SpawnedObject>();
                             newSpawned.ID = spawned.ID;
                             newSpawned.parentID = spawned.parentID;
