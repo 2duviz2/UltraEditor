@@ -113,9 +113,9 @@ public class EditorManager : MonoBehaviour
                     $"{(holdingObject ? holdingObject.name : "null")} & " +
                     $"{(holdingTarget ? holdingTarget.name : "null")}");
 
-            if (holdingObject != null && holdingTarget != null && holdingObject != holdingTarget)
+            if (holdingObject && holdingTarget && holdingObject != holdingTarget)
             {
-                if (CanModifyObject(holdingTarget) || advancedInspector)
+                if (CanModifyObject(holdingObject))
                 {
                     if (logShit)
                         Plugin.LogInfo($"Dropped object: {holdingObject.name} into target: {holdingTarget.name}");
@@ -128,16 +128,19 @@ public class EditorManager : MonoBehaviour
                 }
             }
 
-            else if (holdingObject != holdingTarget && holdingObject != null)
+            else if (holdingObject != holdingTarget && holdingObject)
             {
-                if (logShit)
-                    Plugin.LogInfo($"Released object: {holdingObject.name} from target");
-                holdingObject.transform.SetParent(null);
-                cameraSelector.selectedObject = holdingTarget;
-                lastSelected = null;
-                UpdateHierarchy();
-                holdingObject = null;
-                holdingTarget = null;
+                if (CanModifyObject(holdingObject))
+                {
+                    if (logShit)
+                        Plugin.LogInfo($"Released object: {holdingObject.name} from target");
+                    holdingObject.transform.SetParent(null);
+                    cameraSelector.selectedObject = holdingTarget;
+                    lastSelected = null;
+                    UpdateHierarchy();
+                    holdingObject = null;
+                    holdingTarget = null;
+                }
             }
         }
 
@@ -1815,6 +1818,7 @@ public class EditorManager : MonoBehaviour
         {
             if (obj == null) return;
             holdingObject = obj;
+            if (!holdingTarget) holdingTarget = obj;
             if (logShit)
                 Plugin.LogInfo($"Holding object: {holdingObject.name}");
         });
