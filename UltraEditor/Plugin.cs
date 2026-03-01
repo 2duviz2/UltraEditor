@@ -33,7 +33,7 @@ public class Plugin : BaseUnityPlugin
 
     const string LastPlayedVersionPlayerPrefs = "UltraEditor_LastPlayedVersion";
 
-    static bool seenWelcomeMessage = false;
+    static bool SeenWelcomeMessage = false;
 
     public static bool IsToggleEnabledKeyPressed() =>
         Input.GetKey(AltKey) && Input.GetKey(ShiftKey) && Input.GetKeyDown(KeyCode.A);
@@ -91,14 +91,14 @@ public class Plugin : BaseUnityPlugin
             EditorManager.Create();
         }
 
-        if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !seenWelcomeMessage)
+        if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !SeenWelcomeMessage)
         {
             if (PlayerPrefs.GetString(LastPlayedVersionPlayerPrefs) != GetVersion().ToString())
             {
                 Instantiate(BundlesManager.welcomeCanvas);
                 PlayerPrefs.SetString(LastPlayedVersionPlayerPrefs, GetVersion().ToString());
             }
-            seenWelcomeMessage = true;
+            SeenWelcomeMessage = true;
         }
     }
 
