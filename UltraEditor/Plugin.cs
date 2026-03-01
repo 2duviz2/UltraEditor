@@ -53,6 +53,15 @@ public class Plugin : BaseUnityPlugin
         return false;
     }
 
+    public static bool isUndoPressed()
+    {
+        if (Input.GetKey(ctrlKey) && Input.GetKeyDown(KeyCode.Z))
+        {
+            return true;
+        }
+        return false;
+    }
+
     public static bool isSelectPressed()
     {
         if (Input.GetKey(altKey) && Input.GetKeyDown(KeyCode.S))
