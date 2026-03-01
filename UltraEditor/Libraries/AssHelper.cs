@@ -21,16 +21,22 @@ public static class AssHelper
     public static IEnumerable<object> GetAddressableKeys() =>
         MainAddressablesLocator?.Keys ?? [];
 
+    /// <summary> Cached list of all prefab keys. </summary>
+    private static List<string> cache_PrefabKeys = null;
+
     /// <summary> Grabs a list of every prefabs addressable key, filtering out for dupes. </summary>
     public static List<string> GetPrefabAddressableKeys(Func<IResourceLocation, bool> Search = null)
     {
+        if (cache_PrefabKeys == null)
+            return cache_PrefabKeys;
+
         List<string> keys = [];
         foreach (object key in GetAddressableKeys())
             if (MainAddressablesLocator.Locate(key, typeof(GameObject), out IList<IResourceLocation> locs) && !keys.Contains(locs[0].PrimaryKey) && (Search?.Invoke(locs[0]) ?? true))
                 keys.Add(locs[0].PrimaryKey);
 
         keys.Sort();
-        return keys;
+        return cache_PrefabKeys = keys;
     }
 
     #endregion
