@@ -62,8 +62,8 @@ public class EditorManager : MonoBehaviour
             return;
 
         IEditorAction lastAction = UndoActions[^1];
-        UndoActions.RemoveAt(UndoActions.Count-1);
         RedoActions.Add(lastAction);
+        UndoActions.RemoveAt(UndoActions.Count-1);
 
         lastAction.UndoPop();
     }
@@ -74,8 +74,8 @@ public class EditorManager : MonoBehaviour
             return;
 
         IEditorAction nextAction = RedoActions[^1];
-        RedoActions.RemoveAt(UndoActions.Count-1);
         UndoActions.Add(nextAction);
+        RedoActions.RemoveAt(RedoActions.Count-1);
 
         nextAction.RedoPop();
     }
