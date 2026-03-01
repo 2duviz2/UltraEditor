@@ -1,4 +1,4 @@
-﻿namespace UltraEditor.Classes.ActionTypes;
+﻿namespace UltraEditor.Classes.ActionTypes.Base;
 
 using System;
 
