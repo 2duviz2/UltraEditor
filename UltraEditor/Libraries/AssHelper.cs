@@ -27,7 +27,7 @@ public static class AssHelper
     /// <summary> Grabs a list of every prefabs addressable key, filtering out for dupes. </summary>
     public static List<string> GetPrefabAddressableKeys(Func<IResourceLocation, bool> Search = null)
     {
-        if (cache_PrefabKeys == null)
+        if (cache_PrefabKeys != null)
             return cache_PrefabKeys;
 
         List<string> keys = [];
