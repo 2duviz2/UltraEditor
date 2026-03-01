@@ -217,7 +217,6 @@ public class AssetsWindowManager : MonoBehaviour
     public static void LoadFolders()
     {
         List<string> keys = AssHelper.GetPrefabAddressableKeys(key => !BlacklistedKeys.Contains(key));
-        Plugin.LogInfo("Keys: " + string.Join(", ", keys));
 
         foreach (string key in keys)
         {
