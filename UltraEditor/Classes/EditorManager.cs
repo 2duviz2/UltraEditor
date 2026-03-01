@@ -567,6 +567,12 @@ public class EditorManager : MonoBehaviour
             obj.transform.GetChild(2).gameObject.SetActive(true);
             obj.name += " (Active)";
         }
+        else if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab")
+        {
+            obj = new GameObject("Checkpoint");
+            var c = CheckpointObject.Create(obj);
+            c.Create();
+        }
         else
         {
             // Spawn the object like normal
