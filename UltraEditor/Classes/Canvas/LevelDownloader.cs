@@ -41,25 +41,24 @@ public class LevelDownloader : MonoBehaviour
             SceneHelper.Instance.loadingBlocker.SetActive(true);
             StartCoroutine(FetchLevels.GetStringFromUrl(levelUrl, str =>
             {
-                if (str != null)
-                {
-                    EmptySceneLoader.forceEditor = false;
-                    EmptySceneLoader.forceSave = "?";
-                    EmptySceneLoader.forceSaveData = str;
-                    EmptySceneLoader.forceLevelName = levelName;
-                    EmptySceneLoader.forceLevelLayer = levelLayer;
-                    EmptySceneLoader.forceLevelCanOpenEditor = canOpenEditor;
-                    EmptySceneLoader.pTime = pTime;
-                    EmptySceneLoader.pKills = pKills;
-                    EmptySceneLoader.pStyle = pStyle;
-                    EmptySceneLoader.forceLevelImage = levelImageUrl;
-                    EditorManager.canOpenEditor = false;
-                    EmptySceneLoader.Instance.LoadLevel();
-                }
-                else
+                if (str == null)
                 {
                     SceneHelper.Instance.loadingBlocker.SetActive(false);
+                    return;
                 }
+
+                EmptySceneLoader.forceEditor = false;
+                EmptySceneLoader.forceSave = "?";
+                EmptySceneLoader.forceSaveData = str;
+                EmptySceneLoader.forceLevelName = levelName;
+                EmptySceneLoader.forceLevelLayer = levelLayer;
+                EmptySceneLoader.forceLevelCanOpenEditor = canOpenEditor;
+                EmptySceneLoader.pTime = pTime;
+                EmptySceneLoader.pKills = pKills;
+                EmptySceneLoader.pStyle = pStyle;
+                EmptySceneLoader.forceLevelImage = levelImageUrl;
+                EditorManager.canOpenEditor = false;
+                EmptySceneLoader.Instance.LoadLevel();
             }));
         }
     }
