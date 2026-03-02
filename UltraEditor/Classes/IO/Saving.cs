@@ -1034,6 +1034,8 @@ public static class SceneJsonSaver
             data["PortalEntranceRot"] = JArray.FromObject(V3(obj.PortalEntrance.transform.eulerAngles));
             data["PortalExitPos"] = JArray.FromObject(V3(obj.PortalExit.transform.localPosition));
             data["PortalExitRot"] = JArray.FromObject(V3(obj.PortalExit.transform.eulerAngles));
+            data["EnteranceColor"] = JArray.FromObject(V3(obj.EnteranceColor));
+            data["ExitColor"] = JArray.FromObject(V3(obj.ExitColor));
 
             so.data = data;
             scene.objects.Add(so);
@@ -1432,6 +1434,9 @@ public static class SceneJsonSaver
                         
                         if (data.TryGetValue("PortalExitPos", out JToken uwu8)) po.PortalExitPos = ParseV3(uwu8);
                         if (data.TryGetValue("PortalExitRot", out JToken uwu9)) po.PortalExitRot = ParseV3(uwu9);
+
+                        if (data.TryGetValue("EnteranceColor", out JToken uwu10)) po.EnteranceColor = ParseV3(uwu10);
+                        if (data.TryGetValue("ExitColor", out JToken uwu11)) po.ExitColor = ParseV3(uwu11);
                     }
                 }
                 else if (typeName == "HUDMessageObject")

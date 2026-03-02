@@ -86,6 +86,12 @@ public class PortalObject : SavableObject
             portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
     }
 
+    [EditorVar("Enterance Color")]
+    public Vector3 EnteranceColor = new(0f, 255f, 190f);
+
+    [EditorVar("Exit Color")]
+    public Vector3 ExitColor = new(255f, 25f, 150f);
+
     /// <summary> Line material for drawing the outline. </summary>
     public Material LineMat;
 
@@ -100,8 +106,8 @@ public class PortalObject : SavableObject
         float height = PortalHeight/2f;
 
         LineMat ??= new(DefaultReferenceManager.Instance.masterShader);
-        DrawOutline(new(0f, 1f, 0.75f), PortalEntrance.transform);
-        DrawOutline(new(1f, 0.1f, 0.6f), PortalExit.transform);
+        DrawOutline(EnteranceColor.ToColor(), PortalEntrance.transform);
+        DrawOutline(ExitColor.ToColor(), PortalExit.transform);
 
         void DrawOutline(Color col, Transform local)
         {
@@ -114,15 +120,18 @@ public class PortalObject : SavableObject
             [
                 new(width, height, 0),
                 new(width, -height, 0),
-                
+
                 new(-width, -height, 0),
                 new(width, -height, 0),
-                
+
                 new(-width, -height, 0),
                 new(-width, height, 0),
 
                 new(-width, height, 0),
                 new(width, height, 0),
+
+                Vector3.zero,
+                new(0f, 0f, -5f)
             ]);
 
             GL.PopMatrix();
