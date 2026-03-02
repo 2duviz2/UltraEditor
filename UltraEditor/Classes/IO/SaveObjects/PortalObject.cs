@@ -26,8 +26,11 @@ public class PortalObject : SavableObject
     /// <summary> Portal component mrrrp miaow </summary>
     public Portal portal;
 
-    public Vector3 PortalEntrancePos = Vector3.zero, PortalEntranceRot = Vector3.zero, PortalEntranceSca = Vector3.zero;
-    public Vector3 PortalExitPos = Vector3.back * 10, PortalExitRot = Vector3.up * 180, PortalExitSca = Vector3.zero;
+    /// <summary> Position and rotation for the entry portal. </summary>
+    public Vector3 PortalEntrancePos = new(0f, 0f, -10f), PortalEntranceRot = new (0f, 180f, 0f);
+
+    /// <summary> Position and rotation for the exit portal. </summary>
+    public Vector3 PortalExitPos = new(0f, 0f, 10f), PortalExitRot = Vector3.zero;
 
     /// <summary> Creates the portals and setups the portal meowmeowmeow </summary>
     public void Start()
@@ -42,7 +45,6 @@ public class PortalObject : SavableObject
 
             PortalEntrance.transform.parent = transform;
             PortalEntrance.transform.localPosition = PortalEntrancePos;
-            PortalEntrance.transform.localScale = PortalEntranceSca;
             PortalEntrance.transform.forward = new(0f, 0f, 1f);
             PortalEntrance.transform.eulerAngles = PortalEntranceRot;
         }
@@ -55,7 +57,6 @@ public class PortalObject : SavableObject
 
             PortalExit.transform.parent = transform;
             PortalExit.transform.localPosition = PortalExitPos;
-            PortalExit.transform.localScale = PortalExitSca;
             PortalExit.transform.forward = new(0f, 0f, 1f);
             PortalExit.transform.eulerAngles = PortalExitRot;
         }
@@ -94,9 +95,9 @@ public class PortalObject : SavableObject
         if (!EditorManager.Instance.editorOpen)
             return;
 
-        // portals width and height are divided by 5 :3
-        float width =  (PortalWidth /5f) / 1f;
-        float height = (PortalHeight/5f) / 1f;
+        // half width and height since that all we need :3
+        float width =  PortalWidth/2f;
+        float height = PortalHeight/2f;
 
         LineMat ??= new(DefaultReferenceManager.Instance.masterShader);
         DrawOutline(new(0f, 1f, 0.75f), PortalEntrance.transform);
