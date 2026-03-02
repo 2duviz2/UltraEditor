@@ -95,21 +95,21 @@ public class PortalObject : SavableObject
             return;
 
         // portals width and height are divided by 5 :3
-        float width =  (PortalWidth /5f) / 2f;
-        float height = (PortalHeight/5f) / 2f;
+        float width =  (PortalWidth /5f) / 1f;
+        float height = (PortalHeight/5f) / 1f;
 
-        DrawOutline(PortalEntrance.transform);
-        DrawOutline(PortalExit.transform);
+        LineMat ??= new(DefaultReferenceManager.Instance.masterShader);
+        DrawOutline(new(0f, 1f, 0.75f), PortalEntrance.transform);
+        DrawOutline(new(1f, 0.1f, 0.6f), PortalExit.transform);
 
-        void DrawOutline(Transform local)
+        void DrawOutline(Color col, Transform local)
         {
-            if (!(LineMat ??= new(DefaultReferenceManager.Instance.masterShader)).SetPass(0))
-                return;
+            LineMat.SetPass(0);
 
             GL.PushMatrix();
             GL.MultMatrix(local.localToWorldMatrix);
 
-            DrawLines(new(0f, 1f, 0.75f),
+            DrawLines(col,
             [
                 new(width, height, 0),
                 new(width, -height, 0),
