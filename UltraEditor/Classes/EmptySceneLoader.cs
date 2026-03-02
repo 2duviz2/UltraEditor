@@ -180,6 +180,7 @@ public class EmptySceneLoader : MonoBehaviour
         }
 
         StatsManager.Instance.gameObject.AddComponent<FogFadeController>();
+        StatsManager.Instance.gameObject.AddComponent<TimeTracker>();
         ChallengeManager.Instance.challengePanel.transform.parent.Find("ChallengeText").GetComponent<TMP_Text>().text = "(NO CHALLENGE)";
         MusicManager.Instance.battleTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
         MusicManager.Instance.cleanTheme.outputAudioMixerGroup = AudioMixerController.Instance.musicGroup;
