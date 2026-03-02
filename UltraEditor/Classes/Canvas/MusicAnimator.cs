@@ -16,9 +16,19 @@ public class MusicAnimator : MonoBehaviour
         s2.enabled = SceneHelper.CurrentScene == EditorManager.EditorSceneName;
     }
 
+    public void OnEnable()
+    {
+        float pitch = Random.Range(0, 50) == 0 
+            ? 0.25f
+            : 1f;
+
+        s1.SetPitch(pitch);
+        s2.SetPitch(pitch);
+    }
+
     public void Update()
     {
-        if (EditorManager.Instance == null) return;
-        animator.SetBool(battleString, EditorManager.Instance.cameraSelector.selectedObject != null);
+        if (EditorManager.Instance != null)
+            animator.SetBool(battleString, EditorManager.Instance.cameraSelector.selectedObject != null);
     }
 }
