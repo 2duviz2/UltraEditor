@@ -1007,14 +1007,32 @@ public static class SceneJsonSaver
         // OrbitTrigger
         foreach (OrbitTrigger obj in ReverseArray(GameObject.FindObjectsOfType<OrbitTrigger>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
-            if (obj.GetComponent<SavableObject>() == null) continue;
+            if (obj.name == "HIDEINHIERARCHY" || obj.GetComponent<SavableObject>() == null) continue;
 
             SerializedObject so = new() { type = "OrbitTrigger", common = SerializeCommon(obj) };
             JObject data = [];
             if (obj.ToOrbit.Length > 0)
                 data["ToOrbit"] = new JArray(obj.ToOrbit.Select(obj => LoadingHelper.GetIdOfObj(obj)).ToList());
             data["GravityStrength"] = obj.GravityStrength;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
+        // PortalObject
+        foreach (PortalObject obj in ReverseArray(GameObject.FindObjectsOfType<PortalObject>(true)))
+        {
+            if (obj.name == "HIDEINHIERARCHY") 
+                continue;
+
+            SerializedObject so = new() { type = "PortalObject", common = SerializeCommon(obj) };
+
+            JObject data = [];
+            data["PortalWidth"] = obj.PortalWidth;
+            data["PortalHeight"] = obj.PortalHeight;
+            data["MaxRecursions"] = obj.MaxRecursions;
+            data["PortalEntrance"] = LoadingHelper.GetIdOfObj(obj.PortalEntrance);
+            data["PortalExit"] = LoadingHelper.GetIdOfObj(obj.PortalExit);
+
             so.data = data;
             scene.objects.Add(so);
         }
@@ -1389,16 +1407,26 @@ public static class SceneJsonSaver
                 }
                 else if (typeName == "OrbitTrigger")
                 {
-                    if (workingObject.GetComponent<OrbitTrigger>() == null) 
-                        workingObject.AddComponent<OrbitTrigger>();
-
-                    OrbitTrigger ot = workingObject.GetComponent<OrbitTrigger>();
+                    OrbitTrigger ot = workingObject.GetComponent<OrbitTrigger>() ?? workingObject.AddComponent<OrbitTrigger>();
                     if (data != null)
                     {
                         if (data.TryGetValue("ToOrbit", out JToken meow))
                             ot.ToOrbit = LoadingHelper.GetObjectsWithIds([.. ((JArray)meow).Select(e => e.ToString())]);
                         if (data.TryGetValue("GravityStrength", out JToken rawr))
                             ot.GravityStrength = rawr.ToObject<float>();
+                    }
+                }
+                else if (typeName == "PortalObject")
+                {
+                    PortalObject po = workingObject.GetComponent<PortalObject>() ?? workingObject.AddComponent<PortalObject>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("PortalWidth", out JToken uwu1)) po.PortalWidth = uwu1.ToObject<float>();
+                        if (data.TryGetValue("PortalHeight", out JToken uwu2)) po.PortalHeight = uwu2.ToObject<float>();
+                        if (data.TryGetValue("MaxRecursions", out JToken uwu3)) po.MaxRecursions = uwu3.ToObject<int>();
+
+                        if (data.TryGetValue("PortalEntrance", out JToken uwu4)) po.PortalEntrance = LoadingHelper.GetObjectsWithIds([uwu4.ToString()]).FirstOrDefault();
+                        if (data.TryGetValue("PortalExit", out JToken uwu5)) po.PortalExit = LoadingHelper.GetObjectsWithIds([uwu5.ToString()]).FirstOrDefault();
                     }
                 }
                 else if (typeName == "HUDMessageObject")
