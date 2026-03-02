@@ -745,7 +745,7 @@ public static class SceneJsonSaver
         }
 
         // CheckPoint/CheckpointObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
+        /*foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
         {
             if (obj.name == "HIDEINHIERARCHY") continue;
             while (obj.GetComponent<CheckpointObject>() != null)
@@ -773,7 +773,7 @@ public static class SceneJsonSaver
             scene.objects.Add(so);
 
             GameObject.Destroy(obj.GetComponent<CheckpointObject>());
-        }
+        }*/
 
         // CheckpointObject children-less cases
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
@@ -1030,8 +1030,10 @@ public static class SceneJsonSaver
             data["PortalWidth"] = obj.PortalWidth;
             data["PortalHeight"] = obj.PortalHeight;
             data["MaxRecursions"] = obj.MaxRecursions;
-            data["PortalEntrance"] = LoadingHelper.GetIdOfObj(obj.PortalEntrance);
-            data["PortalExit"] = LoadingHelper.GetIdOfObj(obj.PortalExit);
+            data["PortalEntrancePos"] = JArray.FromObject(V3(obj.PortalEntrance.transform.localPosition));
+            data["PortalEntranceRot"] = JArray.FromObject(V3(obj.PortalEntrance.transform.eulerAngles));
+            data["PortalExitPos"] = JArray.FromObject(V3(obj.PortalExit.transform.localPosition));
+            data["PortalExitRot"] = JArray.FromObject(V3(obj.PortalExit.transform.eulerAngles));
 
             so.data = data;
             scene.objects.Add(so);
@@ -1425,8 +1427,11 @@ public static class SceneJsonSaver
                         if (data.TryGetValue("PortalHeight", out JToken uwu2)) po.PortalHeight = uwu2.ToObject<float>();
                         if (data.TryGetValue("MaxRecursions", out JToken uwu3)) po.MaxRecursions = uwu3.ToObject<int>();
 
-                        if (data.TryGetValue("PortalEntrance", out JToken uwu4)) po.PortalEntrance = LoadingHelper.GetObjectsWithIds([uwu4.ToString()]).FirstOrDefault();
-                        if (data.TryGetValue("PortalExit", out JToken uwu5)) po.PortalExit = LoadingHelper.GetObjectsWithIds([uwu5.ToString()]).FirstOrDefault();
+                        if (data.TryGetValue("PortalEntrancePos", out JToken uwu6)) po.PortalEntrancePos = ParseV3(uwu6);
+                        if (data.TryGetValue("PortalEntranceRot", out JToken uwu7)) po.PortalEntranceRot = ParseV3(uwu7);
+                        
+                        if (data.TryGetValue("PortalExitPos", out JToken uwu8)) po.PortalExitPos = ParseV3(uwu8);
+                        if (data.TryGetValue("PortalExitRot", out JToken uwu9)) po.PortalExitRot = ParseV3(uwu9);
                     }
                 }
                 else if (typeName == "HUDMessageObject")

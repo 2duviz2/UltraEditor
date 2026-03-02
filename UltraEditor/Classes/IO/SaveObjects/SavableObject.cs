@@ -1,5 +1,6 @@
 ﻿namespace UltraEditor.Classes.IO.SaveObjects;
 
+using Unity.AI.Navigation;
 using UnityEngine;
 
 public class SavableObject : MonoBehaviour
@@ -21,4 +22,13 @@ public class SavableObject : MonoBehaviour
 
     public virtual void Tick() { }
     public virtual void Create() { }
+
+    public void DisableNavmesh()
+    {
+        NavMeshModifier mod = gameObject.AddComponent<NavMeshModifier>();
+        mod.ignoreFromBuild = true;
+        DisableCollision();
+    }
+
+    public void DisableCollision() => gameObject.GetComponent<Collider>().isTrigger = true;
 }
