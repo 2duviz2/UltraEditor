@@ -42,12 +42,6 @@ public class EditorManager : MonoBehaviour
 
     static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 
-    public class Action(ActionType type, List<object> data)
-    {
-        public ActionType type = type;
-        public List<object> data = data;
-    }
-
     public List<IEditorAction> UndoActions = [], RedoActions = [];
 
     public void AddToUndo(IEditorAction act)
