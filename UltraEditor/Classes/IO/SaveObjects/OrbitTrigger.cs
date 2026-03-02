@@ -28,9 +28,8 @@ public class OrbitTrigger : SavableObject
     }
 
     /// <summary> Actually orbit the obj :3 </summary>
-    public new void Update()
+    public override void Tick()
     {
-        base.Update();
         if (orbitting && ToOrbit.Length == 1)
             nm.SwitchGravity((nm.transform.position - ToOrbit[0].transform.position).normalized * -GravityStrength);
     }
