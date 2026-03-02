@@ -994,12 +994,12 @@ public static class SceneJsonSaver
         // GravityTrigger
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GravityTrigger>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
 
             var so = new SerializedObject { type = "GravityTrigger", common = SerializeCommon(obj) };
             var data = new JObject();
-            data["ToOrbit"] = JArray.FromObject(V3(obj.gravity));
+            data["gravity"] = JArray.FromObject(V3(obj.gravity));
+            data["disabledOnTrigger"] = obj.disableOnTrigger;
             so.data = data;
             scene.objects.Add(so);
         }
