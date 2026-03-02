@@ -40,13 +40,6 @@ public class EmptySceneLoader : MonoBehaviour
     /// <summary> Load the assetbundle containing the scene. </summary>
     public void Load()
     {
-        // skip if we're already loaded
-        if (_loaded || Instance != null)
-        {
-            if (Instance != null) Destroy(gameObject);
-            if (_loaded)
-                return;
-        }
         DontDestroyOnLoad((Instance = this).gameObject);
 
         // istg why does this crash the game when u dont do this
@@ -60,7 +53,6 @@ public class EmptySceneLoader : MonoBehaviour
         {
             Plugin.LogInfo("Loaded Empty Scene bundle.");
             _loaded = true;
-            SceneHelper.SetLoadingSubtext("");
         };
     }
 
@@ -71,7 +63,7 @@ public class EmptySceneLoader : MonoBehaviour
     public IEnumerator LoadLevelAsync()
     {
         Plugin.LogInfo("Loading Empty Scene.");
-        Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(true);
+        SceneHelper.Instance.loadingBlocker.SetActive(true);
         SceneHelper.SetLoadingSubtext("Loading editor...");
         yield return null;
 
@@ -84,17 +76,18 @@ public class EmptySceneLoader : MonoBehaviour
             while (!_loaded) yield return null;
         }
 
-        if (SceneHelper.CurrentScene != "UltraEditor") Property(typeof(SceneHelper), "LastScene", SceneHelper.CurrentScene);
-        Property(typeof(SceneHelper), "CurrentScene", EditorManager.EditorSceneName);
+        if (SceneHelper.CurrentScene != "UltraEditor") 
+            SceneHelper.LastScene = SceneHelper.CurrentScene;
 
+        SceneHelper.CurrentScene = EditorManager.EditorSceneName;
         AsyncOperation sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
         while (!sceneload.isDone) yield return null;
 
         Plugin.LogInfo("Scene loaded!");
-
-        Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
+        SceneHelper.SetLoadingSubtext("");
+        SceneHelper.Instance.loadingBlocker.SetActive(false);
 
         // duviz why
         yield return LoadEditor();
@@ -202,82 +195,4 @@ public class EmptySceneLoader : MonoBehaviour
         EditorManager.canOpenEditor = true;
         EditorManager.Create();
     }
-
-    // gah could i PLEASE add a publicizer
-    #region tools
-    /// <summary> Gets or Sets a field regardless if its private or not. </summary>
-    /// <param name="InstanceOrType">Instance or type of the field. (use an instance or non-static fields, and a type for static fields.)</param>
-    /// <param name="fieldName">The name of the field.</param>
-    /// <param name="value">Value to set the field to.</param>
-    public static T Field<T>(object InstanceOrType, string fieldName, object value = null) =>
-        (T)Field(InstanceOrType, fieldName, value);
-
-    /// <summary> Gets or Sets a property regardless if its private or not. </summary>
-    /// <param name="InstanceOrType">Instance or type of the property. (use an instance or non-static properties, and a type for static properties.)</param>
-    /// <param name="propName">The name of the property.</param>
-    /// <param name="value">Value to set the property to.</param>
-    public static T Property<T>(object InstanceOrType, string propName, object value = null) =>
-        (T)Property(InstanceOrType, propName, value);
-
-    /// <summary> Tools.Field cache. </summary>
-    private static Dictionary<(object, string), FieldInfo> Field_Cache = [];
-
-    /// <summary> Gets or Sets a field regardless if its private or not. </summary>
-    /// <param name="InstanceOrType">Instance or type of the field. (use an instance or non-static fields, and a type for static fields.)</param>
-    /// <param name="fieldName">The name of the field.</param>
-    /// <param name="value">Value to set the field to.</param>
-    public static object Field(object InstanceOrType, string fieldName, object value = null)
-    {
-        Type type = InstanceOrType is Type _type ? _type : InstanceOrType.GetType();
-        var key = (InstanceOrType, fieldName);
-        if (!Field_Cache.TryGetValue(key, out var field))
-            Field_Cache[key] = field = AccessTools.Field(type, fieldName);
-
-        object obj = field?.IsStatic ?? false ? null : InstanceOrType;
-
-        if (value != null)
-            field?.SetValue(obj, value);
-
-        return field?.GetValue(obj);
-    }
-
-    /// <summary> Tools.Property cache. </summary>
-    private static Dictionary<(object, string), PropertyInfo> Property_Cache = [];
-
-    /// <summary> Gets or Sets a property regardless if its private or not. </summary>
-    /// <param name="InstanceOrType">Instance or type of the property. (use an instance or non-static properties, and a type for static properties.)</param>
-    /// <param name="propName">The name of the property.</param>
-    /// <param name="value">Value to set the property to.</param>
-    public static object Property(object InstanceOrType, string propName, object value = null)
-    {
-        Type type = InstanceOrType is Type _type ? _type : InstanceOrType.GetType();
-        object obj = InstanceOrType is Type ? null : InstanceOrType;
-
-        var key = (InstanceOrType, propName);
-        if (!Property_Cache.TryGetValue(key, out var property))
-            Property_Cache[key] = property = AccessTools.Property(type, propName);
-
-        if (value != null) // Set
-            property?.GetSetMethod(true)?.Invoke(obj, [value]);
-
-        return property?.GetGetMethod(true)?.Invoke(obj, null);
-    }
-
-    /// <summary> Tools.InvokeMethod cache. </summary>
-    private static Dictionary<(object, string), MethodBase> InvokeMethod_Cache = [];
-
-    /// <summary> Invokes a method regardless if its private or not. </summary>
-    /// <param name="InstanceOrType">Instance or type of the method to invoke. (use an instance or non-static methods, and a type for static methods.)</param>
-    /// <param name="methodName">The name of the method.</param>
-    /// <param name="args">Arguements to be given to the method.</param>
-    public static void InvokeMethod(object InstanceOrType, string methodName, params object[] args)
-    {
-        Type type = InstanceOrType is Type _type ? _type : InstanceOrType.GetType();
-        var key = (InstanceOrType, methodName);
-        if (!InvokeMethod_Cache.TryGetValue(key, out var method))
-            InvokeMethod_Cache[key] = method = AccessTools.Method(type, methodName);
-
-        method.Invoke(InstanceOrType, args);
-    }
-    #endregion
 }

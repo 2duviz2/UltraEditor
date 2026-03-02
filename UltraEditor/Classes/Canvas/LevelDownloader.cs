@@ -38,7 +38,7 @@ public class LevelDownloader : MonoBehaviour
     {
         if (levelUrl != "")
         {
-            EmptySceneLoader.Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(true);
+            SceneHelper.Instance.loadingBlocker.SetActive(true);
             StartCoroutine(FetchLevels.GetStringFromUrl(levelUrl, str =>
             {
                 if (str != null)
@@ -58,7 +58,7 @@ public class LevelDownloader : MonoBehaviour
                 }
                 else
                 {
-                    EmptySceneLoader.Field<GameObject>(SceneHelper.Instance, "loadingBlocker").SetActive(false);
+                    SceneHelper.Instance.loadingBlocker.SetActive(false);
                 }
             }));
         }
