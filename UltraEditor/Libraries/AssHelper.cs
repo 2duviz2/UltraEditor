@@ -61,13 +61,6 @@ public static class AssHelper
         return asset;
     }
 
-    public static bool CheckIfLoaded<T>(string key)
-    {
-        if (CachedAddressableAssets.TryGetValue(key + typeof(T).Name, out object cachedAsset))
-            return true;
-        return false;
-    }
-
     #endregion
 
     extension(string str)
