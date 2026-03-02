@@ -29,37 +29,39 @@ public class LevelDownloader : MonoBehaviour
         levelAuthorText.text = levelAuthor;
         levelSizeText.text = "Play";
         Vector3 cc = ParseHelper.ParseVector3(color);
-        Color c = new Color(cc.x / 255f, cc.y / 255f, cc.z / 255f);
+        Color c = new(cc.x / 255f, cc.y / 255f, cc.z / 255f);
         levelBackground.color = c;
         levelNameText.color = c;
     }
 
     public void Download()
     {
-        if (levelUrl != "")
-        {
-            SceneHelper.Instance.loadingBlocker.SetActive(true);
-            StartCoroutine(FetchLevels.GetStringFromUrl(levelUrl, str =>
-            {
-                if (str == null)
-                {
-                    SceneHelper.Instance.loadingBlocker.SetActive(false);
-                    return;
-                }
+        if (levelUrl == "")
+            return;
 
-                EmptySceneLoader.forceEditor = false;
-                EmptySceneLoader.forceSave = "?";
-                EmptySceneLoader.forceSaveData = str;
-                EmptySceneLoader.forceLevelName = levelName;
-                EmptySceneLoader.forceLevelLayer = levelLayer;
-                EmptySceneLoader.forceLevelCanOpenEditor = canOpenEditor;
-                EmptySceneLoader.pTime = pTime;
-                EmptySceneLoader.pKills = pKills;
-                EmptySceneLoader.pStyle = pStyle;
-                EmptySceneLoader.forceLevelImage = levelImageUrl;
-                EditorManager.canOpenEditor = false;
-                EmptySceneLoader.Instance.LoadLevel();
-            }));
-        }
+        SceneHelper.Instance.loadingBlocker.SetActive(true);
+        SceneHelper.SetLoadingSubtext("Downloading level...");
+        StartCoroutine(FetchLevels.GetStringFromUrl(levelUrl, str =>
+        {
+            if (str == null)
+            {
+                SceneHelper.Instance.loadingBlocker.SetActive(false);
+                SceneHelper.SetLoadingSubtext("");
+                return;
+            }
+
+            EmptySceneLoader.forceEditor = false;
+            EmptySceneLoader.forceSave = "?";
+            EmptySceneLoader.forceSaveData = str;
+            EmptySceneLoader.forceLevelName = levelName;
+            EmptySceneLoader.forceLevelLayer = levelLayer;
+            EmptySceneLoader.forceLevelCanOpenEditor = canOpenEditor;
+            EmptySceneLoader.pTime = pTime;
+            EmptySceneLoader.pKills = pKills;
+            EmptySceneLoader.pStyle = pStyle;
+            EmptySceneLoader.forceLevelImage = levelImageUrl;
+            EditorManager.canOpenEditor = false;
+            EmptySceneLoader.Instance.LoadLevel();
+        }));
     }
 }
