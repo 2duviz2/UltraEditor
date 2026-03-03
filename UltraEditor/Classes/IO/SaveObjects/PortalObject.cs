@@ -116,20 +116,19 @@ public class PortalObject : SavableObject
             GL.PushMatrix();
             GL.MultMatrix(local.localToWorldMatrix);
 
-            DrawLines(col,
+            // draw []
+            Draw(col, GL.LINE_STRIP,
             [
                 new(width, height, 0),
                 new(width, -height, 0),
-
                 new(-width, -height, 0),
-                new(width, -height, 0),
-
-                new(-width, -height, 0),
-                new(-width, height, 0),
-
                 new(-width, height, 0),
                 new(width, height, 0),
+            ]);
 
+            // draw arrow
+            Draw(col * 1.5f, GL.LINES, 
+            [
                 Vector3.zero,
                 new(0f, 0f, -5f)
             ]);
@@ -138,10 +137,10 @@ public class PortalObject : SavableObject
         }
     }
 
-    /// <summary> Draws a buncha lines like a gizmo :sleepingfilth: </summary>
-    public void DrawLines(Color col, params List<Vector3> linePositions)
+    /// <summary> Draws stuff :3 </summary>
+    public void Draw(Color col, int mode, params List<Vector3> linePositions)
     {
-        GL.Begin(GL.LINES);
+        GL.Begin(mode);
         GL.Color(col);
 
         linePositions.ForEach(GL.Vertex);
