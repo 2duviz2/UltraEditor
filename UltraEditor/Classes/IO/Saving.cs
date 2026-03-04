@@ -595,6 +595,7 @@ public static class SceneJsonSaver
         {
             if (obj.name == "HIDEINHIERARCHY") continue;
             if (obj.GetComponent<CheckPoint>() != null) continue;
+            if (obj.GetComponent<CheckpointObject>() != null) continue;
             if (obj.transform.parent != null && obj.transform.parent.name == "Automated Gore Zone") continue;
             if (obj.GetComponent<ItemIdentifier>() != null && obj.GetComponent<ItemIdentifier>().pickedUp) continue;
 
@@ -779,7 +780,6 @@ public static class SceneJsonSaver
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
         {
             if (obj.name == "HIDEINHIERARCHY") continue;
-            if (obj.transform.childCount != 0) continue;
 
             obj.rooms = new List<string>();
             foreach (var e in obj.checkpointRooms)

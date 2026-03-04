@@ -16,6 +16,7 @@ public class LevelDownloader : MonoBehaviour
     public string color;
     public string levelLayer;
     public string levelImageUrl;
+    public string levelGUID;
     public bool canOpenEditor;
 
     public TMP_Text levelNameText;
@@ -56,6 +57,7 @@ public class LevelDownloader : MonoBehaviour
             EmptySceneLoader.forceLevelName = levelName;
             EmptySceneLoader.forceLevelLayer = levelLayer;
             EmptySceneLoader.forceLevelCanOpenEditor = canOpenEditor;
+            EmptySceneLoader.forceLevelGUID = levelGUID;
             EmptySceneLoader.pTime = pTime;
             EmptySceneLoader.pKills = pKills;
             EmptySceneLoader.pStyle = pStyle;

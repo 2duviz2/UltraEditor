@@ -90,7 +90,7 @@ public class Plugin : BaseUnityPlugin
 
     public void Update()
     {
-        if (Input.GetKeyDown(EditorOpenKey) && (SceneHelper.CurrentScene != EditorManager.EditorSceneName || EditorManager.canOpenEditor || EmptySceneLoader.forceLevelCanOpenEditor || (EditorManager.Instance != null && EditorManager.Instance.editorCanvas.activeInHierarchy)) && SceneHelper.PendingScene == null)
+        if (Input.GetKeyDown(EditorOpenKey) && (!SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName) || EditorManager.canOpenEditor || EmptySceneLoader.forceLevelCanOpenEditor || (EditorManager.Instance != null && EditorManager.Instance.editorCanvas.activeInHierarchy)) && SceneHelper.PendingScene == null)
         {
             EditorManager.Create();
         }

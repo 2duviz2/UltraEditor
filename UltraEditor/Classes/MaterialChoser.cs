@@ -262,12 +262,12 @@ public class MaterialChoser : MonoBehaviour
         if (mesh == null)
         {
             mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
-            float maxScale = Mathf.Max(new float[]
-            {
+            float maxScale = Mathf.Max(
+            [
                 transform.lossyScale.x,
                 transform.lossyScale.y,
                 transform.lossyScale.z
-            });
+            ]);
             float localStep = 1f / (maxScale / 10f);
             localStep = MathF.Max(localStep, 0.1f);
             if (PlayerPrefs.GetInt("PerformanceLighting") == 0 && !EditorManager.Instance.editorOpen)

@@ -34,6 +34,9 @@ public class EmptySceneLoader : MonoBehaviour
     /// <summary> Forces the editor to set a scene name, only happens if forceSave is "?". </summary>
     public static string forceLevelName = "";
 
+    /// <summary> Forces the editor to set a scene name to SceneHelper </summary>
+    public static string forceLevelGUID = "";
+
     /// <summary> Force the loader to load. </summary>
     void Awake() => Load();
 
@@ -64,7 +67,8 @@ public class EmptySceneLoader : MonoBehaviour
     {
         Plugin.LogInfo("Loading Empty Scene.");
         SceneHelper.Instance.loadingBlocker.SetActive(true);
-        SceneHelper.SetLoadingSubtext("Loading editor...");
+        if (!forceEditor && forceSave != "") SceneHelper.SetLoadingSubtext("Loading level...");
+        else SceneHelper.SetLoadingSubtext("Loading editor...");
         yield return null;
 
         if (!_loaded)
@@ -80,6 +84,8 @@ public class EmptySceneLoader : MonoBehaviour
             SceneHelper.LastScene = SceneHelper.CurrentScene;
 
         SceneHelper.CurrentScene = EditorManager.EditorSceneName;
+        if (forceLevelGUID != "" && forceSave == "?" && !forceEditor)
+            SceneHelper.CurrentScene = EditorManager.EditorSceneName+"."+forceLevelGUID;
         AsyncOperation sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
@@ -157,7 +163,7 @@ public class EmptySceneLoader : MonoBehaviour
             StockMapInfo.Instance.levelName = levelName.ToUpper();
             StockMapInfo.Instance.layerName = StockMapInfo.Instance.layerName.Replace("EMPTY", forceLevelLayer);
             StockMapInfo.Instance.assets.LargeText = levelName.ToUpper();
-            string[] tips = ["Welcome!", "Hi!", $"Welcome to {levelName}", "I'm tired.", "Hi! I'm a terminal", "I despise you", "I don't like you", "Entertain me", "Get away", "Disappear", "Get out of my sight", "Entry 17"];
+            string[] tips = ["Welcome!", "Hi!", $"Welcome to {levelName}", "I'm tired.", "Hi! I'm a terminal", "I despise you", "I don't like you", "Entertain me", "Get away", "Disappear", "Get out of my sight", "Entry 17", "I live in despair", ":3", ":c", "You piss me of", "Shut the fuck up", "I hate people who hate people...", "...but I hate you more", "duviz, why server no work"];
             if (lio != null)
             {
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = lio.tipOfTheDay };

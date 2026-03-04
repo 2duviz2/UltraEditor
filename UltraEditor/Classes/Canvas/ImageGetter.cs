@@ -18,6 +18,7 @@ public class ImageGetter : MonoBehaviour
         {
             if (tex != null)
             {
+                tex.filterMode = FilterMode.Point;
                 image.texture = tex;
             }
         }));

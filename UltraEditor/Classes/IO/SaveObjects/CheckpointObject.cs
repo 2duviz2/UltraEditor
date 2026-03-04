@@ -18,6 +18,8 @@ public class CheckpointObject : SavableObject
         CheckpointObject checkpointObject = target.AddComponent<CheckpointObject>();
         if (checkpointObject.GetComponent<Collider>() != null)
             checkpointObject.GetComponent<Collider>().isTrigger = true;
+        Destroy(checkpointObject.GetComponent<MeshRenderer>());
+        Destroy(checkpointObject.GetComponent<MeshFilter>());
         return checkpointObject;
     }
 

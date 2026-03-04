@@ -12,7 +12,7 @@ public static class SceneHelperPatch
     [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), nameof(SceneHelper.RestartSceneAsync))]
     public static bool RestartMissionPatch(ref Coroutine __result)
     {
-        if (SceneHelper.CurrentScene == EditorManager.EditorSceneName)
+        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
         {
             __result = Plugin.Instance.StartCoroutine(EmptySceneLoader.Instance.LoadLevelAsync());
             return false;
@@ -24,7 +24,7 @@ public static class SceneHelperPatch
     [HarmonyPrefix] [HarmonyPatch(typeof(GetMissionName), "GetMissionNumberOnly")]
     public static bool FixMissionNum(ref string __result)
     {
-        if (SceneHelper.CurrentScene == "UltraEditor")
+        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
         {
             __result = "C";
             return false;
@@ -33,11 +33,10 @@ public static class SceneHelperPatch
         return true;
     }
 
-    [HarmonyPrefix]
-    [HarmonyPatch(typeof(GetMissionName), "GetMissionNameOnly")]
+    [HarmonyPrefix] [HarmonyPatch(typeof(GetMissionName), "GetMissionNameOnly")]
     public static bool FixMissionNameOnly(ref string __result)
     {
-        if (SceneHelper.CurrentScene == "UltraEditor")
+        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
         {
             __result = MapInfoBase.Instance.levelName;
             return false;
@@ -49,7 +48,7 @@ public static class SceneHelperPatch
     [HarmonyPrefix] [HarmonyPatch(typeof(GetMissionName), "GetMission")]
     public static bool FixMissionName(ref string __result)
     {
-        if (SceneHelper.CurrentScene == "UltraEditor")
+        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
         {
             __result = MapInfoBase.Instance.levelName;
             return false;

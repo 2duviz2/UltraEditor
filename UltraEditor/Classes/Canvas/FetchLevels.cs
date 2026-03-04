@@ -29,6 +29,7 @@ public class FetchLevels : MonoBehaviour
         public string pstyle;
         public string rank;
         public string layer;
+        public string guid;
         public int canOpenEditor;
     }
 
@@ -82,6 +83,7 @@ public class FetchLevels : MonoBehaviour
                     lv.GetComponent<LevelDownloader>().levelLayer = levelData.layer;
                     lv.GetComponent<LevelDownloader>().canOpenEditor = levelData.canOpenEditor == 1;
                     lv.GetComponent<LevelDownloader>().levelImageUrl = $"{getImageUrl}{levelData.id}";
+                    lv.GetComponent<LevelDownloader>().levelGUID = levelData.guid;
                     lv.GetComponent<LevelDownloader>().SetTexts();
                 }
                 _loaded = true;

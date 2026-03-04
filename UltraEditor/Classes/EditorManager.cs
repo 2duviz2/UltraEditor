@@ -206,7 +206,7 @@ public class EditorManager : MonoBehaviour
     public static GameObject currentFirstRoom;
     public static void DeleteScene(bool force = false)
     {
-        if ((force || (SceneHelper.CurrentScene == EditorSceneName && !StatsManager.Instance.timer)))
+        if ((force || (SceneHelper.CurrentScene.StartsWith(EditorSceneName) && !StatsManager.Instance.timer)))
         {
             foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList())
             {
@@ -319,11 +319,11 @@ public class EditorManager : MonoBehaviour
                 editorCamera.transform.eulerAngles = new Vector3(NewMovement.Instance.transform.eulerAngles.x, NewMovement.Instance.transform.eulerAngles.y, 0);
             }
 
-            if (editorOpen && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
+            if (editorOpen && !string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene.StartsWith(EditorSceneName) && canOpenEditor)
             {
                 StartCoroutine(GoToBackupScene());
             }
-            if (!editorOpen && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor)
+            if (!editorOpen && !advancedInspector && SceneHelper.CurrentScene.StartsWith(EditorSceneName) && canOpenEditor)
             {
                 tempScene = GetSceneJson();
 
@@ -377,7 +377,7 @@ public class EditorManager : MonoBehaviour
 
         SetupButtons();
 
-        if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene == EditorSceneName && canOpenEditor) // load backup level after restart
+        if (!string.IsNullOrEmpty(tempScene) && !advancedInspector && SceneHelper.CurrentScene.StartsWith(EditorSceneName) && canOpenEditor) // load backup level after restart
         {
             StartCoroutine(GoToBackupScene());
         }
@@ -524,7 +524,7 @@ public class EditorManager : MonoBehaviour
 
     void RebuildNavmesh(bool forceFindNavmesh)
     {
-        if (SceneHelper.CurrentScene != EditorSceneName)
+        if (!SceneHelper.CurrentScene.StartsWith(EditorSceneName))
             return;
 
         if (navMeshSurface == null)
@@ -903,7 +903,7 @@ public class EditorManager : MonoBehaviour
 
         foreach (GameObject obj in objectsToHierarch)
         {
-            if (SceneHelper.CurrentScene == EditorSceneName || !advancedInspector)
+            if (SceneHelper.CurrentScene.StartsWith(EditorSceneName) || !advancedInspector)
                 if (obj.GetComponent<SavableObject>() == null && !advancedInspector)
                     continue;
 

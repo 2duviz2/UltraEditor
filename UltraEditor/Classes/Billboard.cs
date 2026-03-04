@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 
@@ -26,6 +27,8 @@ public class Billboard : MonoBehaviour
     public static Sprite skullTrigger = null;
     public static Sprite bookObject = null;
 
+    public static Component[] lastComponents = [];
+
     public static void DeleteAll()
     {
         foreach (var billboard in billboards.ToList())
@@ -43,6 +46,12 @@ public class Billboard : MonoBehaviour
 #if EXPORTMODE
         return;
 #endif
+        if (PlayerPrefs.GetInt("Billboards", 1) == 0)
+        {
+            DeleteAll();
+            return;
+        }
+
         if (entitySprite == null)
         {
             entitySprite = BundlesManager.editorBundle.LoadAsset<Sprite>("entity");
@@ -62,12 +71,18 @@ public class Billboard : MonoBehaviour
             bookObject = BundlesManager.editorBundle.LoadAsset<Sprite>("book");
         }
 
-        DeleteAll();
-
         var allComponents = FindObjectsOfType<Component>(true);
+
+        if (lastComponents == allComponents)
+            return;
+        
+        lastComponents = allComponents;
+
+        DeleteAll();
 
         foreach (var c in allComponents)
         {
+            if (c == null) continue;
             var t = c.transform.position;
 
             switch (c)
@@ -139,6 +154,7 @@ public class Billboard : MonoBehaviour
         }
     }
 
+    static Shader shader = Shader.Find("Sprites/Default");
     public static List<(Sprite, Material, Vector3)> materials = [];
     public static void NewBillboard(Sprite spr, Vector3 pos, GameObject target)
     {
@@ -148,7 +164,6 @@ public class Billboard : MonoBehaviour
 
         var renderer = bill.GetComponent<Renderer>();
 
-        var shader = Shader.Find("Sprites/Default");
         if (!shader)
         {
             Debug.LogError("Sprites/Default shader not found");
@@ -187,9 +202,7 @@ public class Billboard : MonoBehaviour
             renderer.material = matt.Item2;
             bill.transform.localScale = matt.Item3;
         }
-        //bill.transform.localScale *= 2f;
         bill.transform.position = pos;
-        //bill.transform.position = pos + new Vector3(0, bill.transform.localScale.y / 2f, 0);
         bill.GetComponent<Billboard>().target = target;
         bill.GetComponent<Billboard>().Update();
     }
