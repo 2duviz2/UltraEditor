@@ -21,18 +21,6 @@ public static class SceneHelperPatch
         return true;
     }
 
-    [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), nameof(SceneHelper.RestartScene))]
-    public static bool RestartMissionPatchNotAsync()
-    {
-        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
-        {
-            EmptySceneLoader.Instance.LoadLevel();
-            return false;
-        }
-
-        return true;
-    }
-
     [HarmonyPrefix] [HarmonyPatch(typeof(GetMissionName), "GetMissionNumberOnly")]
     public static bool FixMissionNum(ref string __result)
     {
