@@ -79,6 +79,20 @@ public class PortalObject : SavableObject
         PortalExit.SetActive(true);
     }
 
+    public void Start()
+    {
+        PortalEntrance.transform.parent = transform;
+        PortalEntrance.transform.localPosition = PortalEntrancePos;
+        PortalEntrance.transform.forward = new(0f, 0f, 1f);
+        PortalEntrance.transform.eulerAngles = PortalEntranceRot;
+
+        PortalExit.transform.parent = transform;
+        PortalExit.transform.localPosition = PortalExitPos;
+        PortalExit.transform.forward = new(0f, 0f, 1f);
+        PortalExit.transform.eulerAngles = PortalExitRot;
+        portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
+    }
+
     /// <summary> rawr </summary>
     public override void Tick()
     {

@@ -31,14 +31,6 @@ public class ImageGetter : MonoBehaviour
     {
         //while (!_loaded) yield return null;
 
-        (string, Texture2D) cached = cachedTextures.FirstOrDefault(x => x.Item1 == url);
-
-        if (cached.Item2 != null)
-        {
-            callback(cached.Item2);
-            yield break;
-        }
-
         var TextureObjects = FindObjectsOfType<TextureObject>(true);
         foreach (TextureObject obj in TextureObjects)
         {
@@ -55,6 +47,14 @@ public class ImageGetter : MonoBehaviour
             }
         }
 
+        (string, Texture2D) cached = cachedTextures.FirstOrDefault(x => x.Item1 == url);
+
+        if (cached.Item2 != null)
+        {
+            callback(cached.Item2);
+            yield break;
+        }
+
         _loaded = false;
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
@@ -63,7 +63,7 @@ public class ImageGetter : MonoBehaviour
 
             if (uwr.result != UnityWebRequest.Result.Success)
             {
-                Plugin.LogError("Failed to load texture: " + uwr.error);
+                Plugin.LogError($"Failed to load texture {url}: " + uwr.error);
                 callback?.Invoke(null);
                 _loaded = true;
             }

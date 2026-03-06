@@ -1255,6 +1255,17 @@ public static class SceneJsonSaver
                         }
                     }
                 }
+                else if (typeName == "TextureObject")
+                {
+                    var to = workingObject.GetOrAddComponent<TextureObject>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("width", out JToken t1)) to.imageSizeX = ParseInt(t1);
+                        if (data.TryGetValue("height", out JToken t2)) to.imageSizeY = ParseInt(t2);
+                        if (data.TryGetValue("texture", out JToken t3)) to.colonThree = ParseTex2D(t3);
+                        if (data.TryGetValue("textureName", out JToken t4)) to.TextureName = t4.ToString();
+                    }
+                }
                 else if (typeName == "ArenaObject")
                 {
                     ArenaObject.Create(workingObject);
@@ -1477,17 +1488,6 @@ public static class SceneJsonSaver
 
                         if (data.TryGetValue("EnteranceColor", out JToken uwu10)) po.EnteranceColor = ParseV3(uwu10);
                         if (data.TryGetValue("ExitColor", out JToken uwu11)) po.ExitColor = ParseV3(uwu11);
-                    }
-                }
-                else if (typeName == "TextureObject")
-                {
-                    var to = workingObject.GetOrAddComponent<TextureObject>();
-                    if (data != null)
-                    {
-                        if (data.TryGetValue("width", out JToken t1)) to.imageSizeX = ParseInt(t1);
-                        if (data.TryGetValue("height", out JToken t2)) to.imageSizeY = ParseInt(t2);
-                        if (data.TryGetValue("texture", out JToken t3)) to.colonThree = ParseTex2D(t3);
-                        if (data.TryGetValue("textureName", out JToken t4)) to.TextureName = t4.ToString();
                     }
                 }
                 else if (typeName == "HUDMessageObject")

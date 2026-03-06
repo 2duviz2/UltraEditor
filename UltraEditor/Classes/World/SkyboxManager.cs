@@ -80,8 +80,6 @@ public static class SkyboxManager
                             skyboxMat.mainTexture = tex;
                             RenderSettings.skybox = skyboxMat;
                         }
-                        else
-                            RenderSettings.skybox = null;
                     }));
                     return;
                 case Skybox.BlackSky:
