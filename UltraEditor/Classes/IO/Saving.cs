@@ -514,6 +514,14 @@ public static class SceneJsonSaver
 
     static float[] V3(Vector3 v) => new float[] { v.x, v.y, v.z };
 
+    static string Tex2D(Texture2D tex)
+    {
+        if (tex == null) return null;
+
+        byte[] png = tex.EncodeToPNG();
+        return Convert.ToBase64String(png);
+    }
+
     static CommonFields SerializeCommon(SavableObject obj)
     {
         obj.Update();
@@ -1041,6 +1049,23 @@ public static class SceneJsonSaver
             scene.objects.Add(so);
         }
 
+        // TextureObject
+        foreach (TextureObject obj in ReverseArray(GameObject.FindObjectsOfType<TextureObject>(true)))
+        {
+            if (obj.name == "HIDEINHIERARCHY") 
+                continue;
+
+            SerializedObject so = new() { type = "TextureObject", common = SerializeCommon(obj) };
+
+            JObject data = [];
+            data["width"] = obj.imageSizeX;
+            data["height"] = obj.imageSizeY;
+            data["texture"] = Tex2D(obj.colonThree);
+            data["textureName"] = obj.TextureName;
+            so.data = data;
+            scene.objects.Add(so);
+        }
+
         return JsonConvert.SerializeObject(scene, jsonSettings);
     }
 
@@ -1105,6 +1130,21 @@ public static class SceneJsonSaver
             if (!string.IsNullOrEmpty(s))
                 return ParseHelper.ParseVector2(s);
             return Vector2.zero;
+        }
+        Texture2D ParseTex2D(JToken t)
+        {
+            if (t == null) return null;
+
+            string base64 = t.ToString();
+            if (string.IsNullOrEmpty(base64)) return null;
+
+            byte[] bytes = Convert.FromBase64String(base64);
+
+            Texture2D tex = new Texture2D(2, 2);
+            tex.LoadImage(bytes);
+            tex.filterMode = FilterMode.Point;
+
+            return tex;
         }
         bool ParseBool(JToken t)
         {
@@ -1437,6 +1477,17 @@ public static class SceneJsonSaver
 
                         if (data.TryGetValue("EnteranceColor", out JToken uwu10)) po.EnteranceColor = ParseV3(uwu10);
                         if (data.TryGetValue("ExitColor", out JToken uwu11)) po.ExitColor = ParseV3(uwu11);
+                    }
+                }
+                else if (typeName == "TextureObject")
+                {
+                    var to = workingObject.GetOrAddComponent<TextureObject>();
+                    if (data != null)
+                    {
+                        if (data.TryGetValue("width", out JToken t1)) to.imageSizeX = ParseInt(t1);
+                        if (data.TryGetValue("height", out JToken t2)) to.imageSizeY = ParseInt(t2);
+                        if (data.TryGetValue("texture", out JToken t3)) to.colonThree = ParseTex2D(t3);
+                        if (data.TryGetValue("textureName", out JToken t4)) to.TextureName = t4.ToString();
                     }
                 }
                 else if (typeName == "HUDMessageObject")

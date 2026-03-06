@@ -3,6 +3,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
@@ -36,6 +37,22 @@ public class ImageGetter : MonoBehaviour
         {
             callback(cached.Item2);
             yield break;
+        }
+
+        var TextureObjects = FindObjectsOfType<TextureObject>(true);
+        foreach (TextureObject obj in TextureObjects)
+        {
+            if (obj != null)
+            {
+                if (obj.TextureName == url)
+                {
+                    if (obj.colonThree != null)
+                    {
+                        callback?.Invoke(obj.colonThree);
+                        yield break;
+                    }
+                }
+            }
         }
 
         _loaded = false;

@@ -10,6 +10,7 @@ using System.Reflection;
 using TMPro;
 using UltraEditor.Classes.ActionTypes;
 using UltraEditor.Classes.ActionTypes.Base;
+using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;
@@ -1302,6 +1303,14 @@ public class EditorManager : MonoBehaviour
             {
                 bool newValue = !(bool)value;
                 SetMemberValue(field, comp, newValue);
+                UpdateInspector();
+            });
+        }
+        if (type == typeof(UnityEvent))
+        {
+            CreateInspectorItem(fieldName, InspectorItemType.Button, "Click", value).AddListener(() =>
+            {
+                ((UnityEvent)GetMemberValue(field, comp)).Invoke();
                 UpdateInspector();
             });
         }

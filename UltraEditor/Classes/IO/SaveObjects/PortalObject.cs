@@ -33,7 +33,7 @@ public class PortalObject : SavableObject
     public Vector3 PortalExitPos = new(0f, 0f, 10f), PortalExitRot = Vector3.zero;
 
     /// <summary> Creates the portals and setups the portal meowmeowmeow </summary>
-    public void Start()
+    public void Awake()
     {
         DisableCollision();
 
@@ -82,7 +82,7 @@ public class PortalObject : SavableObject
     /// <summary> rawr </summary>
     public override void Tick()
     {
-        if (portal.shape is PlaneShape shape && (shape.width != PortalWidth || shape.height != PortalHeight))
+        if (portal?.shape is PlaneShape shape && (shape.width != PortalWidth || shape.height != PortalHeight))
             portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
     }
 
