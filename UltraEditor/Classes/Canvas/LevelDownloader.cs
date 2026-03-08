@@ -63,7 +63,7 @@ public class LevelDownloader : MonoBehaviour
             EmptySceneLoader.pStyle = pStyle;
             EmptySceneLoader.forceLevelImage = levelImageUrl;
             EditorManager.canOpenEditor = false;
-            EmptySceneLoader.Instance.LoadLevel();
+            EmptySceneLoader.LoadLevel();
         }));
     }
 }

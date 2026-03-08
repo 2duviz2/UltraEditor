@@ -14,7 +14,7 @@ public static class SceneHelperPatch
     {
         if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
         {
-            __result = Plugin.Instance.StartCoroutine(EmptySceneLoader.Instance.LoadLevelAsync());
+            __result = Plugin.Instance.StartCoroutine(EmptySceneLoader.LoadLevelAsync());
             return false;
         }
 

@@ -10,15 +10,11 @@ using TMPro;
 using UltraEditor.Classes.IO.SaveObjects;
 using UltraEditor.Libraries;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 
 /// <summary> Handles loading and accessing the empty scene. </summary>
-public class EmptySceneLoader : MonoBehaviour
+public static class EmptySceneLoader
 {
-    /// <summary> Instance of the Loader. </summary>
-    public static EmptySceneLoader Instance = null;
-
     /// <summary> Whether its already loaded. </summary>
     private static bool _loaded = false;
 
@@ -37,14 +33,9 @@ public class EmptySceneLoader : MonoBehaviour
     /// <summary> Forces the editor to set a scene name to SceneHelper </summary>
     public static string forceLevelGUID = "";
 
-    /// <summary> Force the loader to load. </summary>
-    void Awake() => Load();
-
     /// <summary> Load the assetbundle containing the scene. </summary>
-    public void Load()
+    public static void Load()
     {
-        DontDestroyOnLoad((Instance = this).gameObject);
-
         // istg why does this crash the game when u dont do this
         AssHelper.Ass<GameObject>("FirstRoom");
 
@@ -60,10 +51,10 @@ public class EmptySceneLoader : MonoBehaviour
     }
 
     /// <summary> Loads the Empty level. </summary>
-    public void LoadLevel() => StartCoroutine("LoadLevelAsync");
+    public static void LoadLevel() => Plugin.Instance.StartCoroutine(LoadLevelAsync());
 
-    /// <summary> Loads the Empty level asynchronously. </summary>
-    public IEnumerator LoadLevelAsync()
+    /// <summary> Asynchronously loads the Empty level. </summary>
+    public static IEnumerator LoadLevelAsync()
     {
         Plugin.LogInfo("Loading Empty Scene.");
         SceneHelper.Instance.loadingBlocker.SetActive(true);
@@ -80,12 +71,13 @@ public class EmptySceneLoader : MonoBehaviour
             while (!_loaded) yield return null;
         }
 
-        if (SceneHelper.CurrentScene != "UltraEditor") 
+        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName)) 
             SceneHelper.LastScene = SceneHelper.CurrentScene;
-
+        
         SceneHelper.CurrentScene = EditorManager.EditorSceneName;
         if (forceLevelGUID != "" && forceSave == "?" && !forceEditor)
             SceneHelper.CurrentScene = EditorManager.EditorSceneName+"."+forceLevelGUID;
+
         AsyncOperation sceneload = SceneManager.LoadSceneAsync("Assets/ULTRAEDITOR/Empty Editor Scene.unity");
 
         // wait til its loaded 
@@ -108,7 +100,7 @@ public class EmptySceneLoader : MonoBehaviour
 
     /// <summary> Loads the actual editor or level once you enter the scene. </summary>
     /// <remarks>(THIS IS WRITTEN BY DUVIZ NOT BY ME PLEASE THIS WASNT ME)</remarks>
-    public IEnumerator LoadEditor()
+    public static IEnumerator LoadEditor()
     {
         if (forceEditor)
         {
@@ -151,13 +143,13 @@ public class EmptySceneLoader : MonoBehaviour
             }
             List<GameObject> secrets = [];
             int ind = 0;
-            foreach (Bonus secret in FindObjectsOfType<Bonus>(true))
+            foreach (Bonus secret in GameObject.FindObjectsOfType<Bonus>(true))
             {
                 secret.secretNumber = ind;
                 secrets.Add(secret.gameObject);
                 ind++;
             }
-            LevelInfoObject lio = FindObjectOfType<LevelInfoObject>();
+            LevelInfoObject lio = GameObject.FindObjectOfType<LevelInfoObject>();
             StatsManager.Instance.secretObjects = secrets.ToArray();
             EditorManager.Instance.CreateUI();
             StockMapInfo.Instance.levelName = levelName.ToUpper();
@@ -174,7 +166,7 @@ public class EmptySceneLoader : MonoBehaviour
             }
             else
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = tips[UnityEngine.Random.Range(0, tips.Length)] };
-            ShopZone[] sz = FindObjectsOfType<ShopZone>(true);
+            ShopZone[] sz = GameObject.FindObjectsOfType<ShopZone>(true);
             foreach (var s in sz)
             {
                 s.tipOfTheDay?.text = StockMapInfo.Instance.tipOfTheDay.tip;
@@ -184,7 +176,7 @@ public class EmptySceneLoader : MonoBehaviour
             DiscordController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
             SteamController.Instance.FetchSceneActivity(SceneHelper.CurrentScene);
         }
-
+        
         StatsManager.Instance.gameObject.AddComponent<FogFadeController>();
         StatsManager.Instance.gameObject.AddComponent<TimeTracker>();
         ChallengeManager.Instance.challengePanel.transform.parent.Find("ChallengeText").GetComponent<TMP_Text>().text = "(NO CHALLENGE)";
@@ -195,7 +187,7 @@ public class EmptySceneLoader : MonoBehaviour
     }
 
     /// <summary> Tries to open the editor. </summary>
-    public void OpenEditor()
+    public static void OpenEditor()
     {
         if (SceneHelper.PendingScene != null) return;
 
