@@ -89,7 +89,7 @@ public class PortalObject : SavableObject
         if (portal?.shape is PlaneShape shape && (shape.width != PortalWidth || shape.height != PortalHeight))
             portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
 
-        if (PortalEntrance?.scale != Vector3.one || PortalExit?.scale != Vector3.one)
+        if ((PortalEntrance && PortalEntrance.scale != Vector3.one) || (PortalExit && PortalExit?.scale != Vector3.one))
         {
             PortalEntrance.scale = PortalExit.scale = Vector3.one;
             EditorManager.Instance.SetAlert("Change the scale of portals in the object with the portal component.", "Warning!", new(0f, 1f, 0.75f));
