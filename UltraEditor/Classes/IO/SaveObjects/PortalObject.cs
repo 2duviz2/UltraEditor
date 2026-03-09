@@ -79,25 +79,21 @@ public class PortalObject : SavableObject
         PortalExit.SetActive(true);
     }
 
-    public void Start()
-    {
-        PortalEntrance.transform.parent = transform;
-        PortalEntrance.transform.localPosition = PortalEntrancePos;
-        PortalEntrance.transform.forward = new(0f, 0f, 1f);
-        PortalEntrance.transform.eulerAngles = PortalEntranceRot;
-
-        PortalExit.transform.parent = transform;
-        PortalExit.transform.localPosition = PortalExitPos;
-        PortalExit.transform.forward = new(0f, 0f, 1f);
-        PortalExit.transform.eulerAngles = PortalExitRot;
+    /// <summary> Update portal.shape on start :3 </summary>
+    public void Start() =>
         portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
-    }
 
-    /// <summary> rawr </summary>
+    /// <summary> Updates the portal.shape whenever u change it and also warns u if ur stupid and try to scale the portal children themselves. </summary>
     public override void Tick()
     {
         if (portal?.shape is PlaneShape shape && (shape.width != PortalWidth || shape.height != PortalHeight))
             portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
+
+        if (PortalEntrance?.scale != Vector3.one || PortalExit?.scale != Vector3.one)
+        {
+            PortalEntrance.scale = PortalExit.scale = Vector3.one;
+            EditorManager.Instance.SetAlert("Change the scale of portals in the object with the portal component.", "Warning!", new(0f, 1f, 0.75f));
+        }
     }
 
     [EditorVar("Enterance Color")]
@@ -120,6 +116,7 @@ public class PortalObject : SavableObject
         float height = PortalHeight/2f;
 
         LineMat ??= new(DefaultReferenceManager.Instance.masterShader);
+
         DrawOutline(EnteranceColor.ToColor(), PortalEntrance.transform);
         DrawOutline(ExitColor.ToColor(), PortalExit.transform);
 
@@ -128,7 +125,7 @@ public class PortalObject : SavableObject
             LineMat.SetPass(0);
 
             GL.PushMatrix();
-            GL.MultMatrix(local.localToWorldMatrix);
+            GL.MultMatrix(Matrix4x4.TRS(local.position, local.rotation, Vector3.one));
 
             // draw []
             Draw(col, GL.LINE_STRIP,

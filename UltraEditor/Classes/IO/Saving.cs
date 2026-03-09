@@ -512,7 +512,9 @@ public static class SceneJsonSaver
         DefaultValueHandling = DefaultValueHandling.Include
     };
 
-    static float[] V3(Vector3 v) => new float[] { v.x, v.y, v.z };
+    static float[] V3(Vector3? v) => v.HasValue
+        ? [ v.Value.x, v.Value.y, v.Value.z ] 
+        : [ 0f, 0f, 0f ];
 
     static string Tex2D(Texture2D tex)
     {
@@ -1038,10 +1040,10 @@ public static class SceneJsonSaver
             data["PortalWidth"] = obj.PortalWidth;
             data["PortalHeight"] = obj.PortalHeight;
             data["MaxRecursions"] = obj.MaxRecursions;
-            data["PortalEntrancePos"] = JArray.FromObject(V3(obj.PortalEntrance.transform.localPosition));
-            data["PortalEntranceRot"] = JArray.FromObject(V3(obj.PortalEntrance.transform.eulerAngles));
-            data["PortalExitPos"] = JArray.FromObject(V3(obj.PortalExit.transform.localPosition));
-            data["PortalExitRot"] = JArray.FromObject(V3(obj.PortalExit.transform.eulerAngles));
+            data["PortalEntrancePos"] = JArray.FromObject(V3(obj.PortalEntrance?.transform.localPosition));
+            data["PortalEntranceRot"] = JArray.FromObject(V3(obj.PortalEntrance?.transform.eulerAngles));
+            data["PortalExitPos"] = JArray.FromObject(V3(obj.PortalExit?.transform.localPosition));
+            data["PortalExitRot"] = JArray.FromObject(V3(obj.PortalExit?.transform.eulerAngles));
             data["EnteranceColor"] = JArray.FromObject(V3(obj.EnteranceColor));
             data["ExitColor"] = JArray.FromObject(V3(obj.ExitColor));
 
@@ -1488,6 +1490,8 @@ public static class SceneJsonSaver
 
                         if (data.TryGetValue("EnteranceColor", out JToken uwu10)) po.EnteranceColor = ParseV3(uwu10);
                         if (data.TryGetValue("ExitColor", out JToken uwu11)) po.ExitColor = ParseV3(uwu11);
+
+                        po.Awake();
                     }
                 }
                 else if (typeName == "HUDMessageObject")
