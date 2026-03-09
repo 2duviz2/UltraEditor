@@ -1,5 +1,6 @@
 ﻿namespace UltraEditor.Classes.IO.SaveObjects;
 
+using ULTRAKILL.Portal;
 using UnityEngine;
 
 public class CubeObject : SavableObject
@@ -35,6 +36,11 @@ public class CubeObject : SavableObject
         obj._matType = materialType;
         MaterialChoser.Create(target, materialType);
         return obj;
+    }
+
+    public void Start()
+    {
+        gameObject.AddComponent<PortalAwareRenderer>();
     }
 
     public override void Tick()
