@@ -12,13 +12,14 @@ public class ChapterSelectChanger : MonoBehaviour
     public GameObject bottomMiddleCS;
 
     int frameCount = 0;
+    float timer = 0;
 
     public void Awake() =>
         DontDestroyOnLoad(gameObject);
 
     public void Update()
     {
-        if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.CurrentThreadIsMainThread())
+        if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null)
         {
             if (topLeftCS != null || topRightCS != null || bottomMiddleCS != null)
             {
@@ -26,7 +27,8 @@ public class ChapterSelectChanger : MonoBehaviour
                 return;
             }
             frameCount++;
-            if (frameCount < 60)
+            timer += Time.deltaTime;
+            if (frameCount < 90 || timer < 1.5f)
             {
                 return;
             }
@@ -103,9 +105,13 @@ public class ChapterSelectChanger : MonoBehaviour
                 int phase = 0;
                 GameObject lastCopiedChapter = null;
                 GameObject lastCopiedText = null;
-                for (int i = 0; i < chapter.transform.childCount; i++)
+                for (int i = 0; i < 100; i++)
                 {
-                    GameObject chapterButton = chapter.transform.GetChild(i).gameObject;
+                    if (i >= chapter.transform.childCount) break;
+                    var child = chapter.transform.GetChild(i);
+                    GameObject chapterButton = child.gameObject;
+
+                    Plugin.LogInfo($"Iterating {chapterButton.name} & {phase}");
 
                     if (chapterButton.name == "Secondary")
                     {
