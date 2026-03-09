@@ -18,7 +18,7 @@ public class MusicAnimator : MonoBehaviour
 
     public void OnEnable()
     {
-        float pitch = Random.Range(0, 100) == 0 
+        float pitch = Random.Range(0, 200) == 0 
             ? 0.25f
             : 1f;
 
