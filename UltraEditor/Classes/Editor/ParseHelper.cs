@@ -1,36 +1,38 @@
 ﻿namespace UltraEditor.Classes.Editor;
 
 using System;
+using System.Globalization;
+using System.Linq;
 using UnityEngine;
 
 public static class ParseHelper
 {
     public static Vector3 ParseVector3(string input)
     {
-        input = input.Trim('(', ')', ' ');
-        var parts = input.Split(',');
+        input = input.Trim('(', ')');
+        string[] parts = [.. input.Split(',', ' ').Where(p => !string.IsNullOrEmpty(p))];
 
         if (parts.Length != 3)
             throw new FormatException($"Invalid Vector3 format: {input}");
 
-        return new Vector3(
-            float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture),
-            float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture),
-            float.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture)
+        return new(
+            float.Parse(parts[0], CultureInfo.InvariantCulture),
+            float.Parse(parts[1], CultureInfo.InvariantCulture),
+            float.Parse(parts[2], CultureInfo.InvariantCulture)
         );
     }
 
     public static Vector2 ParseVector2(string input)
     {
-        input = input.Trim('(', ')', ' ');
-        var parts = input.Split(',');
+        input = input.Trim('(', ')');
+        string[] parts = [.. input.Split(',', ' ').Where(p => !string.IsNullOrEmpty(p))];
 
         if (parts.Length != 2)
             throw new FormatException($"Invalid Vector2 format: {input}");
 
-        return new Vector2(
-            float.Parse(parts[0], System.Globalization.CultureInfo.InvariantCulture),
-            float.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture)
+        return new(
+            float.Parse(parts[0], CultureInfo.InvariantCulture),
+            float.Parse(parts[1], CultureInfo.InvariantCulture)
         );
     }
 
