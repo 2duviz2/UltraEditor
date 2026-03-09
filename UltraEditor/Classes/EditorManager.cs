@@ -1306,7 +1306,7 @@ public class EditorManager : MonoBehaviour
                 UpdateInspector();
             });
         }
-        if (type == typeof(UnityEvent))
+        else if (type == typeof(UnityEvent))
         {
             CreateInspectorItem(fieldName, InspectorItemType.Button, "Click", value).AddListener(() =>
             {
