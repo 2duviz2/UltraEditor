@@ -164,7 +164,7 @@ public class ChapterSelectChanger : MonoBehaviour
                 copyChapterButton2.GetComponent<Button>().onClick.AddListener(() =>
                 {
                     EmptySceneLoader.forceEditor = true;
-                    EmptySceneLoader.Instance.LoadLevel();
+                    EmptySceneLoader.LoadLevel();
                 });
 
                 l1 = objectActivateInSequence.objectsToActivate.ToList();

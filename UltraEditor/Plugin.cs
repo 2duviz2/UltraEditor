@@ -77,7 +77,6 @@ public class Plugin : BaseUnityPlugin
         harmony.PatchAll();
 
         gameObject.hideFlags = HideFlags.DontSaveInEditor;
-        SceneManager.sceneLoaded += (_, _) => new GameObject("load pls uwu :3").AddComponent<EmptySceneLoader>();
     }
 
     public void Start()
@@ -86,6 +85,7 @@ public class Plugin : BaseUnityPlugin
 
         // load the assets window
         AssetsWindowManager.Load();
+        EmptySceneLoader.Load();
     }
 
     public void Update()

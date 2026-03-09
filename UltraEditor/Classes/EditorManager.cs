@@ -2043,7 +2043,7 @@ public class EditorManager : MonoBehaviour
                     EmptySceneLoader.forceSave = sceneName;
                     EmptySceneLoader.forceEditor = false;
                     EmptySceneLoader.forceLevelCanOpenEditor = false;
-                    EmptySceneLoader.Instance.LoadLevel();
+                    EmptySceneLoader.LoadLevel();
                 }
             }
         });
