@@ -85,6 +85,7 @@ public class Plugin : BaseUnityPlugin
 
         // load the assets window
         AssetsWindowManager.Load();
+        EmptySceneLoader.Load();
     }
 
     public void Update()
