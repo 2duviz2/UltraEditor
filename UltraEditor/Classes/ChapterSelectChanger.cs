@@ -134,6 +134,7 @@ public class ChapterSelectChanger : MonoBehaviour
                         if (chapterButton.name.Contains("(Clone)") || chapterButton.name == "Boss Rush Button") // Angry level loader or bossrush
                         {
                             copyChapterButton = chapterButton;
+                            i--;
 
                             /*if (chapterButton.name == "CustomLevels(Clone)") // angry level loader
                             {
