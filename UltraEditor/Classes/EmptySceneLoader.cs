@@ -1,7 +1,5 @@
 ﻿namespace UltraEditor.Classes;
 
-using HarmonyLib;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -57,6 +55,7 @@ public static class EmptySceneLoader
     public static IEnumerator LoadLevelAsync()
     {
         Plugin.LogInfo("Loading Empty Scene.");
+        SceneHelper.PendingScene = EditorManager.EditorSceneName;
         SceneHelper.Instance.loadingBlocker.SetActive(true);
         if (!forceEditor && forceSave != "") SceneHelper.SetLoadingSubtext("Loading level...");
         else SceneHelper.SetLoadingSubtext("Loading editor...");
@@ -86,6 +85,7 @@ public static class EmptySceneLoader
         Plugin.LogInfo("Scene loaded!");
         SceneHelper.SetLoadingSubtext("");
         SceneHelper.Instance.loadingBlocker.SetActive(false);
+        SceneHelper.PendingScene = null;
 
         // duviz why
         yield return LoadEditor();

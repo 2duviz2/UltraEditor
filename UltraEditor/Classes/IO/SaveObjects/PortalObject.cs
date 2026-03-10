@@ -42,24 +42,24 @@ public class PortalObject : SavableObject
         {
             PortalEntrance = new("Portal Enterance", typeof(SavableObject));
             PortalEntrance.SetActive(false);
-
-            PortalEntrance.transform.parent = transform;
-            PortalEntrance.transform.localPosition = PortalEntrancePos;
-            PortalEntrance.transform.forward = new(0f, 0f, 1f);
-            PortalEntrance.transform.eulerAngles = PortalEntranceRot;
         }
+
+        PortalEntrance.transform.parent = transform;
+        PortalEntrance.transform.localPosition = PortalEntrancePos;
+        PortalEntrance.transform.forward = new(0f, 0f, 1f);
+        PortalEntrance.transform.eulerAngles = PortalEntranceRot;
 
         // create exit portal if it doesnt exist
         if (!PortalExit)
         {
             PortalExit = new("Portal Exit", typeof(SavableObject));
             PortalExit.SetActive(false);
-
-            PortalExit.transform.parent = transform;
-            PortalExit.transform.localPosition = PortalExitPos;
-            PortalExit.transform.forward = new(0f, 0f, 1f);
-            PortalExit.transform.eulerAngles = PortalExitRot;
         }
+
+        PortalExit.transform.parent = transform;
+        PortalExit.transform.localPosition = PortalExitPos;
+        PortalExit.transform.forward = new(0f, 0f, 1f);
+        PortalExit.transform.eulerAngles = PortalExitRot;
 
         // set up the portals
         portal = gameObject.AddComponent<Portal>();
@@ -89,7 +89,7 @@ public class PortalObject : SavableObject
         if (portal?.shape is PlaneShape shape && (shape.width != PortalWidth || shape.height != PortalHeight))
             portal.shape = new PlaneShape() { width = PortalWidth, height = PortalHeight };
 
-        if (PortalEntrance?.scale != Vector3.one || PortalExit?.scale != Vector3.one)
+        if ((PortalEntrance && PortalEntrance.scale != Vector3.one) || (PortalExit && PortalExit?.scale != Vector3.one))
         {
             PortalEntrance.scale = PortalExit.scale = Vector3.one;
             EditorManager.Instance.SetAlert("Change the scale of portals in the object with the portal component.", "Warning!", new(0f, 1f, 0.75f));
