@@ -49,7 +49,8 @@ public static class EmptySceneLoader
     }
 
     /// <summary> Loads the Empty level. </summary>
-    public static void LoadLevel() => Plugin.Instance.StartCoroutine(LoadLevelAsync());
+    public static Coroutine LoadLevel() => 
+        Plugin.Instance.StartCoroutine(LoadLevelAsync());
 
     /// <summary> Asynchronously loads the Empty level. </summary>
     public static IEnumerator LoadLevelAsync()

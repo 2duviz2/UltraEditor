@@ -1,20 +1,19 @@
 ﻿namespace UltrakillStupid.Patches;
 
 using HarmonyLib;
-using UltraEditor;
+using System.Collections;
 using UltraEditor.Classes;
-using UnityEngine;
 
 [HarmonyPatch]
 public static class SceneHelperPatch
 {
     /// <summary> Reload the empty scene when you restart mission in it. </summary>
-    [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), nameof(SceneHelper.RestartSceneAsync))]
-    public static bool RestartMissionPatch(ref Coroutine __result)
+    [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), "LoadSceneCoroutine")]
+    public static bool RestartMissionPatch(ref IEnumerator __result, string sceneName)
     {
-        if (SceneHelper.CurrentScene.StartsWith(EditorManager.EditorSceneName))
+        if (sceneName.StartsWith(EditorManager.EditorSceneName))
         {
-            __result = Plugin.Instance.StartCoroutine(EmptySceneLoader.LoadLevelAsync());
+            __result = EmptySceneLoader.LoadLevelAsync();
             return false;
         }
 
