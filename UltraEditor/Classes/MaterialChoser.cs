@@ -70,7 +70,8 @@ public class MaterialChoser : MonoBehaviour
         InsideOutCapsule,
         Sphere,
         Capsule,
-        Plane
+        Plane,
+        Cylinder
     }
 
     public static MaterialChoser Create(GameObject target, materialTypes materialType)
@@ -463,6 +464,7 @@ public static class ShapesExtensions
                 Shapes.Cube => PrimitiveType.Cube,
                 Shapes.Sphere => PrimitiveType.Sphere,
                 Shapes.Capsule => PrimitiveType.Capsule,
+                Shapes.Cylinder => PrimitiveType.Cylinder,
                 Shapes.Plane => PrimitiveType.Plane,
                 Shapes.InsideOutCube => PrimitiveType.Cube,
                 Shapes.InsideOutSphere => PrimitiveType.Sphere,
