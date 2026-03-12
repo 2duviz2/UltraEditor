@@ -50,4 +50,11 @@ public class OrbitTrigger : SavableObject
             nm.ResetGravity();
         }
     }
+
+    /// <summary> Reset gravity when destroyed. </summary>
+    public void OnDestroy()
+    {
+        orbitting = false;
+        nm.ResetGravity();
+    }
 }

@@ -259,6 +259,7 @@ public class EditorManager : MonoBehaviour
         if (SceneHelper.CurrentScene is "Intro" or "Bootstrap")
             return;
 
+        NewMovement.Instance?.ResetGravity();
         if (Instance == null)
         {
             DeleteScene();
