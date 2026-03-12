@@ -1,4 +1,4 @@
-﻿namespace UltrakillStupid.Patches;
+﻿namespace UltraEditor.Patches;
 
 using HarmonyLib;
 using System.Collections;
@@ -7,9 +7,9 @@ using UltraEditor.Classes;
 [HarmonyPatch]
 public static class SceneHelperPatch
 {
-    /// <summary> Reload the empty scene when you restart mission in it. </summary>
+    /// <summary> Redirect SceneHelper.LoadScene("UltraEditor"); to use our scene loader so restart mission and others work :3 </summary>
     [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), "LoadSceneCoroutine")]
-    public static bool RestartMissionPatch(ref IEnumerator __result, string sceneName)
+    public static bool LoadScenePatch(ref IEnumerator __result, string sceneName)
     {
         if (sceneName.StartsWith(EditorManager.EditorSceneName))
         {

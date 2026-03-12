@@ -1,4 +1,4 @@
-﻿namespace UltrakillStupid.Patches;
+﻿namespace UltraEditor.Patches;
 
 using HarmonyLib;
 using UnityEngine;
