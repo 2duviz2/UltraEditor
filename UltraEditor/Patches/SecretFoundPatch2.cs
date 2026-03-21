@@ -2,12 +2,9 @@
 
 using HarmonyLib;
 
-[HarmonyPatch(typeof(StatsManager))]
-[HarmonyPatch("SecretFound")]
-internal class SecretFoundPatch2
+[HarmonyPatch(typeof(StatsManager), "SecretFound")]
+public static class SecretFoundPatch2
 {
-    public static bool Prefix(int i)
-    {
-        return i != 100000;
-    }
+    public static bool Prefix(int i) =>
+        i != 100000;
 }

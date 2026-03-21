@@ -7,7 +7,7 @@ using UltraEditor.Classes;
 [HarmonyPatch]
 public static class SceneHelperPatch
 {
-    /// <summary> Redirect SceneHelper.LoadScene("UltraEditor"); to use our scene loader so restart mission and others work :3 </summary>
+    /// <summary> Redirect <c>SceneHelper.LoadSceneCoroutine("UltraEditor");</c> to use our scene loader so restart mission and others work :3 </summary>
     [HarmonyPrefix] [HarmonyPatch(typeof(SceneHelper), "LoadSceneCoroutine")]
     public static bool LoadScenePatch(ref IEnumerator __result, string sceneName)
     {

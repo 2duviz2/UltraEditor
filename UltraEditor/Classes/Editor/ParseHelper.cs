@@ -10,7 +10,7 @@ public static class ParseHelper
     public static Vector3 ParseVector3(string input)
     {
         input = input.Trim('(', ')');
-        string[] parts = [.. input.Split(',', ' ').Where(p => !string.IsNullOrEmpty(p))];
+        string[] parts = input.Split(',', ' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (parts.Length != 3)
             throw new FormatException($"Invalid Vector3 format: {input}");
@@ -25,7 +25,7 @@ public static class ParseHelper
     public static Vector2 ParseVector2(string input)
     {
         input = input.Trim('(', ')');
-        string[] parts = [.. input.Split(',', ' ').Where(p => !string.IsNullOrEmpty(p))];
+        string[] parts = input.Split(',', ' ', StringSplitOptions.RemoveEmptyEntries);
 
         if (parts.Length != 2)
             throw new FormatException($"Invalid Vector2 format: {input}");

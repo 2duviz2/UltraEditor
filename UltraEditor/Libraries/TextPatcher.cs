@@ -15,6 +15,7 @@ public static class TextPatcher
         string t = originalText;
         foreach (var pat in patches)
             t = t.Replace(pat.Item1, pat.Item2);
+
         return t;
     }
 }

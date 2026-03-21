@@ -2,9 +2,8 @@
 
 using HarmonyLib;
 
-[HarmonyPatch(typeof(GameProgressSaver))]
-[HarmonyPatch("SecretFound")]
-internal class GmameProggressSaverPatch
+[HarmonyPatch(typeof(GameProgressSaver), "SecretFound")]
+public class GmameProggressSaverPatch
 {
     public static bool Prefix(int secretNum)
     {

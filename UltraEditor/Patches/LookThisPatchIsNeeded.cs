@@ -3,9 +3,8 @@
 using HarmonyLib;
 using UnityEngine;
 
-[HarmonyPatch(typeof(Revolver))]
-[HarmonyPatch("Shoot")]
-internal class LookThisPatchIsNeeded
+[HarmonyPatch(typeof(Revolver), "Shoot")]
+public static class LookThisPatchIsNeeded
 {
     public static void Postfix(int shotType = 1)
     {

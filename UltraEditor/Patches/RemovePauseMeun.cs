@@ -4,7 +4,7 @@ using HarmonyLib;
 using UltraEditor.Classes;
 
 [HarmonyPatch]
-public class RemovePauseMeun
+public static class RemovePauseMeun
 {
     [HarmonyPrefix] [HarmonyPatch(typeof(OptionsManager), nameof(OptionsManager.Pause))]
     public static bool DontFuckingExistYouFuckAssMenu() =>
