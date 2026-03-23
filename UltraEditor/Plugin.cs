@@ -15,6 +15,7 @@ public class Plugin : BaseUnityPlugin
     public const string GUID = "duviz.ultrakill.ultraeditor";
     public const string Name = "UltraEditor";
     public const string Version = "0.1.0";
+    public const string ExpectedBuildGUID = "0ab3618344e342558a9e2795284ddad1"; // 17b2
 
     public static Plugin Instance;
     public plog.Logger Log;
@@ -65,6 +66,15 @@ public class Plugin : BaseUnityPlugin
 
     public void Awake()
     {
+        if (Application.buildGUID != ExpectedBuildGUID)
+        {
+            Logger.LogFatal("Incompatible game version!" +
+                $"\nGUID: {Application.buildGUID} EXPECTED: {ExpectedBuildGUID}");
+
+            Destroy(this);
+            return;
+        }
+
         Instance = this;
         LogInfo("Hi :3");
         System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
