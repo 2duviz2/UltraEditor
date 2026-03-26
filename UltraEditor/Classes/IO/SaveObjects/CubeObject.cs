@@ -38,11 +38,6 @@ public class CubeObject : SavableObject
         return obj;
     }
 
-    public void Start()
-    {
-        gameObject.AddComponent<PortalAwareRenderer>();
-    }
-
     public override void Tick()
     {
         if (GetComponent<Collider>() != null)

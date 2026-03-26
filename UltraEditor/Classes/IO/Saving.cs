@@ -562,7 +562,7 @@ public static class SceneJsonSaver
         // CubeObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
             {
                 var ob = obj.gameObject;
@@ -603,7 +603,7 @@ public static class SceneJsonSaver
         // PrefabObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<PrefabObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<CheckPoint>() != null) continue;
             if (obj.GetComponent<CheckpointObject>() != null) continue;
             if (obj.transform.parent != null && obj.transform.parent.name == "Automated Gore Zone") continue;
@@ -626,7 +626,7 @@ public static class SceneJsonSaver
             var iterated = new HashSet<GameObject>();
             foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ArenaObject>(true)))
             {
-                if (obj.name == "HIDEINHIERARCHY") continue;
+                if (obj.isHidden) continue;
                 if (iterated.Contains(obj.gameObject)) continue;
                 if (obj.GetComponent<ActivateArena>() == null) continue;
 
@@ -660,7 +660,7 @@ public static class SceneJsonSaver
         // NextArenaObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NextArenaObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<ActivateNextWave>() == null) continue;
             var an = obj.GetComponent<ActivateNextWave>();
             obj.enemyIds.Clear();
@@ -687,7 +687,7 @@ public static class SceneJsonSaver
         // ActivateObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ActivateObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             obj.toActivateIds.Clear();
             obj.toDeactivateIds.Clear();
             foreach (var e in obj.toActivate)
@@ -708,7 +708,7 @@ public static class SceneJsonSaver
         // HUDMessageObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<HUDMessageObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             var so = new SerializedObject { type = "HUDMessageObject", common = SerializeCommon(obj) };
             var data = new JObject();
             data["message"] = obj.message;
@@ -720,7 +720,7 @@ public static class SceneJsonSaver
         // TeleportObject (IO.SaveObjects)
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<IO.SaveObjects.TeleportObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             var so = new SerializedObject { type = "TeleportObject", common = SerializeCommon(obj) };
             var data = new JObject();
             data["teleportPosition"] = JArray.FromObject(V3(obj.teleportPosition));
@@ -733,7 +733,7 @@ public static class SceneJsonSaver
         // LevelInfoObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<LevelInfoObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             var so = new SerializedObject { type = "LevelInfoObject", common = SerializeCommon(obj) };
             var data = new JObject();
             obj.activateOnDoorOpenIds.Clear();
@@ -789,7 +789,7 @@ public static class SceneJsonSaver
         // CheckpointObject children-less cases
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
 
             obj.rooms = new List<string>();
             foreach (var e in obj.checkpointRooms)
@@ -810,7 +810,7 @@ public static class SceneJsonSaver
         // DeathZone
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<DeathZone>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
             var sav = obj.gameObject.AddComponent<SavableObject>();
             var so = new SerializedObject { type = "DeathZone", common = SerializeCommon(sav) };
@@ -825,7 +825,7 @@ public static class SceneJsonSaver
         // Light
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<Light>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.gameObject.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             if (obj.GetComponent<PrefabObject>() != null) continue;
             var sav = obj.gameObject.AddComponent<SavableObject>();
@@ -843,7 +843,7 @@ public static class SceneJsonSaver
         // MusicObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MusicObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             var so = new SerializedObject { type = "MusicObject", common = SerializeCommon(obj) };
             var data = new JObject();
@@ -856,7 +856,7 @@ public static class SceneJsonSaver
         // SFXObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SFXObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             var so = new SerializedObject { type = "SFXObject", common = SerializeCommon(obj) };
             var data = new JObject();
@@ -873,7 +873,7 @@ public static class SceneJsonSaver
         // MovingPlatformAnimator
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.affectedCubesIds = new List<string>();
             obj.pointsIds = new List<string>();
@@ -896,7 +896,7 @@ public static class SceneJsonSaver
         // SkullActivatorObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SkullActivatorObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.triggerAltarsIds = new List<string>();
             obj.toActivateIds = new List<string>();
@@ -918,7 +918,7 @@ public static class SceneJsonSaver
         // CubeTilingAnimator
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeTilingAnimator>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.affectedCubesIds = new List<string>();
             foreach (var e in obj.affectedCubes) if (e != null) obj.addId(LoadingHelper.GetIdOfObj(e));
@@ -935,7 +935,7 @@ public static class SceneJsonSaver
         // BookObject
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<BookObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             var bo = new SerializedObject { type = "BookObject", common = SerializeCommon(obj) };
             var data = new JObject();
             data["content"] = obj.content;
@@ -946,7 +946,7 @@ public static class SceneJsonSaver
         // GlitchEffect
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GlitchEffect>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.dummyObjectsIds = new List<string>();
             foreach (var e in obj.dummyObjects) if (e != null) obj.addId(LoadingHelper.GetIdOfObj(e));
@@ -965,7 +965,7 @@ public static class SceneJsonSaver
         // EnemyModifier
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<EnemyModifier>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.affectedEnemiesIds = new List<string>();
             foreach (var e in obj.affectedEnemies) if (e != null) obj.addId(LoadingHelper.GetIdOfObj(e));
@@ -986,7 +986,7 @@ public static class SceneJsonSaver
         // FogTrigger
         foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<FogTrigger>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") continue;
+            if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
 
             var so = new SerializedObject { type = "FogTrigger", common = SerializeCommon(obj) };
@@ -1017,7 +1017,8 @@ public static class SceneJsonSaver
         // OrbitTrigger
         foreach (OrbitTrigger obj in ReverseArray(GameObject.FindObjectsOfType<OrbitTrigger>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY" || obj.GetComponent<SavableObject>() == null) continue;
+            if (obj.isHidden) continue; 
+            if (obj.GetComponent<SavableObject>() == null) continue;
 
             SerializedObject so = new() { type = "OrbitTrigger", common = SerializeCommon(obj) };
             JObject data = [];
@@ -1031,8 +1032,7 @@ public static class SceneJsonSaver
         // PortalObject
         foreach (PortalObject obj in ReverseArray(GameObject.FindObjectsOfType<PortalObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") 
-                continue;
+            if (obj.isHidden) continue;
 
             SerializedObject so = new() { type = "PortalObject", common = SerializeCommon(obj) };
 
@@ -1054,8 +1054,7 @@ public static class SceneJsonSaver
         // TextureObject
         foreach (TextureObject obj in ReverseArray(GameObject.FindObjectsOfType<TextureObject>(true)))
         {
-            if (obj.name == "HIDEINHIERARCHY") 
-                continue;
+            if (obj.isHidden) continue;
 
             SerializedObject so = new() { type = "TextureObject", common = SerializeCommon(obj) };
 
@@ -1634,5 +1633,26 @@ public static class SceneJsonSaver
             EditorManager.Instance.cameraSelector.UnselectObject();
         }
         catch { }
+    }
+
+    extension(MonoBehaviour obj)
+    {
+        public bool isHidden => obj.rootName == "HIDEINHIERARCHY";
+        public string rootName => GetRootName(obj.transform);
+    }
+
+    extension(GameObject obj)
+    {
+        public bool isHidden => obj.rootName == "HIDEINHIERARCHY";
+        public string rootName => GetRootName(obj.transform);
+    }
+
+    public static string GetRootName(Transform j)
+    {
+        if (j.parent)
+        {
+            return GetRootName(j.parent);
+        }
+        return j.name;
     }
 }
