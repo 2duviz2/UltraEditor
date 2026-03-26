@@ -1,6 +1,5 @@
 ﻿namespace UltraEditor.Classes.IO.SaveObjects;
 
-using ULTRAKILL.Portal;
 using UnityEngine;
 
 public class CubeObject : SavableObject
