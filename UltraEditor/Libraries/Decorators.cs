@@ -22,6 +22,7 @@ public static class AttributeHelper
             .Where(x => x.attr != null);
 }
 
+/// <summary> Adds the component to the addable component list in the editor. </summary>
 [AttributeUsage(AttributeTargets.Class)]
 public class EditorComp : Attribute
 {
@@ -30,18 +31,11 @@ public class EditorComp : Attribute
     public EditorComp(string description) => this.description = description;
 }
 
-[AttributeUsage(AttributeTargets.Field)]
-public class VarDescription : Attribute
-{
-    public string description;
-
-    public VarDescription(string description) => this.description = description;
-}
-
+/// <summary> Adds the variable to the inspector with the desired name. </summary>
 [AttributeUsage(AttributeTargets.Field)]
 public class EditorVar: Attribute
 {
     public string display;
 
-    public EditorVar(string description) => this.display = description;
+    public EditorVar(string display) => this.display = display;
 }
