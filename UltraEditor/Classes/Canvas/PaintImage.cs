@@ -47,7 +47,7 @@ public class PaintImage : MonoBehaviour, IPointerDownHandler, IPointerUpHandler,
         float x = (localPoint.x - rect.x) / rect.width;
         float y = (localPoint.y - rect.y) / rect.height;
 
-        Texture2D tex = textureObj.colonThree;
+        Texture2D tex = textureObj.texture;
 
         int pixelX = Mathf.FloorToInt(x * tex.width);
         int pixelY = Mathf.FloorToInt(y * tex.height);

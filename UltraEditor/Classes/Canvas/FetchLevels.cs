@@ -35,8 +35,6 @@ public class FetchLevels : MonoBehaviour
 
     public void Start()
     {
-        ImageGetter._loaded = true;
-
         StartCoroutine(FetchLevels.GetStringFromUrl(url, str =>
         {
             if (str != null)

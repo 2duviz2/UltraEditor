@@ -10,7 +10,6 @@ using System.Reflection;
 using TMPro;
 using UltraEditor.Classes.ActionTypes;
 using UltraEditor.Classes.ActionTypes.Base;
-using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO;
 using UltraEditor.Classes.IO.SaveObjects;

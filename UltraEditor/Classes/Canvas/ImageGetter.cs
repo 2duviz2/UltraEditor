@@ -25,26 +25,13 @@ public class ImageGetter : MonoBehaviour
         }));
     }
 
-    public static bool _loaded = true;
     public static List<(string, Texture2D)> cachedTextures = [];
     public static IEnumerator GetTextureFromURL(string url, System.Action<Texture2D> callback)
     {
-        //while (!_loaded) yield return null;
-
-        var TextureObjects = FindObjectsOfType<TextureObject>(true);
-        foreach (TextureObject obj in TextureObjects)
+        if (TextureObject.textures.ContainsKey(url))
         {
-            if (obj != null)
-            {
-                if (obj.TextureName == url)
-                {
-                    if (obj.colonThree != null)
-                    {
-                        callback?.Invoke(obj.colonThree);
-                        yield break;
-                    }
-                }
-            }
+            callback(TextureObject.textures[url]);
+            yield break;
         }
 
         (string, Texture2D) cached = cachedTextures.FirstOrDefault(x => x.Item1 == url);
@@ -55,7 +42,6 @@ public class ImageGetter : MonoBehaviour
             yield break;
         }
 
-        _loaded = false;
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
             uwr.timeout = 5;
@@ -65,14 +51,12 @@ public class ImageGetter : MonoBehaviour
             {
                 Plugin.LogError($"Failed to load texture {url}: " + uwr.error);
                 callback?.Invoke(null);
-                _loaded = true;
             }
             else
             {
                 Texture2D tex = DownloadHandlerTexture.GetContent(uwr);
                 cachedTextures.Add((url, tex));
                 callback?.Invoke(tex);
-                _loaded = true;
             }
         }
     }

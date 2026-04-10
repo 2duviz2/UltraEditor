@@ -12,6 +12,7 @@ public static class EditorComponentsList
 {
     /// <summary> Static list of every editor component </summary>
     public static List<EditorComponent> editorComponents;
+    public static List<Type> savableComponents;
 
     /// <summary> Sets every editor component avaliable </summary>
     public static void SetupEditorComponents()
@@ -69,6 +70,9 @@ public static class EditorComponentsList
 
         foreach (var (type, attr) in AttributeHelper.GetTypesWithAttribute<global::EditorComp>())
             new EditorComponent(type, true, attr.description);
+
+        foreach (var (type, attr) in AttributeHelper.GetTypesWithAttribute<global::SavableComponent>())
+            savableComponents.Add(type);
     }
 
     /// <summary> Returns a list of every type in editorComponents without any other property </summary>
