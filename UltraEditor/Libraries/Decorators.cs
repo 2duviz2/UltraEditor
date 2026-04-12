@@ -33,9 +33,17 @@ public class EditorComp : Attribute
 
 /// <summary> Adds the variable to the inspector with the desired name. </summary>
 [AttributeUsage(AttributeTargets.Field)]
-public class EditorVar: Attribute
+public class EditorVar : Attribute
 {
     public string display;
 
     public EditorVar(string display) => this.display = display;
 }
+
+/// <summary> Makes the component be saved in the scene. </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public class SavableComponent : Attribute;
+
+/// <summary> Makes the variable be saved in the scene. </summary>
+[AttributeUsage(AttributeTargets.Field)]
+public class SavableVariable : Attribute;

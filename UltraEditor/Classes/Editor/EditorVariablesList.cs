@@ -2,13 +2,21 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UltraEditor.Classes.IO.SaveObjects;
 using UnityEngine;
+
+public class SavableVariableObject(FieldInfo variable, Type parentType)
+{
+    public FieldInfo variable = variable;
+    public Type parentType = parentType;
+}
 
 public static class EditorVariablesList
 {
     /// <summary> Static list of every editor variable </summary>
     public static List<EditorVariable> editorVariables;
+    public static List<SavableVariableObject> savableVariables;
 
     /// <summary> Sets every editor variable avaliable </summary>
     public static void SetupEditorVariables()
@@ -95,12 +103,21 @@ public static class EditorVariablesList
 
         foreach (var (field, attr) in AttributeHelper.GetFieldsWithAttribute<global::EditorVar>())
             NewInspectorVariable(field.Name, field.DeclaringType, attr.display);
+
+        foreach (var (field, attr) in AttributeHelper.GetFieldsWithAttribute<global::SavableVariable>())
+            NewSavable(field, field.DeclaringType);
     }
 
     /// <summary> Creates a new EditorVariable </summary>
     static void NewInspectorVariable(string varName, Type parentComponent, string varDisplay)
     {
         new EditorVariable(varName, varDisplay, parentComponent);
+    }
+
+    /// <summary> Creates a new SavableVariable </summary>
+    static void NewSavable(FieldInfo field, Type parentComponent)
+    {
+        savableVariables.Add(new SavableVariableObject(field, parentComponent));
     }
 
     /// <summary> Gets the display name for that specific variable </summary>

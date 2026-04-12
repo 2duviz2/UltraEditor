@@ -1061,10 +1061,16 @@ public static class SceneJsonSaver
             JObject data = [];
             data["width"] = obj.imageSizeX;
             data["height"] = obj.imageSizeY;
-            data["texture"] = Tex2D(obj.colonThree);
+            data["texture"] = Tex2D(obj.texture);
             data["textureName"] = obj.TextureName;
             so.data = data;
             scene.objects.Add(so);
+        }
+
+        // Others
+        foreach (var type in EditorComponentsList.savableComponents)
+        {
+            // to-do, Im not doing this w/o google
         }
 
         return JsonConvert.SerializeObject(scene, jsonSettings);
@@ -1263,7 +1269,7 @@ public static class SceneJsonSaver
                     {
                         if (data.TryGetValue("width", out JToken t1)) to.imageSizeX = ParseInt(t1);
                         if (data.TryGetValue("height", out JToken t2)) to.imageSizeY = ParseInt(t2);
-                        if (data.TryGetValue("texture", out JToken t3)) to.colonThree = ParseTex2D(t3);
+                        if (data.TryGetValue("texture", out JToken t3)) to.texture = ParseTex2D(t3);
                         if (data.TryGetValue("textureName", out JToken t4)) to.TextureName = t4.ToString();
                     }
                 }

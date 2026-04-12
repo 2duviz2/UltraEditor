@@ -1,6 +1,6 @@
 ﻿namespace UltraEditor.Classes.IO.SaveObjects;
 
-using System.Linq;
+using System.Collections.Generic;
 using UltraEditor.Classes.Canvas;
 using UnityEngine;
 using UnityEngine.Events;
@@ -21,15 +21,17 @@ public class TextureObject : SavableObject
     [EditorVar("Texture height")]
     public int imageSizeY = 32;
 
-    public Texture2D colonThree = new(32, 32);
+    public Texture2D texture = new(32, 32);
     public RawImage imageContainer;
     public Image previewImage;
 
+    public static Dictionary<string, Texture2D> textures = [];
+
     public override void Tick()
     {
-        if (new Vector2(colonThree.width, colonThree.height) != new Vector2(imageSizeX, imageSizeY))
+        if (new Vector2(texture.width, texture.height) != new Vector2(imageSizeX, imageSizeY))
         {
-            colonThree = new(imageSizeX, imageSizeY)
+            texture = new(imageSizeX, imageSizeY)
             {
                 filterMode = FilterMode.Point
             };
@@ -39,6 +41,8 @@ public class TextureObject : SavableObject
 
         if (TextureName == "")
             TextureName = Random.Range(0, int.MaxValue).ToString();
+
+        textures[TextureName] = texture;
     }
 
     public void Awake()
@@ -48,7 +52,7 @@ public class TextureObject : SavableObject
         if (TextureName == "")
             TextureName = Random.Range(0, int.MaxValue).ToString();
 
-        colonThree.filterMode = FilterMode.Point;
+        texture.filterMode = FilterMode.Point;
 
         onClick = new UnityEvent();
         onClick.AddListener(() =>
@@ -58,13 +62,14 @@ public class TextureObject : SavableObject
             PaintWindow.SetActive(true);
             copyURL = TextureName;
 
+            // OMG i need to change the name of the fuckass button at some point :sob:
             PaintWindow.Find("Button (1)").GetComponent<Button>().onClick = new();
             PaintWindow.Find("Button (1)").GetComponent<Button>().onClick.AddListener(CopyURL);
 
             previewImage = PaintWindow.Find("Preview").Find("Image").GetComponent<Image>();
             imageContainer = PaintWindow.Find("ImageContainer").Find("Image").GetComponent<RawImage>();
 
-            imageContainer.texture = colonThree;
+            imageContainer.texture = texture;
             imageContainer.GetOrAddComponent<PaintImage>().textureObj = this;
             imageContainer.GetOrAddComponent<PaintImage>().image = imageContainer;
             imageContainer.GetOrAddComponent<PaintImage>().brushSlider = PaintWindow.Find("Brush").Find("Slider").GetComponent<Slider>();
