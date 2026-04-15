@@ -7,7 +7,6 @@ using UltraEditor.Classes;
 using UltraEditor.Classes.Editor;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
-using UnityEngine.SceneManagement;
 
 [BepInPlugin(GUID, Name, Version)]
 public class Plugin : BaseUnityPlugin
@@ -15,7 +14,7 @@ public class Plugin : BaseUnityPlugin
     public const string GUID = "duviz.ultrakill.ultraeditor";
     public const string Name = "UltraEditor";
     public const string Version = "0.1.0";
-    public const string ExpectedBuildGUID = "83637f57668a46cfafb94f888c4820e1"; // 17c
+    public const string ExpectedBuildGUID = "bbd1cd876b3a4291a141f9d10b058935"; // 17d2
 
     public static Plugin Instance;
     public plog.Logger Log;
