@@ -8,7 +8,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 
-/// <summary> Helper class for AddreSSable ASSets. </summary>
+/// <summary> Helper class for ASSets. </summary>
 public static class AssHelper
 {
     #region Keys
@@ -60,6 +60,26 @@ public static class AssHelper
 
         return asset;
     }
+
+    /// <summary> Cache list of all used resource assets. </summary>
+    public static Dictionary<string, object> CachedResourceAssets = [];
+
+    /// <summary> Synchronously loads an asset via resources with its asset path. </summary>
+    /// <remarks> Don't use this for ULTRAKILL since pretty much EVERY asset is addressable and asset paths are all addressable GUID's. </remarks>
+    public static T ResAss<T>(string path) where T : UnityObject
+    {
+        if (CachedResourceAssets.TryGetValue(path + typeof(T).Name, out object cachedAsset))
+            return (T)cachedAsset;
+
+        T asset = Resources.Load<T>(path);
+        if (asset != null)
+            CachedResourceAssets.Add(path + typeof(T).Name, asset);
+        else
+            Plugin.LogError("Failed to load asset: " + path);
+
+        return asset;
+    }
+
 
     #endregion
 

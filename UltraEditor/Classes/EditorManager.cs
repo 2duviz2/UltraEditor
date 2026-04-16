@@ -968,7 +968,7 @@ public class EditorManager : MonoBehaviour
             {
                 field.SetValue(component, Activator.CreateInstance(fieldType));
             }
-            else if (typeof(UnityEngine.Object).IsAssignableFrom(fieldType))
+            else if (typeof(UnityObject).IsAssignableFrom(fieldType))
             {
 
             }
@@ -1392,7 +1392,7 @@ public class EditorManager : MonoBehaviour
                 arrayType = value.GetType().GetElementType();
 
                 string displayName;
-                if (element is UnityEngine.Object uobj && uobj)
+                if (element is UnityObject uobj && uobj)
                     displayName = uobj.name;
                 else
                     displayName = element?.ToString() ?? "null";
@@ -1501,7 +1501,7 @@ public class EditorManager : MonoBehaviour
                 var element = list[i];
 
                 string displayName;
-                if (element is UnityEngine.Object uobj && uobj)
+                if (element is UnityObject uobj && uobj)
                     displayName = uobj.name;
                 else
                     displayName = element?.ToString() ?? "null";
@@ -2477,7 +2477,7 @@ public class EditorManager : MonoBehaviour
 
         Plugin.LogInfo("Assigning parents...");
 
-        var allObjs = GameObject.FindObjectsOfType<SpawnedObject>(true);
+        var allObjs = UnityObject.FindObjectsOfType<SpawnedObject>(true);
 
         var dict = new Dictionary<string, SpawnedObject>();
         foreach (var o in allObjs)

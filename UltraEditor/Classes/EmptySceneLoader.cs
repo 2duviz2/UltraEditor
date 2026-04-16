@@ -144,7 +144,7 @@ public static class EmptySceneLoader
             }
             List<GameObject> secrets = [];
             int ind = 0;
-            foreach (Bonus secret in GameObject.FindObjectsOfType<Bonus>(true))
+            foreach (Bonus secret in UnityObject.FindObjectsOfType<Bonus>(true))
             {
                 secret.secretNumber = ind;
                 secrets.Add(secret.gameObject);
@@ -167,7 +167,7 @@ public static class EmptySceneLoader
             }
             else
                 StockMapInfo.Instance.tipOfTheDay = new ScriptableObjects.TipOfTheDay() { tip = tips[UnityEngine.Random.Range(0, tips.Length)] };
-            ShopZone[] sz = GameObject.FindObjectsOfType<ShopZone>(true);
+            ShopZone[] sz = UnityObject.FindObjectsOfType<ShopZone>(true);
             foreach (var s in sz)
             {
                 s.tipOfTheDay?.text = StockMapInfo.Instance.tipOfTheDay.tip;

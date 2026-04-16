@@ -3,8 +3,11 @@
 using BepInEx;
 using HarmonyLib;
 using System;
+using System.Globalization;
+using System.Threading;
 using UltraEditor.Classes;
 using UltraEditor.Classes.Editor;
+using UltraEditor.Libraries;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -76,7 +79,7 @@ public class Plugin : BaseUnityPlugin
 
         Instance = this;
         LogInfo("Hi :3");
-        System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
+        Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
 
         BundlesManager.Load();
         EditorVariablesList.SetupEditorVariables();
@@ -115,14 +118,16 @@ public class Plugin : BaseUnityPlugin
         }
     }
 
-    [Obsolete("Use AddressablesHelper")]
+    [Obsolete("Use AssHelper.Ass")]
     public static T Ass<T>(string path) { return Addressables.LoadAssetAsync<T>((object)path).WaitForCompletion(); }
-    [Obsolete("Use AddressablesHelper")]
-    public static T Ast<T>(string path) where T : UnityEngine.Object
+
+    [Obsolete("Use AssHelper.ResAss")]
+    public static T Ast<T>(string path) where T : UnityObject
     {
         T obj = Resources.Load<T>(path);
         if (obj == null)
             LogError($"Resources.Load failed for \"{path}\"");
+
         return obj;
     }
 

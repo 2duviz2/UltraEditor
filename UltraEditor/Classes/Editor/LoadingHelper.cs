@@ -21,12 +21,12 @@ public static class LoadingHelper
 
     public static void RebuiltCacheForIDs()
     {
-        foreach (var obj in GameObject.FindObjectsOfType<SavableObject>(true))
+        foreach (var obj in UnityObject.FindObjectsOfType<SavableObject>(true))
         {
             GetIdOfObj(obj.gameObject, seeking : true);
             continue;
         }
-        foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+        foreach (var obj in UnityObject.FindObjectsOfType<Transform>(true))
         {
             GetIdOfObj(obj.gameObject, seeking: true);
             continue;
@@ -48,7 +48,7 @@ public static class LoadingHelper
                 foundObjects.Add(cached);
                 continue;
             }
-            foreach (var obj in GameObject.FindObjectsOfType<Transform>(true))
+            foreach (var obj in UnityObject.FindObjectsOfType<Transform>(true))
             {
                 string id = GetIdOfObj(obj.gameObject);
                 if (e == id)

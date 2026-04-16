@@ -53,12 +53,12 @@ public static class Saving
         List<GameObject> iterated = [];
         string text = "";
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CubeObject>(true)))
         {
             if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
             {
                 GameObject ob = obj.gameObject;
-                GameObject.Destroy(obj.GetComponent<CubeObject>());
+                UnityObject.Destroy(obj.GetComponent<CubeObject>());
                 if (obj.GetComponent<ArenaObject>() == null)
                     ArenaObject.Create(ob);
                 continue;
@@ -67,7 +67,7 @@ public static class Saving
             if (obj.GetComponent<ActivateNextWave>() != null)
             {
                 GameObject ob = obj.gameObject;
-                GameObject.Destroy(obj.GetComponent<CubeObject>());
+                UnityObject.Destroy(obj.GetComponent<CubeObject>());
                 NextArenaObject o = NextArenaObject.Create(ob);
                 continue;
             }
@@ -89,7 +89,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<PrefabObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<PrefabObject>(true)))
         {
             if (obj.GetComponent<CheckPoint>() != null) continue;
             if (obj.transform.parent != null && obj.transform.parent.name == "Automated Gore Zone") continue;
@@ -104,7 +104,7 @@ public static class Saving
         }
 
         iterated = [];
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ArenaObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<ArenaObject>(true)))
         {
             if (iterated.Contains(obj.gameObject)) continue;
             if (obj.GetComponent<ActivateArena>() == null) continue;
@@ -125,7 +125,7 @@ public static class Saving
             iterated.Add(obj.gameObject);
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NextArenaObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<NextArenaObject>(true)))
         {
             if (obj.GetComponent<ActivateNextWave>() == null) continue;
             obj.enemyIds.Clear();
@@ -153,7 +153,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ActivateObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<ActivateObject>(true)))
         {
             obj.toActivateIds.Clear();
             obj.toDeactivateIds.Clear();
@@ -190,7 +190,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<HUDMessageObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<HUDMessageObject>(true)))
         {
             text += "? HUDMessageObject ?";
             text += "\n";
@@ -202,7 +202,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<IO.SaveObjects.TeleportObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<IO.SaveObjects.TeleportObject>(true)))
         {
             text += "? TeleportObject ?";
             text += "\n";
@@ -216,7 +216,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<LevelInfoObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<LevelInfoObject>(true)))
         {
             text += "? LevelInfoObject ?";
             text += "\n";
@@ -238,10 +238,10 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CheckPoint>(true)))
         {
             while (obj.GetComponent<CheckpointObject>() != null)
-                GameObject.Destroy(obj.GetComponent<CheckpointObject>());
+                UnityObject.Destroy(obj.GetComponent<CheckpointObject>());
 
             CheckpointObject co = CheckpointObject.Create(obj.gameObject);
 
@@ -279,10 +279,10 @@ public static class Saving
             text += "? END ?";
             text += "\n";
 
-            GameObject.Destroy(obj.GetComponent<CheckpointObject>());
+            UnityObject.Destroy(obj.GetComponent<CheckpointObject>());
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CheckpointObject>(true)))
         {
             if (obj.transform.childCount != 0) continue;
 
@@ -316,7 +316,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<DeathZone>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<DeathZone>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
             text += "? DeathZone ?";
@@ -334,7 +334,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<Light>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<Light>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
             if (obj.GetComponent<PrefabObject>() != null) continue;
@@ -356,7 +356,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MusicObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<MusicObject>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
             text += "? MusicObject ?";
@@ -371,7 +371,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SFXObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<SFXObject>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
             text += "? SFXObject ?";
@@ -392,7 +392,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.affectedCubesIds = [];
@@ -421,7 +421,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SkullActivatorObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<SkullActivatorObject>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.triggerAltarsIds = [];
@@ -453,7 +453,7 @@ public static class Saving
             text += "\n";
         }
 
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeTilingAnimator>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CubeTilingAnimator>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
             obj.affectedCubesIds = [];
@@ -560,13 +560,13 @@ public static class SceneJsonSaver
         Plugin.LogInfo("Serializing objects...");
 
         // CubeObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CubeObject>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<ActivateArena>() != null && obj.GetComponent<Collider>().isTrigger)
             {
                 var ob = obj.gameObject;
-                GameObject.Destroy(obj.GetComponent<CubeObject>());
+                UnityObject.Destroy(obj.GetComponent<CubeObject>());
                 if (obj.GetComponent<ArenaObject>() == null)
                     ArenaObject.Create(ob);
                 continue;
@@ -575,7 +575,7 @@ public static class SceneJsonSaver
             if (obj.GetComponent<ActivateNextWave>() != null)
             {
                 var ob = obj.gameObject;
-                GameObject.Destroy(obj.GetComponent<CubeObject>());
+                UnityObject.Destroy(obj.GetComponent<CubeObject>());
                 NextArenaObject.Create(ob);
                 continue;
             }
@@ -601,7 +601,7 @@ public static class SceneJsonSaver
         }
 
         // PrefabObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<PrefabObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<PrefabObject>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<CheckPoint>() != null) continue;
@@ -624,7 +624,7 @@ public static class SceneJsonSaver
         // ArenaObject
         {
             var iterated = new HashSet<GameObject>();
-            foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ArenaObject>(true)))
+            foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<ArenaObject>(true)))
             {
                 if (obj.isHidden) continue;
                 if (iterated.Contains(obj.gameObject)) continue;
@@ -658,7 +658,7 @@ public static class SceneJsonSaver
         }
 
         // NextArenaObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<NextArenaObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<NextArenaObject>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<ActivateNextWave>() == null) continue;
@@ -685,7 +685,7 @@ public static class SceneJsonSaver
         }
 
         // ActivateObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<ActivateObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<ActivateObject>(true)))
         {
             if (obj.isHidden) continue;
             obj.toActivateIds.Clear();
@@ -706,7 +706,7 @@ public static class SceneJsonSaver
         }
 
         // HUDMessageObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<HUDMessageObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<HUDMessageObject>(true)))
         {
             if (obj.isHidden) continue;
             var so = new SerializedObject { type = "HUDMessageObject", common = SerializeCommon(obj) };
@@ -718,7 +718,7 @@ public static class SceneJsonSaver
         }
 
         // TeleportObject (IO.SaveObjects)
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<IO.SaveObjects.TeleportObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<IO.SaveObjects.TeleportObject>(true)))
         {
             if (obj.isHidden) continue;
             var so = new SerializedObject { type = "TeleportObject", common = SerializeCommon(obj) };
@@ -731,7 +731,7 @@ public static class SceneJsonSaver
         }
 
         // LevelInfoObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<LevelInfoObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<LevelInfoObject>(true)))
         {
             if (obj.isHidden) continue;
             var so = new SerializedObject { type = "LevelInfoObject", common = SerializeCommon(obj) };
@@ -756,11 +756,11 @@ public static class SceneJsonSaver
         }
 
         // CheckPoint/CheckpointObject
-        /*foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckPoint>(true)))
+        /*foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CheckPoint>(true)))
         {
             if (obj.name == "HIDEINHIERARCHY") continue;
             while (obj.GetComponent<CheckpointObject>() != null)
-                GameObject.Destroy(obj.GetComponent<CheckpointObject>());
+                UnityObject.Destroy(obj.GetComponent<CheckpointObject>());
 
             var co = CheckpointObject.Create(obj.gameObject);
 
@@ -783,11 +783,11 @@ public static class SceneJsonSaver
             so.data = data;
             scene.objects.Add(so);
 
-            GameObject.Destroy(obj.GetComponent<CheckpointObject>());
+            UnityObject.Destroy(obj.GetComponent<CheckpointObject>());
         }*/
 
         // CheckpointObject children-less cases
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CheckpointObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CheckpointObject>(true)))
         {
             if (obj.isHidden) continue;
 
@@ -808,7 +808,7 @@ public static class SceneJsonSaver
         }
 
         // DeathZone
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<DeathZone>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<DeathZone>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
@@ -823,7 +823,7 @@ public static class SceneJsonSaver
         }
 
         // Light
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<Light>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<Light>(true)))
         {
             if (obj.gameObject.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -841,7 +841,7 @@ public static class SceneJsonSaver
         }
 
         // MusicObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MusicObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<MusicObject>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -854,7 +854,7 @@ public static class SceneJsonSaver
         }
 
         // SFXObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SFXObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<SFXObject>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -871,7 +871,7 @@ public static class SceneJsonSaver
         }
 
         // MovingPlatformAnimator
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<MovingPlatformAnimator>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -894,7 +894,7 @@ public static class SceneJsonSaver
         }
 
         // SkullActivatorObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<SkullActivatorObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<SkullActivatorObject>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -916,7 +916,7 @@ public static class SceneJsonSaver
         }
 
         // CubeTilingAnimator
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<CubeTilingAnimator>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<CubeTilingAnimator>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -933,7 +933,7 @@ public static class SceneJsonSaver
         }
 
         // BookObject
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<BookObject>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<BookObject>(true)))
         {
             if (obj.isHidden) continue;
             var bo = new SerializedObject { type = "BookObject", common = SerializeCommon(obj) };
@@ -944,7 +944,7 @@ public static class SceneJsonSaver
         }
 
         // GlitchEffect
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GlitchEffect>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<GlitchEffect>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -963,7 +963,7 @@ public static class SceneJsonSaver
         }
 
         // EnemyModifier
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<EnemyModifier>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<EnemyModifier>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -984,7 +984,7 @@ public static class SceneJsonSaver
         }
 
         // FogTrigger
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<FogTrigger>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<FogTrigger>(true)))
         {
             if (obj.isHidden) continue;
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -1002,7 +1002,7 @@ public static class SceneJsonSaver
         }
 
         // GravityTrigger
-        foreach (var obj in ReverseArray(GameObject.FindObjectsOfType<GravityTrigger>(true)))
+        foreach (var obj in ReverseArray(UnityObject.FindObjectsOfType<GravityTrigger>(true)))
         {
             if (obj.GetComponent<SavableObject>() == null) continue;
 
@@ -1015,7 +1015,7 @@ public static class SceneJsonSaver
         }
 
         // OrbitTrigger
-        foreach (OrbitTrigger obj in ReverseArray(GameObject.FindObjectsOfType<OrbitTrigger>(true)))
+        foreach (OrbitTrigger obj in ReverseArray(UnityObject.FindObjectsOfType<OrbitTrigger>(true)))
         {
             if (obj.isHidden) continue; 
             if (obj.GetComponent<SavableObject>() == null) continue;
@@ -1030,7 +1030,7 @@ public static class SceneJsonSaver
         }
 
         // PortalObject
-        foreach (PortalObject obj in ReverseArray(GameObject.FindObjectsOfType<PortalObject>(true)))
+        foreach (PortalObject obj in ReverseArray(UnityObject.FindObjectsOfType<PortalObject>(true)))
         {
             if (obj.isHidden) continue;
 
@@ -1052,7 +1052,7 @@ public static class SceneJsonSaver
         }
 
         // TextureObject
-        foreach (TextureObject obj in ReverseArray(GameObject.FindObjectsOfType<TextureObject>(true)))
+        foreach (TextureObject obj in ReverseArray(UnityObject.FindObjectsOfType<TextureObject>(true)))
         {
             if (obj.isHidden) continue;
 
@@ -1066,12 +1066,12 @@ public static class SceneJsonSaver
             so.data = data;
             scene.objects.Add(so);
         }
-
+        
         // Others
-        foreach (var type in EditorComponentsList.savableComponents)
-        {
+        //foreach (var type in EditorComponentsList.savableComponents)
+        //{
             // to-do, Im not doing this w/o google
-        }
+        //}
 
         return JsonConvert.SerializeObject(scene, jsonSettings);
     }
@@ -1255,7 +1255,7 @@ public static class SceneJsonSaver
                                 m?.Invoke(doorComp, null);
                             }
                             createdSpawnedObjects.Remove(spawned);
-                            GameObject.DestroyImmediate(workingObject);
+                            UnityObject.DestroyImmediate(workingObject);
                             spawned = newSpawned;
                             workingObject = newObj;
                             createdSpawnedObjects.Add(spawned);
@@ -1601,7 +1601,7 @@ public static class SceneJsonSaver
         }
 
         Plugin.LogInfo("Assigning parents...");
-        var allObjs = GameObject.FindObjectsOfType<SpawnedObject>(true);
+        var allObjs = UnityObject.FindObjectsOfType<SpawnedObject>(true);
         var dict = new Dictionary<string, SpawnedObject>();
 
         foreach (var o in allObjs)
