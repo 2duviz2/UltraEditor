@@ -99,31 +99,28 @@ public class MaterialChoser : MonoBehaviour
                 Shape = shape.Value;
                 GameObject tempObj = GameObject.CreatePrimitive(Shape.GetPrimitiveType());
 
-                Mesh mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
+                Mesh tempMesh = tempObj.GetComponent<MeshFilter>().mesh;
                 Destroy(tempObj);
 
                 if (Shape is Shapes.Pyramid or Shapes.InsideOutPyramid)
                 {
                     tempObj = Instantiate(BundlesManager.pyramidMesh);
-                    mesh2 = tempObj.GetComponent<MeshFilter>().sharedMesh;
+                    tempMesh = tempObj.GetComponent<MeshFilter>().mesh;
                     Destroy(tempObj);
                 }
 
-                if (Shape.ToString().StartsWith("InsideOut"))
-                    mesh2 = CreateInsideOutMesh(mesh2);
+                bool insideOut = Shape.ToString().StartsWith("InsideOut"); // this some bullshit
+                if (insideOut)
+                    tempMesh = CreateInsideOutMesh(tempMesh);
 
-                GetComponent<MeshFilter>().mesh = mesh2;
-
-                mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
-                GetComponent<MeshFilter>().mesh = mesh;
-
+                mesh = GetComponent<MeshFilter>().mesh = tempMesh;
                 if (Shape != Shapes.Cube && collider)
                 {
                     bool isTrigger = collider.isTrigger;
                     Destroy(collider);
 
                     MeshCollider meshCollider = gameObject.AddComponent<MeshCollider>();
-                    meshCollider.convex = true;
+                    meshCollider.convex = !insideOut; // not insideOut since insideout mesh's arent convex :P
                     meshCollider.sharedMesh = mesh;
                     meshCollider.isTrigger = isTrigger;
                 }
@@ -250,19 +247,11 @@ public class MaterialChoser : MonoBehaviour
         mesh = null;
     }
 
-    public void UpdateOffset()
-    {
-        Renderer renderer = GetComponent<Renderer>();
-        if (!renderer) return;
-
-        renderer.material.SetTextureOffset("_MainTex", offset);
-    }
-
     public void Update()
     {
         if (mesh == null)
         {
-            mesh = Instantiate(GetComponent<MeshFilter>()?.mesh);
+            mesh = GetComponent<MeshFilter>()?.mesh;
             float maxScale = Mathf.Max(
             [
                 transform.lossyScale.x,
@@ -271,8 +260,9 @@ public class MaterialChoser : MonoBehaviour
             ]);
             float localStep = 1f / (maxScale / 10f);
             localStep = MathF.Max(localStep, 0.1f);
-            if (PlayerPrefs.GetInt("PerformanceLighting") == 0 && !EditorManager.Instance.editorOpen)
+            if (Preferences.GetInt("PerformanceLighting") == 0 && !EditorManager.Instance.editorOpen)
                 SubdivideToUnitSize(mesh, localStep);
+
             GetComponent<MeshFilter>().mesh = mesh;
             return;
         }
@@ -287,7 +277,7 @@ public class MaterialChoser : MonoBehaviour
             lastScale = transform.lossyScale;
         }
 
-        UpdateOffset();
+        GetComponent<Renderer>()?.material.SetTextureOffset("_MainTex", offset);
     }
 
     void UpdateUVs()
