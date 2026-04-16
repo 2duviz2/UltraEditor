@@ -1,6 +1,7 @@
 ﻿namespace UltraEditor.Classes.Canvas;
 
 using System.Collections.Generic;
+using UltraEditor.Libraries;
 using UnityEngine;
 
 public class SpawnOnce : MonoBehaviour
@@ -12,7 +13,7 @@ public class SpawnOnce : MonoBehaviour
 
     public void Start()
     {
-        if (PlayerPrefs.GetInt("WelcomePopup", 1) == 0) return;
+        if (Preferences.GetInt("WelcomePopup", 1) == 0) return;
         if (!spawned.Contains(nameOfSpawn))
         {
             spawned.Add(nameOfSpawn);

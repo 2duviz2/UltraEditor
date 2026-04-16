@@ -1,6 +1,7 @@
 ﻿namespace UltraEditor.Classes.Canvas;
 
 using TMPro;
+using UltraEditor.Libraries;
 using UnityEngine;
 
 public class SettingItem : MonoBehaviour
@@ -16,14 +17,14 @@ public class SettingItem : MonoBehaviour
 
     public void ToggleValue()
     {
-        bool currentValue = PlayerPrefs.GetInt(prefKey, defaultValue ? 1 : 0) == 1;
-        PlayerPrefs.SetInt(prefKey, currentValue ? 0 : 1);
-        UpdateValueText();
+        bool currentValue = Preferences.GetInt(prefKey, defaultValue ? 1 : 0) == 1;
+        Preferences.SetInt(prefKey, currentValue ? 0 : 1); // duviz what the fuck were you doing why is this an int
+        UpdateValueText(); // WAIT WHAT THE FUCK WHY DOESNT PLAYERPREFS HAVE BOOLEANS??
     }
 
     public void UpdateValueText()
     {
-        bool currentValue = PlayerPrefs.GetInt(prefKey, defaultValue ? 1 : 0) == 1;
+        bool currentValue = Preferences.GetInt(prefKey, defaultValue ? 1 : 0) == 1;
         valueText.text = currentValue ? "True" : "False";
     }
 }

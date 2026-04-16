@@ -51,7 +51,7 @@ public static class AssHelper
     {
         if (CachedAddressableAssets.TryGetValue(key + typeof(T).Name, out object cachedAsset))
             return (T)cachedAsset;
-
+        
         T asset = Addressables.LoadAssetAsync<T>(key).WaitForCompletion();
         if (asset != null)
             CachedAddressableAssets.Add(key + typeof(T).Name, asset);

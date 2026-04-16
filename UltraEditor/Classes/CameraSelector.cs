@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UltraEditor.Classes.ActionTypes;
 using UltraEditor.Classes.Canvas;
 using UltraEditor.Classes.IO.SaveObjects;
+using UltraEditor.Libraries;
 using Unity.AI.Navigation;
 using UnityEngine;
 
@@ -520,7 +521,7 @@ public class CameraSelector : MonoBehaviour
         if (moveArrows != null)
             DeleteArrows();
 
-        globalArrows = PlayerPrefs.GetInt("GlobalArrows", 1) == 1;
+        globalArrows = Preferences.GetInt("GlobalArrows", 1) == 1;
 
         moveArrows = new Transform[3];
         for (int i = 0; i < 3; i++)

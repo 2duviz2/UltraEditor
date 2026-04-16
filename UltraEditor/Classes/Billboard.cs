@@ -3,8 +3,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using UltraEditor.Classes.IO.SaveObjects;
+using UltraEditor.Libraries;
 using UnityEngine;
 
 public class Billboard : MonoBehaviour
@@ -46,7 +46,7 @@ public class Billboard : MonoBehaviour
 #if EXPORTMODE
         return;
 #endif
-        if (PlayerPrefs.GetInt("Billboards", 1) == 0)
+        if (Preferences.GetInt("Billboards", 1) == 0)
         {
             DeleteAll();
             return;

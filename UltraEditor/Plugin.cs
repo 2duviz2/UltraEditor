@@ -54,14 +54,8 @@ public class Plugin : BaseUnityPlugin
                 || Input.GetKeyDown(KeyCode.Y) // ctrl+y
             );
 
-    public static bool IsSelectPressed()
-    {
-        if (Input.GetKey(AltKey) && Input.GetKeyDown(KeyCode.S))
-        {
-            return true;
-        }
-        return false;
-    }
+    public static bool IsSelectPressed() =>
+        Input.GetKey(AltKey) && Input.GetKeyDown(KeyCode.S);
 
     public static bool CanMove() =>
         !Input.GetKey(CtrlKey) && !Input.GetKey(AltKey);
@@ -109,10 +103,10 @@ public class Plugin : BaseUnityPlugin
 
         if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !SeenWelcomeMessage)
         {
-            if (PlayerPrefs.GetString(LastPlayedVersionPlayerPrefs) != GetVersion().ToString())
+            if (Preferences.GetString(LastPlayedVersionPlayerPrefs) != GetVersion().ToString())
             {
                 Instantiate(BundlesManager.welcomeCanvas);
-                PlayerPrefs.SetString(LastPlayedVersionPlayerPrefs, GetVersion().ToString());
+                Preferences.SetString(LastPlayedVersionPlayerPrefs, GetVersion().ToString());
             }
             SeenWelcomeMessage = true;
         }
