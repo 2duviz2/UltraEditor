@@ -17,7 +17,7 @@ public class Plugin : BaseUnityPlugin
     public const string GUID = "duviz.ultrakill.ultraeditor";
     public const string Name = "UltraEditor";
     public const string Version = "0.1.0";
-    public const string ExpectedBuildGUID = "bbd1cd876b3a4291a141f9d10b058935"; // 17d2
+    public const string ExpectedBuildGUID = "5ffb9064d1b84602a611f284c757ed4c"; // 17d3
 
     public static Plugin Instance;
     public plog.Logger Log;
