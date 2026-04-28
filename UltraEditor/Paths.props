@@ -10,6 +10,6 @@
 		<PluginPath>$(BepInExPath)\plugins</PluginPath>
 		
 		<!-- This is the path where the DLL is copied too, if you have it in a folder or something then add the name of that folder onto here. -->
-		<CopyPath>$(PluginPath)\Stupid</CopyPath>
+		<CopyPath>$(PluginPath)\UltraEditor</CopyPath>
 	</PropertyGroup>
 </Project>

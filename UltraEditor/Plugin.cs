@@ -34,7 +34,7 @@ public class Plugin : BaseUnityPlugin
     public static KeyCode ShiftKey = KeyCode.LeftShift;
     public static KeyCode AltKey = KeyCode.LeftAlt;
 
-    const string LastPlayedVersionPlayerPrefs = "UltraEditor_LastPlayedVersion";
+    const string LastPlayedVersionPref = "UltraEditor_LastPlayedVersion";
 
     static bool SeenWelcomeMessage = false;
 
@@ -103,10 +103,10 @@ public class Plugin : BaseUnityPlugin
 
         if (SceneHelper.CurrentScene == "Main Menu" && SceneHelper.PendingScene == null && !SeenWelcomeMessage)
         {
-            if (Preferences.GetString(LastPlayedVersionPlayerPrefs) != GetVersion().ToString())
+            if (Preferences.GetString(LastPlayedVersionPref) != GetVersion().ToString())
             {
                 Instantiate(BundlesManager.welcomeCanvas);
-                Preferences.SetString(LastPlayedVersionPlayerPrefs, GetVersion().ToString());
+                Preferences.SetString(LastPlayedVersionPref, GetVersion().ToString());
             }
             SeenWelcomeMessage = true;
         }
