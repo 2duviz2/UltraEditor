@@ -41,6 +41,9 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> The text that says the path to the currently open folder in the assets window. </summary>
     public TextMeshProUGUI AssetsFolderPathText;
 
+    /// <summary> Field used to search. </summary>
+    TMP_InputField SearchField;
+
     /// <summary> The currently open folder. </summary>
     [HideInInspector]
     public string CurrentFolder;
@@ -54,11 +57,19 @@ public class AssetsWindowManager : MonoBehaviour
     {
         CurrentFolder = StartingFolder;
         GetComponentInParent<Animator>().speed *= 2f; // faster :3
+        FuckingKillEveryone();
         CreatePreviewCamera();
         Refresh();
 #if EXPORTMODE
         gameObject.AddComponent<ExportDebug>();
 #endif
+    }
+
+    /// <summary> Gets the search field and adds a listener. </summary>
+    public void FuckingKillEveryone()
+    {
+        SearchField = transform.parent.Find("Field").GetChild(0).GetComponent<TMP_InputField>();
+        SearchField.onSubmit.AddListener((_) => SearchFor(_));
     }
 
     /// <summary> Goes back to the previous folder in the path. </summary>
@@ -83,6 +94,12 @@ public class AssetsWindowManager : MonoBehaviour
     /// <summary> Searches for some assets uwu </summary>
     public void SearchFor(string search)
     {
+        if (search == "") {
+            CurrentFolder = StartingFolder;
+            Refresh();
+            return;
+        }
+
         // tolower cuz like yea :3
         search = search.ToLower();
         // search the prefab addressables for any key that isnt black listed and whose name contains the search string
