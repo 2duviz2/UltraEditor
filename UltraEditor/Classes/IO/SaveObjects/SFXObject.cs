@@ -132,6 +132,7 @@ public class SFXObject : SavableObject
             _ => AudioType.MPEG
         };
 
+        Plugin.FormatURLforProxy(ref url);
         using UnityWebRequest www = UnityWebRequestMultimedia.GetAudioClip(url, audType);
         yield return www.SendWebRequest();
 

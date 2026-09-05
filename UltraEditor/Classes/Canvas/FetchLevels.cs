@@ -10,10 +10,10 @@ public class FetchLevels : MonoBehaviour
     public GameObject template;
     public Transform container;
 
-    string url = "https://duviz.xyz/api/ultraeditor/fetchlevels";
-    string getLevelUrl = "https://duviz.xyz/api/ultraeditor/getlevel/";
-    string downloadLevelUrl = "https://duviz.xyz/api/ultraeditor/downloadlevel/";
-    string getImageUrl = "https://duviz.xyz/api/ultraeditor/getimg/";
+    const string url = "https://duviz.xyz/api/ultraeditor/fetchlevels";
+    const string getLevelUrl = "https://duviz.xyz/api/ultraeditor/getlevel/";
+    const string downloadLevelUrl = "https://duviz.xyz/api/ultraeditor/downloadlevel/";
+    const string getImageUrl = "https://duviz.xyz/api/ultraeditor/getimg/";
 
     [Serializable]
     public class LevelData

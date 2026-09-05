@@ -4,6 +4,7 @@ using BepInEx;
 using HarmonyLib;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Threading;
 using UltraEditor.Classes;
 using UltraEditor.Classes.Editor;
@@ -147,5 +148,14 @@ public class Plugin : BaseUnityPlugin
     public static Version GetVersion()
     {
         return Instance.Info.Metadata.Version;
+    }
+
+    public static void FormatURLforProxy(ref string uri)
+    {
+        // if its a local file then dont use the proxy
+        if (File.Exists(uri))
+            return;
+
+        uri = "https://ultraeditor-proxy.fredayddd321ewq.workers.dev/" + uri;
     }
 }

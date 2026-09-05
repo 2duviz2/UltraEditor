@@ -42,6 +42,7 @@ public class ImageGetter : MonoBehaviour
             yield break;
         }
 
+        Plugin.FormatURLforProxy(ref url);
         using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(url))
         {
             uwr.timeout = 5;
