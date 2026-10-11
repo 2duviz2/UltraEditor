@@ -2,12 +2,12 @@
 	<Import Project="Paths.props" />
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.1</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<AssemblyName>UltraEditor</AssemblyName>
 		<Description>WIP in-game level editor for ultrakill</Description>
 		<Version>0.1.0</Version>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<LangVersion>latest</LangVersion>
+		<LangVersion>14.0</LangVersion>
 		<NoWarn>CS0649, CS0414</NoWarn>
 		<DebugType>embedded</DebugType>
 
@@ -29,8 +29,8 @@
 	
 	<ItemGroup>
 		<!-- Embed the assetbundles into the dll. -->
-		<EmbeddedResource Include="Assets\emptyscene.bundle" />
-		<EmbeddedResource Include="Assets\editorcanvas.bundle" />
+		<EmbeddedResource Include="Assets/emptyscene.bundle" />
+		<EmbeddedResource Include="Assets/editorcanvas.bundle" />
 
 		<!-- Packages -->
 		<PackageReference Include="BepInEx.Core" Version="5.4.21" />
@@ -44,32 +44,32 @@
 
 		<!-- Ultrakill DLL'S -->
 		<Reference Include="Assembly-CSharp">
-			<HintPath>$(ManagedPath)\Assembly-CSharp.dll</HintPath>
+			<HintPath>$(ManagedPath)/Assembly-CSharp.dll</HintPath>
             <Private>false</Private>
             <CopyLocal>false</CopyLocal>
 		</Reference>
 		<Reference Include="plog">
-			<HintPath>$(ManagedPath)\plog.dll</HintPath>
+			<HintPath>$(ManagedPath)/plog.dll</HintPath>
 		</Reference>
 		
 		<!-- Managed -->
 		<Reference Include="Assembly-CSharp :3">
-			<HintPath>$(ManagedPath)\Unity.TextMeshPro.dll</HintPath>
+			<HintPath>$(ManagedPath)/Unity.TextMeshPro.dll</HintPath>
 		</Reference>
 		<Reference Include="UnityEngine.UI rawr">
-			<HintPath>$(ManagedPath)\UnityEngine.UI.dll</HintPath>
+			<HintPath>$(ManagedPath)/UnityEngine.UI.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.AI.Navigation uwu">
-			<HintPath>$(ManagedPath)\Unity.AI.Navigation.dll</HintPath>
+			<HintPath>$(ManagedPath)/Unity.AI.Navigation.dll</HintPath>
 		</Reference>
 		<Reference Include="Facepunch.Steamworks.Win64 &gt;:3">
-			<HintPath>$(ManagedPath)\Facepunch.Steamworks.Win64.dll</HintPath>
+			<HintPath>$(ManagedPath)/Facepunch.Steamworks.Win64.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.Addressables [imagine a silly goober textmoji here]">
-			<HintPath>$(ManagedPath)\Unity.Addressables.dll</HintPath>
+			<HintPath>$(ManagedPath)/Unity.Addressables.dll</HintPath>
 		</Reference>
 		<Reference Include="Unity.ResourceManager OwO">
-			<HintPath>$(ManagedPath)\Unity.ResourceManager.dll</HintPath>
+			<HintPath>$(ManagedPath)/Unity.ResourceManager.dll</HintPath>
 		</Reference>
 
       <Publicize Include="Assembly-CSharp" />

@@ -1,15 +1,15 @@
 ﻿<Project>
 	<PropertyGroup>
 		<!-- Set this to where ever your ULTRAKILL folder is. -->
-		<ULTRAKILLPath>E:\SteamLibrary\steamapps\common\ULTRAKILL</ULTRAKILLPath>
+		<ULTRAKILLPath>/home/duviz/.local/share/Steam/steamapps/common/ULTRAKILL</ULTRAKILLPath>
 
 		<!-- You shouldn't need to touch these. If you do, ask me about it on discord @fredayddd321ewq -->
-		<ManagedPath>$(ULTRAKILLPath)\ULTRAKILL_Data\Managed</ManagedPath>
-		<BepInExPath>$(ULTRAKILLPath)\BepInEx</BepInExPath>
-		<CorePath>$(BepInExPath)\core</CorePath>
-		<PluginPath>$(BepInExPath)\plugins</PluginPath>
-		
+		<ManagedPath>$(ULTRAKILLPath)/ULTRAKILL_Data/Managed</ManagedPath>
+		<BepInExPath>$(ULTRAKILLPath)/BepInEx</BepInExPath>
+		<CorePath>$(BepInExPath)/core</CorePath>
+		<PluginPath>$(BepInExPath)/plugins</PluginPath>
+
 		<!-- This is the path where the DLL is copied too, if you have it in a folder or something then add the name of that folder onto here. -->
-		<CopyPath>$(PluginPath)\UltraEditor</CopyPath>
+		<CopyPath>$(PluginPath)/UltraEditor</CopyPath>
 	</PropertyGroup>
 </Project>
