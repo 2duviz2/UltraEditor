@@ -3,10 +3,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using GameConsole.pcon;
 using UltraEditor.Classes.IO.SaveObjects;
 using UltraEditor.Libraries;
 using UnityEngine;
-
 public class Billboard : MonoBehaviour
 {
     public static List<Billboard> billboards = [];
@@ -26,8 +26,6 @@ public class Billboard : MonoBehaviour
     public static Sprite sfxObject = null;
     public static Sprite skullTrigger = null;
     public static Sprite bookObject = null;
-
-    public static Component[] lastComponents = [];
 
     public static void DeleteAll()
     {
@@ -71,12 +69,7 @@ public class Billboard : MonoBehaviour
             bookObject = BundlesManager.editorBundle.LoadAsset<Sprite>("book");
         }
 
-        var allComponents = FindObjectsOfType<Component>(true);
-
-        if (lastComponents == allComponents)
-            return;
-        
-        lastComponents = allComponents;
+        var allComponents = FindObjectsOfType<SavableObject>(true);
 
         DeleteAll();
 
@@ -85,71 +78,79 @@ public class Billboard : MonoBehaviour
             if (c == null) continue;
             var t = c.transform.position;
 
-            switch (c)
+            var o = c.gameObject;
+            if (o == null) continue;
+
+            var cs = o.GetComponents<Component>();
+
+            foreach (var s in cs)
             {
-                case PrefabObject po when po.PrefabAsset.StartsWith("Assets/Prefabs/Enemies/"):
-                    NewBillboard(entitySprite, t, c.gameObject);
-                    break;
+                switch (s)
+                {
+                    case PrefabObject po when po.PrefabAsset.StartsWith("Assets/Prefabs/Enemies/"):
+                        NewBillboard(entitySprite, t, c.gameObject);
+                        break;
 
-                case ActivateArena aa:
-                    NewBillboard(activateArena, t, c.gameObject);
-                    break;
+                    case ActivateArena aa:
+                        NewBillboard(activateArena, t, c.gameObject);
+                        break;
 
-                case ActivateNextWave nw:
-                    NewBillboard(activateNextWave, t, c.gameObject);
-                    break;
+                    case ActivateNextWave nw:
+                        NewBillboard(activateNextWave, t, c.gameObject);
+                        break;
 
-                case ActivateObject ao:
-                    NewBillboard(activateObject, t, c.gameObject);
-                    break;
+                    case ActivateObject ao:
+                        NewBillboard(activateObject, t, c.gameObject);
+                        break;
 
-                case DeathZone dz when dz.GetComponent<SavableObject>() != null:
-                    NewBillboard(deathzone, t, c.gameObject);
-                    break;
+                    case DeathZone dz when dz.GetComponent<SavableObject>() != null:
+                        NewBillboard(deathzone, t, c.gameObject);
+                        break;
 
-                case HUDMessageObject hmo:
-                    NewBillboard(hudMessageObject, t, c.gameObject);
-                    break;
+                    case HUDMessageObject hmo:
+                        NewBillboard(hudMessageObject, t, c.gameObject);
+                        break;
 
-                case LevelInfoObject lio:
-                    NewBillboard(levelInfoObject, t, c.gameObject);
-                    break;
+                    case LevelInfoObject lio:
+                        NewBillboard(levelInfoObject, t, c.gameObject);
+                        break;
 
-                case Light l when l.GetComponent<SavableObject>() != null && l.GetComponent<PrefabObject>() == null:
-                    NewBillboard(light, t, c.gameObject);
-                    break;
+                    case Light l when l.GetComponent<SavableObject>() != null && l.GetComponent<PrefabObject>() == null:
+                        NewBillboard(light, t, c.gameObject);
+                        break;
 
-                case MusicObject mo:
-                    NewBillboard(musicObject, t, c.gameObject);
-                    break;
+                    case MusicObject mo:
+                        NewBillboard(musicObject, t, c.gameObject);
+                        break;
 
-                case TeleportObject to:
-                    NewBillboard(teleportObject, t, c.gameObject);
-                    break;
+                    case TeleportObject to:
+                        NewBillboard(teleportObject, t, c.gameObject);
+                        break;
 
-                case CheckpointObject co:
-                    NewBillboard(checkpoint, t, c.gameObject);
-                    break;
+                    case CheckpointObject co:
+                        NewBillboard(checkpoint, t, c.gameObject);
+                        break;
 
-                case CubeTilingAnimator cta:
-                    NewBillboard(cubeTilingAnimator, t, c.gameObject);
-                    break;
+                    case CubeTilingAnimator cta:
+                        NewBillboard(cubeTilingAnimator, t, c.gameObject);
+                        break;
 
-                case MovingPlatformAnimator mpa:
-                    NewBillboard(animator, t, c.gameObject);
-                    break;
+                    case MovingPlatformAnimator mpa:
+                        NewBillboard(animator, t, c.gameObject);
+                        break;
 
-                case SFXObject so:
-                    NewBillboard(sfxObject, t, c.gameObject);
-                    break;
+                    case SFXObject so:
+                        NewBillboard(sfxObject, t, c.gameObject);
+                        break;
 
-                case SkullActivatorObject st:
-                    NewBillboard(skullTrigger, t, c.gameObject);
-                    break;
+                    case SkullActivatorObject st:
+                        NewBillboard(skullTrigger, t, c.gameObject);
+                        break;
 
-                case BookObject bo:
-                    NewBillboard(bookObject, t, c.gameObject);
-                    break;
+                    case BookObject bo:
+                        NewBillboard(bookObject, t, c.gameObject);
+                        break;
+                }
             }
         }
     }
@@ -158,6 +159,11 @@ public class Billboard : MonoBehaviour
     public static List<(Sprite, Material, Vector3)> materials = [];
     public static void NewBillboard(Sprite spr, Vector3 pos, GameObject target)
     {
+        if (spr == null)
+        {
+            return;
+        }
+
         GameObject bill = GameObject.CreatePrimitive(PrimitiveType.Quad);
         bill.AddComponent<Billboard>();
         Destroy(bill.GetComponent<Collider>());
@@ -219,8 +225,18 @@ public class Billboard : MonoBehaviour
 
     public void Update()
     {
-        if (EditorManager.Instance == null) DeleteAll();
-        if (!EditorManager.Instance.editorCanvas.activeInHierarchy) DeleteAll();
+        if (EditorManager.Instance == null)
+        {
+            DeleteAll();
+            return;
+        }
+
+        if (EditorManager.Instance.editorCanvas == null ||
+            !EditorManager.Instance.editorCanvas.activeInHierarchy)
+        {
+            DeleteAll();
+            return;
+        }
         if (target == null) return;
 
         Camera camera = EditorManager.Instance.editorCamera;

@@ -5,7 +5,6 @@ using HarmonyLib;
 using System;
 using System.Globalization;
 using System.IO;
-using System.Threading;
 using UltraEditor.Classes;
 using UltraEditor.Classes.Editor;
 using UltraEditor.Libraries;
@@ -17,7 +16,7 @@ public class Plugin : BaseUnityPlugin
 {
     public const string GUID = "duviz.ultrakill.ultraeditor";
     public const string Name = "UltraEditor";
-    public const string Version = "0.1.0";
+    public const string Version = "0.2.0";
     public const string ExpectedBuildGUID = "cd2a9e08be6e44379c465e9b5d8b4fc2"; // 17d4
 
     public static Plugin Instance;
@@ -74,7 +73,15 @@ public class Plugin : BaseUnityPlugin
 
         Instance = this;
         LogInfo("Hi :3");
-        Thread.CurrentThread.CurrentCulture = new CultureInfo("en-US");
+
+        // Sets the region based decimals to not exist because they are dumb
+        CultureInfo culture = CultureInfo.InvariantCulture;
+
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.CurrentCulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+
 
         BundlesManager.Load();
         EditorVariablesList.SetupEditorVariables();
