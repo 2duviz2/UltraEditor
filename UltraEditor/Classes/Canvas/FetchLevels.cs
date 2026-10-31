@@ -4,11 +4,15 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
+using UltraEditor.Libraries;
 
 public class FetchLevels : MonoBehaviour
 {
     public GameObject template;
+    public GameObject low_quality_mode_x;
     public Transform container;
+
+    bool lowQualityMode = false;
 
     const string url = "https://duviz.xyz/api/ultraeditor/fetchlevels";
     const string getLevelUrl = "https://duviz.xyz/api/ultraeditor/getlevel/";
@@ -47,12 +51,26 @@ public class FetchLevels : MonoBehaviour
                 StartCoroutine(LoadLevels(parsedNum));
             }
         }));
+
+        RefreshLowQualityMode();
     }
 
     private void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
             Destroy(gameObject);
+    }
+
+    public void ToggleLowQualityMode()
+    {
+        Preferences.SetInt("LowQualityMode", lowQualityMode ? 0 : 1);
+        RefreshLowQualityMode();
+    }
+
+    public void RefreshLowQualityMode()
+    {
+        lowQualityMode = Preferences.GetInt("LowQualityMode", 0) == 1;
+        low_quality_mode_x.SetActive(lowQualityMode);
     }
 
     public IEnumerator LoadLevels(int parsedNum)

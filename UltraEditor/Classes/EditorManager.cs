@@ -42,6 +42,18 @@ public class EditorManager : MonoBehaviour
 
     static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 
+
+    #region Cached variables
+    GameObject alert;
+
+    public void CacheEditorVariables()
+    {
+        alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
+        blocker = editorCanvas.transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
+    }
+    #endregion
+
+
     public List<IEditorAction> UndoActions = [], RedoActions = [];
 
     public void AddToUndo(IEditorAction act)
@@ -206,7 +218,7 @@ public class EditorManager : MonoBehaviour
     public static GameObject currentFirstRoom;
     public static void DeleteScene(bool force = false)
     {
-        if ((force || (SceneHelper.CurrentScene.StartsWith(EditorSceneName) && !StatsManager.Instance.timer)))
+        if (force || (SceneHelper.CurrentScene.StartsWith(EditorSceneName) && !StatsManager.Instance.timer))
         {
             foreach (var obj in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects().ToList())
             {
@@ -354,6 +366,8 @@ public class EditorManager : MonoBehaviour
         editorCanvas.name = "EditorCanvas_Instance";
         Plugin.LogInfo("EditorCanvas instantiated successfully!");
 
+        CacheEditorVariables();
+
         GameObject cameraObj = new GameObject("EditorCamera");
         editorCamera = cameraObj.AddComponent<Camera>();
         cameraObj.AddComponent<AudioListener>();
@@ -365,7 +379,6 @@ public class EditorManager : MonoBehaviour
         editorCamera.farClipPlane = 4000;
         editorCamera.backgroundColor = Color.black;
         cameraSelector = cameraObj.GetComponent<CameraSelector>();
-        blocker = editorCanvas.transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
 
         if (NewMovement.Instance != null)
         {
@@ -560,65 +573,60 @@ public class EditorManager : MonoBehaviour
         string realPath = dir;
         if (dir == "DuvizPlush") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
         if (dir == "DuvizPlushFixed") dir = "Assets/Prefabs/Fishing/Fish Pickup Template.prefab";
-        GameObject obj = null;
+        GameObject obj;
 
-        // Exclusive exceptions
-        if (dir == "ImCloudingIt")
+        // Manage exceptions with some objects
+        switch (dir)
         {
-            obj = Instantiate(BundlesManager.cloudPrefab);
-        }
-        else if (dir == "AltarBlueOff")
-        {
-            obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
+            case "ImCloudingIt":
+                obj = Instantiate(BundlesManager.cloudPrefab);
+                break;
+            case "AltarBlueOff":
+                obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Blue).prefab"));
 
-            //            |Cube       |SkullBlue
-            obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
-            obj.name += " (Off)";
-        }
-        else if (dir == "AltarRedOff")
-        {
-            obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
+                //            |Cube       |SkullBlue
+                obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+                obj.name += " (Off)";
+                break;
+            case "AltarRedOff":
+                obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Interactive/Altar (Red).prefab"));
 
-            //            |Cube       |SkullBlue
-            obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
-            obj.name += " (Off)";
-        }
-        else if (dir == "BlackholeChaos/Blackhole")
-        {
-            obj = new GameObject("Blackhole");
-            Blackhole bh = obj.AddComponent<Blackhole>();
-            bh.Create();
-        }
-        else if (dir == "BlackholeChaos/Whitehole")
-        {
-            obj = new GameObject("Whitehole");
-            Blackhole bh = obj.AddComponent<Blackhole>();
-            bh.white = true;
-            bh.Create();
-        }
-        else if (dir == "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab(Active)")
-        {
-            obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
+                //            |Cube       |SkullBlue
+                obj.transform.GetChild(0).GetChild(0).gameObject.SetActive(false);
+                obj.name += " (Off)";
+                break;
+            case "BlackholeChaos/Blackhole":
+                obj = new GameObject("Blackhole");
+                Blackhole bh = obj.AddComponent<Blackhole>();
+                bh.Create();
+                break;
+            case "BlackholeChaos/Whitehole":
+                obj = new GameObject("Whitehole");
+                Blackhole bh2 = obj.AddComponent<Blackhole>();
+                bh2.white = true;
+                bh2.Create();
+                break;
+            case "Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab(Active)":
+                obj = Instantiate(AssHelper.Ass<GameObject>("Assets/Prefabs/Levels/Decorations/SuicideTreeHungry.prefab"));
 
-            obj.transform.GetComponent<DisabledEnemiesChecker>().enabled = false;
-            //            |SuicideTree4
-            obj.transform.GetChild(0).GetComponent<BloodFiller>().enabled = false;
-            //            |FinishEffects
-            obj.transform.GetChild(1).gameObject.SetActive(true);
-            //            |BloodLeaves
-            obj.transform.GetChild(2).gameObject.SetActive(true);
-            obj.name += " (Active)";
-        }
-        else if (dir == "Assets/Prefabs/Levels/Checkpoint.prefab")
-        {
-            obj = new GameObject("Checkpoint");
-            var c = CheckpointObject.Create(obj);
-            c.Create();
-        }
-        else
-        {
-            // Spawn the object like normal
-            obj = Instantiate(AssHelper.Ass<GameObject>(PrefabFixer.FixKey(dir)));
+                obj.transform.GetComponent<DisabledEnemiesChecker>().enabled = false;
+                //            |SuicideTree4
+                obj.transform.GetChild(0).GetComponent<BloodFiller>().enabled = false;
+                //            |FinishEffects
+                obj.transform.GetChild(1).gameObject.SetActive(true);
+                //            |BloodLeaves
+                obj.transform.GetChild(2).gameObject.SetActive(true);
+                obj.name += " (Active)";
+                break;
+            case "Assets/Prefabs/Levels/Checkpoint.prefab":
+                obj = new GameObject("Checkpoint");
+                var c = CheckpointObject.Create(obj);
+                c.Create();
+                break;
+            default:
+                // Spawn the object like normal
+                obj = Instantiate(AssHelper.Ass<GameObject>(PrefabFixer.FixKey(dir)));
+                break;
         }
 
         obj.transform.position = editorCamera.transform.position + editorCamera.transform.forward * 5f;
@@ -626,27 +634,30 @@ public class EditorManager : MonoBehaviour
         {
             PrefabObject.Create(obj, realPath);
         }
-        if (Input.GetKey(Plugin.ShiftKey) && cameraSelector.selectedObject != null)
-        {
-            obj.transform.SetParent(cameraSelector.selectedObject.transform);
-            lastSelected = null;
-        }
-        else
-        {
-            if (!isLoading)
-                cameraSelector.SelectObject(obj);
-        }
 
-        if (Input.GetKey(Plugin.AltKey))
+        if (!isLoading)
         {
-            obj.SetActive(false);
-        }
-        else
-        {
-            if (dir.StartsWith("Assets/Prefabs/Enemies/") && !isLoading)
+            if (Input.GetKey(Plugin.ShiftKey) && cameraSelector.selectedObject != null)
+            {
+                obj.transform.SetParent(cameraSelector.selectedObject.transform);
+                lastSelected = null;
+            }
+            else
+            {
+                cameraSelector.SelectObject(obj);
+            }
+
+            if (Input.GetKey(Plugin.AltKey))
             {
                 obj.SetActive(false);
-                SetAlert("Enemies will always spawn disabled in the editor, they must be enabled with ActivateArena objects.", title: "Warning!");
+            }
+            else
+            {
+                if (dir.StartsWith("Assets/Prefabs/Enemies/"))
+                {
+                    obj.SetActive(false);
+                    SetAlert("Enemies will always spawn disabled in the editor, they must be enabled with ActivateArena objects.", title: "Warning!");
+                }
             }
         }
 
@@ -660,14 +671,16 @@ public class EditorManager : MonoBehaviour
             obj.GetComponent<Bonus>().secretNumber = 100000;
 
         // Yay drones/providence fix
-        KeepInBounds kib = obj.GetComponent<KeepInBounds>();
-        if (!kib)
-            kib = obj.GetComponentInChildren<KeepInBounds>();
-
-        if (kib)
+        if (dir == "Assets/Prefabs/Enemies/Drone.prefab" || dir == "Assets/Prefabs/Enemies/Providence.prefab" || dir == "Assets/Prefabs/Enemies/Virtue.prefab")
         {
-            kib.previousRealPosition = obj.transform.position;
-            kib.previousTracedPosition = obj.transform.position;
+            KeepInBounds kib = obj.GetComponent<KeepInBounds>();
+            if (!kib)
+                kib = obj.GetComponentInChildren<KeepInBounds>();
+            if (kib)
+            {
+                kib.previousRealPosition = obj.transform.position;
+                kib.previousTracedPosition = obj.transform.position;
+            }
         }
 
         // Manage the blahaj and plushies
@@ -2205,306 +2218,11 @@ public class EditorManager : MonoBehaviour
         if (text.StartsWith("{"))
         {
             SceneJsonSaver.LoadSceneJson(text);
-            return;
         }
-
-        float startTime = Time.realtimeSinceStartup;
-
-        int lineIndex = 0;
-        int phase = 0;
-        bool isInScript = false;
-        string scriptType = "";
-        List<string> passes = [];
-        GameObject workingObject = null;
-
-        foreach (var line in text.Split(["\r\n", "\n"], StringSplitOptions.None))
+        else
         {
-            if (!isInScript && line.StartsWith("? ") && line.EndsWith(" ?"))
-            {
-                scriptType = line.Replace(" ?", "").Replace("? ", "");
-                isInScript = true;
-                lineIndex = 0;
-                phase = 0;
-
-                workingObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                workingObject.AddComponent<SpawnedObject>();
-            }
-            else if (isInScript)
-            {
-                if (logShit)
-                    Plugin.LogInfo($"Line {lineIndex} \"{line}\" type \"{scriptType}\" phase {phase}");
-
-                if (line == "? END ?")
-                {
-                    isInScript = false;
-                    lineIndex++;
-                    continue;
-                }
-                if (line == "? PASS ?")
-                {
-                    phase++;
-                    lineIndex++;
-                    continue;
-                }
-                if (line == "")
-                {
-                    lineIndex++;
-                    continue;
-                }
-
-                if (lineIndex == 1)
-                    workingObject.GetComponent<SpawnedObject>().ID = line;
-                if (lineIndex == 2)
-                    workingObject.name = line;
-                if (lineIndex == 3)
-                    workingObject.layer = int.Parse(line);
-                if (lineIndex == 4)
-                    workingObject.tag = line;
-                if (lineIndex == 5)
-                    workingObject.transform.position = ParseHelper.ParseVector3(line);
-                if (lineIndex == 6)
-                    workingObject.transform.eulerAngles = ParseHelper.ParseVector3(line);
-                if (lineIndex == 7)
-                    workingObject.transform.localScale = ParseHelper.ParseVector3(line);
-                if (lineIndex == 8)
-                    workingObject.gameObject.SetActive(line == "1");
-                if (lineIndex == 9)
-                    workingObject.GetComponent<SpawnedObject>().parentID = line;
-
-                if (lineIndex >= 10)
-                {
-                    passes.Append(line);
-                }
-                if (lineIndex == 10 && scriptType == "CubeObject")
-                    CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
-                if (lineIndex >= 10 && scriptType == "CubeObject")
-                {
-                    if (phase == 1)
-                        workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
-                    else if (phase == 3)
-                        workingObject.GetComponent<CubeObject>().shape = (MaterialChoser.Shapes)Enum.GetValues(typeof(MaterialChoser.Shapes)).GetValue(int.Parse(line));
-                }
-
-                if (lineIndex == 10 && scriptType == "PrefabObject")
-                {
-                    GameObject newObj = SpawnAsset(line, true);
-                    newObj.transform.position = workingObject.transform.position;
-                    newObj.transform.eulerAngles = workingObject.transform.eulerAngles;
-                    newObj.transform.localScale = workingObject.transform.localScale;
-                    newObj.layer = workingObject.layer;
-                    newObj.tag = workingObject.tag;
-                    newObj.name = workingObject.name;
-                    newObj.SetActive(workingObject.activeSelf);
-                    newObj.AddComponent<SpawnedObject>();
-                    newObj.GetComponent<SpawnedObject>().ID = workingObject.GetComponent<SpawnedObject>().ID;
-                    newObj.GetComponent<SpawnedObject>().parentID = workingObject.GetComponent<SpawnedObject>().parentID;
-                    Destroy(workingObject);
-
-                    if (newObj.GetComponent<Door>() != null)
-                    {
-                        var m = newObj.GetComponent<Door>().GetType().GetMethod("GetPos",
-                            BindingFlags.Instance | BindingFlags.NonPublic);
-
-                        m.Invoke(newObj.GetComponent<Door>(), null);
-
-                    }
-                }
-
-                if (lineIndex == 10 && scriptType == "ArenaObject")
-                {
-                    ArenaObject.Create(workingObject);
-                    workingObject.GetComponent<ArenaObject>().onlyWave = line.ToLower() == "true";
-                }
-                if (lineIndex >= 11 && scriptType == "ArenaObject")
-                    workingObject.GetComponent<ArenaObject>().addId(line);
-
-                if (lineIndex == 10 && scriptType == "NextArenaObject")
-                {
-                    NextArenaObject.Create(workingObject);
-                    workingObject.GetComponent<NextArenaObject>().lastWave = line.ToLower() == "true";
-                }
-                if (lineIndex == 11 && scriptType == "NextArenaObject")
-                    workingObject.GetComponent<NextArenaObject>().enemyCount = int.Parse(line);
-                if (lineIndex >= 12 && scriptType == "NextArenaObject")
-                {
-                    if (phase == 0)
-                        workingObject.GetComponent<NextArenaObject>().addEnemyId(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<NextArenaObject>().addToActivateId(line);
-                }
-
-                if (scriptType == "ActivateObject" && workingObject.GetComponent<ActivateObject>() == null)
-                    ActivateObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "ActivateObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<ActivateObject>().addToActivateId(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<ActivateObject>().canBeReactivated = line.ToLower() == "true";
-                    else if (phase == 3)
-                        workingObject.GetComponent<ActivateObject>().delay = float.Parse(line);
-
-                if (scriptType == "CheckpointObject" && workingObject.GetComponent<CheckpointObject>() == null)
-                    CheckpointObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "CheckpointObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<CheckpointObject>().addRoomId(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<CheckpointObject>().addRoomToInheritId(line);
-
-                if (scriptType == "DeathZone" && workingObject.GetComponent<DeathZoneObject>() == null)
-                    DeathZoneObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "DeathZone")
-                    if (phase == 0)
-                        workingObject.GetComponent<DeathZoneObject>().notInstaKill = line.ToLower() == "true";
-                    else if (phase == 1)
-                        workingObject.GetComponent<DeathZoneObject>().damage = int.Parse(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<DeathZoneObject>().affected = (AffectedSubjects)Enum.GetValues(typeof(AffectedSubjects)).GetValue(int.Parse(line));
-
-                if (scriptType == "Light" && workingObject.GetComponent<LightObject>() == null)
-                    LightObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "Light")
-                    if (phase == 0)
-                        workingObject.GetComponent<LightObject>().intensity = float.Parse(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<LightObject>().range = float.Parse(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
-                    else if (phase == 3)
-                        workingObject.GetComponent<LightObject>().color = ParseHelper.ParseVector3(line);
-
-                if (scriptType == "MusicObject" && workingObject.GetComponent<MusicObject>() == null)
-                    MusicObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "MusicObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<MusicObject>().calmThemePath = line;
-                    else if (phase == 1)
-                        workingObject.GetComponent<MusicObject>().battleThemePath = line;
-
-                if (scriptType == "SFXObject" && workingObject.GetComponent<SFXObject>() == null)
-                    SFXObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "SFXObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<SFXObject>().url = line;
-                    else if (phase == 1)
-                        workingObject.GetComponent<SFXObject>().disableAfterPlaying = line.ToLower() == "true";
-                    else if (phase == 2)
-                        workingObject.GetComponent<SFXObject>().playOnAwake = line.ToLower() == "true";
-                    else if (phase == 3)
-                        workingObject.GetComponent<SFXObject>().loop = line.ToLower() == "true";
-                    else if (phase == 4)
-                        workingObject.GetComponent<SFXObject>().range = float.Parse(line);
-                    else if (phase == 5)
-                        workingObject.GetComponent<SFXObject>().volume = float.Parse(line);
-
-                if (scriptType == "MovingPlatformAnimator" && workingObject.GetComponent<MovingPlatformAnimator>() == null)
-                    MovingPlatformAnimator.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "MovingPlatformAnimator")
-                    if (phase == 0)
-                        workingObject.GetComponent<MovingPlatformAnimator>().addAffectedCubeId(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<MovingPlatformAnimator>().addPointId(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<MovingPlatformAnimator>().speed = float.Parse(line);
-                    else if (phase == 3)
-                        workingObject.GetComponent<MovingPlatformAnimator>().movesWithThePlayer = line.ToLower() == "true";
-                    else if (phase == 4)
-                        workingObject.GetComponent<MovingPlatformAnimator>().mode = (MovingPlatformAnimator.platformMode)Enum.GetValues(typeof(MovingPlatformAnimator.platformMode)).GetValue(int.Parse(line));
-
-                if (scriptType == "SkullActivatorObject" && workingObject.GetComponent<SkullActivatorObject>() == null)
-                    SkullActivatorObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "SkullActivatorObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<SkullActivatorObject>().acceptedItemType = (SkullActivatorObject.skullType)Enum.GetValues(typeof(SkullActivatorObject.skullType)).GetValue(int.Parse(line));
-                    else if (phase == 1)
-                        workingObject.GetComponent<SkullActivatorObject>().addToActivateId(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<SkullActivatorObject>().addToDeactivateId(line);
-                    else if (phase == 3)
-                        workingObject.GetComponent<SkullActivatorObject>().addTriggerAltarId(line);
-
-                if (scriptType == "CubeTilingAnimator" && workingObject.GetComponent<CubeTilingAnimator>() == null)
-                    CubeTilingAnimator.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "CubeTilingAnimator")
-                    if (phase == 0)
-                        workingObject.GetComponent<CubeTilingAnimator>().addId(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<CubeTilingAnimator>().scrolling = ParseHelper.ParseVector2(line);
-
-                if (scriptType == "HUDMessageObject" && workingObject.GetComponent<HUDMessageObject>() == null)
-                    HUDMessageObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "HUDMessageObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<HUDMessageObject>().message = line;
-                    else if (phase == 1)
-                        workingObject.GetComponent<HUDMessageObject>().disableAfterShowing = line.ToLower() == "true";
-
-                if (scriptType == "TeleportObject" && workingObject.GetComponent<NewTeleportObject>() == null)
-                    NewTeleportObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "TeleportObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseHelper.ParseVector3(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
-                    else if (phase == 2)
-                        workingObject.GetComponent<NewTeleportObject>().slowdown = line.ToLower() == "true";
-
-                if (scriptType == "LevelInfoObject" && workingObject.GetComponent<LevelInfoObject>() == null)
-                    LevelInfoObject.Create(workingObject);
-                if (lineIndex >= 10 && scriptType == "LevelInfoObject")
-                    if (phase == 0)
-                        workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseHelper.ParseVector3(line);
-                    else if (phase == 1)
-                        workingObject.GetComponent<LevelInfoObject>().intensityMultiplier = float.Parse(line);
-                    else if (phase == 2)
-                        workingObject.GetComponent<LevelInfoObject>().changeLighting = line.ToLower() == "true";
-                    else if (phase == 3)
-                        workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
-                    else if (phase == 4)
-                        workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
-                    else if (phase == 5)
-                        workingObject.GetComponent<LevelInfoObject>().playMusicOnDoorOpen = line.ToLower() == "true";
-                    else if (phase == 6)
-                        workingObject.GetComponent<LevelInfoObject>().levelName = line;
-            }
-
-            lineIndex++;
+            LegacySaving.LegacyLoadScene(text);
         }
-
-        Plugin.LogInfo("Assigning parents...");
-
-        var allObjs = UnityObject.FindObjectsOfType<SpawnedObject>(true);
-
-        var dict = new Dictionary<string, SpawnedObject>();
-        foreach (var o in allObjs)
-        {
-            if (!string.IsNullOrEmpty(o.ID))
-                dict[o.ID] = o;
-        }
-
-        foreach (var obj in allObjs)
-        {
-            if (!string.IsNullOrEmpty(obj.parentID) && dict.TryGetValue(obj.parentID, out var parent))
-            {
-                obj.transform.SetParent(parent.transform, true);
-            }
-        }
-
-        Plugin.LogInfo("Creating objects...");
-
-        foreach (var obj in allObjs)
-        {
-            obj.GetComponent<SavableObject>()?.Create();
-        }
-
-        Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
-
-        cameraSelector.selectedObject = null;
-        cameraSelector.UnselectObject();
     }
 
     IEnumerator GoToBackupScene()
@@ -2520,7 +2238,6 @@ public class EditorManager : MonoBehaviour
     public void SetAlert(string str, string title = "Error!", Color? col = null)
     {
         if (!editorOpen) return;
-        GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
         alert.GetComponent<Animator>().speed = 1f;
         alert.SetActive(false);
         alert.SetActive(true);
@@ -2535,7 +2252,6 @@ public class EditorManager : MonoBehaviour
 
     public void DisableAlert()
     {
-        GameObject alert = editorCanvas.transform.GetChild(0).GetChild(10).gameObject;
         alert.SetActive(false);
     }
 

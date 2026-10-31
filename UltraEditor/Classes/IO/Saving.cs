@@ -10,11 +10,12 @@ using UltraEditor.Classes.Editor;
 using UltraEditor.Classes.IO.SaveObjects;
 using UltraEditor.Classes.World;
 using UnityEngine;
+using NewTeleportObject = SaveObjects.TeleportObject;
 
-public static class Saving
+#region OLD
+public static class LegacySaving
 {
-    #region OLD
-    public static string addShit(SavableObject obj)
+    public static string AddShit(SavableObject obj)
     {
         string text = "";
 
@@ -48,7 +49,311 @@ public static class Saving
         return array;
     }
 
-    public static string GetSceneOld()
+    public static void LegacyLoadScene(string text)
+    {
+        
+
+        float startTime = Time.realtimeSinceStartup;
+
+        int lineIndex = 0;
+        int phase = 0;
+        bool isInScript = false;
+        string scriptType = "";
+        List<string> passes = [];
+        GameObject workingObject = null;
+
+        foreach (var line in text.Split(["\r\n", "\n"], StringSplitOptions.None))
+        {
+            if (!isInScript && line.StartsWith("? ") && line.EndsWith(" ?"))
+            {
+                scriptType = line.Replace(" ?", "").Replace("? ", "");
+                isInScript = true;
+                lineIndex = 0;
+                phase = 0;
+
+                workingObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                workingObject.AddComponent<SpawnedObject>();
+            }
+            else if (isInScript)
+            {
+                if (EditorManager.logShit)
+                    Plugin.LogInfo($"Line {lineIndex} \"{line}\" type \"{scriptType}\" phase {phase}");
+
+                if (line == "? END ?")
+                {
+                    isInScript = false;
+                    lineIndex++;
+                    continue;
+                }
+                if (line == "? PASS ?")
+                {
+                    phase++;
+                    lineIndex++;
+                    continue;
+                }
+                if (line == "")
+                {
+                    lineIndex++;
+                    continue;
+                }
+
+                if (lineIndex == 1)
+                    workingObject.GetComponent<SpawnedObject>().ID = line;
+                if (lineIndex == 2)
+                    workingObject.name = line;
+                if (lineIndex == 3)
+                    workingObject.layer = int.Parse(line);
+                if (lineIndex == 4)
+                    workingObject.tag = line;
+                if (lineIndex == 5)
+                    workingObject.transform.position = ParseHelper.ParseVector3(line);
+                if (lineIndex == 6)
+                    workingObject.transform.eulerAngles = ParseHelper.ParseVector3(line);
+                if (lineIndex == 7)
+                    workingObject.transform.localScale = ParseHelper.ParseVector3(line);
+                if (lineIndex == 8)
+                    workingObject.gameObject.SetActive(line == "1");
+                if (lineIndex == 9)
+                    workingObject.GetComponent<SpawnedObject>().parentID = line;
+
+                if (lineIndex >= 10)
+                {
+                    passes.Append(line);
+                }
+                if (lineIndex == 10 && scriptType == "CubeObject")
+                    CubeObject.Create(workingObject, (MaterialChoser.materialTypes)Enum.GetValues(typeof(MaterialChoser.materialTypes)).GetValue(int.Parse(line)));
+                if (lineIndex >= 10 && scriptType == "CubeObject")
+                {
+                    if (phase == 1)
+                        workingObject.GetComponent<CubeObject>().matTiling = float.Parse(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<CubeObject>().isTrigger = line.ToLower() == "true";
+                    else if (phase == 3)
+                        workingObject.GetComponent<CubeObject>().shape = (MaterialChoser.Shapes)Enum.GetValues(typeof(MaterialChoser.Shapes)).GetValue(int.Parse(line));
+                }
+
+                if (lineIndex == 10 && scriptType == "PrefabObject")
+                {
+                    GameObject newObj = EditorManager.Instance.SpawnAsset(line, true);
+                    newObj.transform.position = workingObject.transform.position;
+                    newObj.transform.eulerAngles = workingObject.transform.eulerAngles;
+                    newObj.transform.localScale = workingObject.transform.localScale;
+                    newObj.layer = workingObject.layer;
+                    newObj.tag = workingObject.tag;
+                    newObj.name = workingObject.name;
+                    newObj.SetActive(workingObject.activeSelf);
+                    newObj.AddComponent<SpawnedObject>();
+                    newObj.GetComponent<SpawnedObject>().ID = workingObject.GetComponent<SpawnedObject>().ID;
+                    newObj.GetComponent<SpawnedObject>().parentID = workingObject.GetComponent<SpawnedObject>().parentID;
+                    GameObject.Destroy(workingObject);
+
+                    if (newObj.GetComponent<Door>() != null)
+                    {
+                        var m = newObj.GetComponent<Door>().GetType().GetMethod("GetPos",
+                            BindingFlags.Instance | BindingFlags.NonPublic);
+
+                        m.Invoke(newObj.GetComponent<Door>(), null);
+
+                    }
+                }
+
+                if (lineIndex == 10 && scriptType == "ArenaObject")
+                {
+                    ArenaObject.Create(workingObject);
+                    workingObject.GetComponent<ArenaObject>().onlyWave = line.ToLower() == "true";
+                }
+                if (lineIndex >= 11 && scriptType == "ArenaObject")
+                    workingObject.GetComponent<ArenaObject>().addId(line);
+
+                if (lineIndex == 10 && scriptType == "NextArenaObject")
+                {
+                    NextArenaObject.Create(workingObject);
+                    workingObject.GetComponent<NextArenaObject>().lastWave = line.ToLower() == "true";
+                }
+                if (lineIndex == 11 && scriptType == "NextArenaObject")
+                    workingObject.GetComponent<NextArenaObject>().enemyCount = int.Parse(line);
+                if (lineIndex >= 12 && scriptType == "NextArenaObject")
+                {
+                    if (phase == 0)
+                        workingObject.GetComponent<NextArenaObject>().addEnemyId(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<NextArenaObject>().addToActivateId(line);
+                }
+
+                if (scriptType == "ActivateObject" && workingObject.GetComponent<ActivateObject>() == null)
+                    ActivateObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "ActivateObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<ActivateObject>().addToActivateId(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<ActivateObject>().addtoDeactivateId(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<ActivateObject>().canBeReactivated = line.ToLower() == "true";
+                    else if (phase == 3)
+                        workingObject.GetComponent<ActivateObject>().delay = float.Parse(line);
+
+                if (scriptType == "CheckpointObject" && workingObject.GetComponent<CheckpointObject>() == null)
+                    CheckpointObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "CheckpointObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<CheckpointObject>().addRoomId(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<CheckpointObject>().addRoomToInheritId(line);
+
+                if (scriptType == "DeathZone" && workingObject.GetComponent<DeathZoneObject>() == null)
+                    DeathZoneObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "DeathZone")
+                    if (phase == 0)
+                        workingObject.GetComponent<DeathZoneObject>().notInstaKill = line.ToLower() == "true";
+                    else if (phase == 1)
+                        workingObject.GetComponent<DeathZoneObject>().damage = int.Parse(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<DeathZoneObject>().affected = (AffectedSubjects)Enum.GetValues(typeof(AffectedSubjects)).GetValue(int.Parse(line));
+
+                if (scriptType == "Light" && workingObject.GetComponent<LightObject>() == null)
+                    LightObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "Light")
+                    if (phase == 0)
+                        workingObject.GetComponent<LightObject>().intensity = float.Parse(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<LightObject>().range = float.Parse(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<LightObject>().type = (LightType)Enum.GetValues(typeof(LightType)).GetValue(int.Parse(line));
+                    else if (phase == 3)
+                        workingObject.GetComponent<LightObject>().color = ParseHelper.ParseVector3(line);
+
+                if (scriptType == "MusicObject" && workingObject.GetComponent<MusicObject>() == null)
+                    MusicObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "MusicObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<MusicObject>().calmThemePath = line;
+                    else if (phase == 1)
+                        workingObject.GetComponent<MusicObject>().battleThemePath = line;
+
+                if (scriptType == "SFXObject" && workingObject.GetComponent<SFXObject>() == null)
+                    SFXObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "SFXObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<SFXObject>().url = line;
+                    else if (phase == 1)
+                        workingObject.GetComponent<SFXObject>().disableAfterPlaying = line.ToLower() == "true";
+                    else if (phase == 2)
+                        workingObject.GetComponent<SFXObject>().playOnAwake = line.ToLower() == "true";
+                    else if (phase == 3)
+                        workingObject.GetComponent<SFXObject>().loop = line.ToLower() == "true";
+                    else if (phase == 4)
+                        workingObject.GetComponent<SFXObject>().range = float.Parse(line);
+                    else if (phase == 5)
+                        workingObject.GetComponent<SFXObject>().volume = float.Parse(line);
+
+                if (scriptType == "MovingPlatformAnimator" && workingObject.GetComponent<MovingPlatformAnimator>() == null)
+                    MovingPlatformAnimator.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "MovingPlatformAnimator")
+                    if (phase == 0)
+                        workingObject.GetComponent<MovingPlatformAnimator>().addAffectedCubeId(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<MovingPlatformAnimator>().addPointId(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<MovingPlatformAnimator>().speed = float.Parse(line);
+                    else if (phase == 3)
+                        workingObject.GetComponent<MovingPlatformAnimator>().movesWithThePlayer = line.ToLower() == "true";
+                    else if (phase == 4)
+                        workingObject.GetComponent<MovingPlatformAnimator>().mode = (MovingPlatformAnimator.platformMode)Enum.GetValues(typeof(MovingPlatformAnimator.platformMode)).GetValue(int.Parse(line));
+
+                if (scriptType == "SkullActivatorObject" && workingObject.GetComponent<SkullActivatorObject>() == null)
+                    SkullActivatorObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "SkullActivatorObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<SkullActivatorObject>().acceptedItemType = (SkullActivatorObject.skullType)Enum.GetValues(typeof(SkullActivatorObject.skullType)).GetValue(int.Parse(line));
+                    else if (phase == 1)
+                        workingObject.GetComponent<SkullActivatorObject>().addToActivateId(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<SkullActivatorObject>().addToDeactivateId(line);
+                    else if (phase == 3)
+                        workingObject.GetComponent<SkullActivatorObject>().addTriggerAltarId(line);
+
+                if (scriptType == "CubeTilingAnimator" && workingObject.GetComponent<CubeTilingAnimator>() == null)
+                    CubeTilingAnimator.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "CubeTilingAnimator")
+                    if (phase == 0)
+                        workingObject.GetComponent<CubeTilingAnimator>().addId(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<CubeTilingAnimator>().scrolling = ParseHelper.ParseVector2(line);
+
+                if (scriptType == "HUDMessageObject" && workingObject.GetComponent<HUDMessageObject>() == null)
+                    HUDMessageObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "HUDMessageObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<HUDMessageObject>().message = line;
+                    else if (phase == 1)
+                        workingObject.GetComponent<HUDMessageObject>().disableAfterShowing = line.ToLower() == "true";
+
+                if (scriptType == "TeleportObject" && workingObject.GetComponent<NewTeleportObject>() == null)
+                    NewTeleportObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "TeleportObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<NewTeleportObject>().teleportPosition = ParseHelper.ParseVector3(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<NewTeleportObject>().canBeReactivated = line.ToLower() == "true";
+                    else if (phase == 2)
+                        workingObject.GetComponent<NewTeleportObject>().slowdown = line.ToLower() == "true";
+
+                if (scriptType == "LevelInfoObject" && workingObject.GetComponent<LevelInfoObject>() == null)
+                    LevelInfoObject.Create(workingObject);
+                if (lineIndex >= 10 && scriptType == "LevelInfoObject")
+                    if (phase == 0)
+                        workingObject.GetComponent<LevelInfoObject>().ambientColor = ParseHelper.ParseVector3(line);
+                    else if (phase == 1)
+                        workingObject.GetComponent<LevelInfoObject>().intensityMultiplier = float.Parse(line);
+                    else if (phase == 2)
+                        workingObject.GetComponent<LevelInfoObject>().changeLighting = line.ToLower() == "true";
+                    else if (phase == 3)
+                        workingObject.GetComponent<LevelInfoObject>().tipOfTheDay = line;
+                    else if (phase == 4)
+                        workingObject.GetComponent<LevelInfoObject>().levelLayer = line;
+                    else if (phase == 5)
+                        workingObject.GetComponent<LevelInfoObject>().playMusicOnDoorOpen = line.ToLower() == "true";
+                    else if (phase == 6)
+                        workingObject.GetComponent<LevelInfoObject>().levelName = line;
+            }
+
+            lineIndex++;
+        }
+
+        Plugin.LogInfo("Assigning parents...");
+
+        var allObjs = UnityObject.FindObjectsOfType<SpawnedObject>(true);
+
+        var dict = new Dictionary<string, SpawnedObject>();
+        foreach (var o in allObjs)
+        {
+            if (!string.IsNullOrEmpty(o.ID))
+                dict[o.ID] = o;
+        }
+
+        foreach (var obj in allObjs)
+        {
+            if (!string.IsNullOrEmpty(obj.parentID) && dict.TryGetValue(obj.parentID, out var parent))
+            {
+                obj.transform.SetParent(parent.transform, true);
+            }
+        }
+
+        Plugin.LogInfo("Creating objects...");
+
+        foreach (var obj in allObjs)
+        {
+            obj.GetComponent<SavableObject>()?.Create();
+        }
+
+        Plugin.LogInfo($"Loading done in {Time.realtimeSinceStartup - startTime} seconds!");
+
+        EditorManager.Instance.cameraSelector.selectedObject = null;
+        EditorManager.Instance.cameraSelector.UnselectObject();
+    }
+
+    [Obsolete("Use SceneJsonSaver.GetSceneJson() instead")]
+    public static string LegacyGetScene()
     {
         List<GameObject> iterated = [];
         string text = "";
@@ -77,7 +382,7 @@ public static class Saving
 
             text += "? CubeObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += (int)obj.matType + "\n";
             text += "? PASS ?\n";
             text += obj.matTiling + "\n";
@@ -96,7 +401,7 @@ public static class Saving
             if (obj.GetComponent<ItemIdentifier>() != null && obj.GetComponent<ItemIdentifier>().pickedUp) continue;
             text += "? PrefabObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.PrefabAsset + "\n";
             text += "\n";
             text += "? END ?";
@@ -116,7 +421,7 @@ public static class Saving
 
             text += "? ArenaObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.GetComponent<ActivateArena>().onlyWave + "\n";
             foreach (var e in obj.enemyIds)
                 text += e + "\n";
@@ -141,7 +446,7 @@ public static class Saving
 
             text += "? NextArenaObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.GetComponent<ActivateNextWave>().lastWave + "\n";
             text += obj.GetComponent<ActivateNextWave>().enemyCount + "\n";
             foreach (var e in obj.enemyIds)
@@ -170,7 +475,7 @@ public static class Saving
 
             text += "? ActivateObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             foreach (var e in obj.toActivateIds)
             {
                 text += e + "\n";
@@ -194,7 +499,7 @@ public static class Saving
         {
             text += "? HUDMessageObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.message + "\n";
             text += "? PASS ?\n";
             text += obj.disableAfterShowing + "\n";
@@ -206,7 +511,7 @@ public static class Saving
         {
             text += "? TeleportObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.teleportPosition + "\n";
             text += "? PASS ?\n";
             text += obj.canBeReactivated + "\n";
@@ -220,7 +525,7 @@ public static class Saving
         {
             text += "? LevelInfoObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.ambientColor + "\n";
             text += "? PASS ?\n";
             text += obj.intensityMultiplier + "\n";
@@ -264,9 +569,9 @@ public static class Saving
             text += "? CheckpointObject ?";
             text += "\n";
             if (co.transform.parent != null && co.transform.parent.GetComponent<CheckpointObject>() != null)
-                text += addShit(co.transform.parent.GetComponent<CheckpointObject>());
+                text += AddShit(co.transform.parent.GetComponent<CheckpointObject>());
             else
-                text += addShit(co);
+                text += AddShit(co);
             foreach (var e in co.rooms)
             {
                 text += e + "\n";
@@ -302,7 +607,7 @@ public static class Saving
 
             text += "? CheckpointObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             foreach (var e in obj.rooms)
             {
                 text += e + "\n";
@@ -321,7 +626,7 @@ public static class Saving
             if (obj.GetComponent<SavableObject>() == null || obj.GetComponent<PrefabObject>() != null) continue;
             text += "? DeathZone ?";
             text += "\n";
-            text += addShit(obj.gameObject.AddComponent<SavableObject>());
+            text += AddShit(obj.gameObject.AddComponent<SavableObject>());
             text += obj.notInstakill.ToString();
             text += "\n";
             text += "? PASS ?\n";
@@ -340,7 +645,7 @@ public static class Saving
             if (obj.GetComponent<PrefabObject>() != null) continue;
             text += "? Light ?";
             text += "\n";
-            text += addShit(obj.gameObject.AddComponent<SavableObject>());
+            text += AddShit(obj.gameObject.AddComponent<SavableObject>());
             text += obj.intensity.ToString();
             text += "\n";
             text += "? PASS ?\n";
@@ -361,7 +666,7 @@ public static class Saving
             if (obj.GetComponent<SavableObject>() == null) continue;
             text += "? MusicObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += obj.calmThemePath;
             text += "\n";
             text += "? PASS ?\n";
@@ -376,7 +681,7 @@ public static class Saving
             if (obj.GetComponent<SavableObject>() == null) continue;
             text += "? SFXObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += $"{obj.url}\n";
             text += "? PASS ?\n";
             text += $"{obj.disableAfterPlaying}\n";
@@ -405,7 +710,7 @@ public static class Saving
                     obj.addPointId(LoadingHelper.GetIdOfObj(e));
             text += "? MovingPlatformAnimator ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             foreach (var e in obj.affectedCubesIds)
                 text += e + "\n";
             text += "? PASS ?\n";
@@ -438,7 +743,7 @@ public static class Saving
                     obj.addTriggerAltarId(LoadingHelper.GetIdOfObj(e));
             text += "? SkullActivatorObject ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             text += $"{(int)obj.acceptedItemType}\n";
             text += "? PASS ?\n";
             foreach (var e in obj.toActivateIds)
@@ -462,7 +767,7 @@ public static class Saving
                     obj.addId(LoadingHelper.GetIdOfObj(e));
             text += "? CubeTilingAnimator ?";
             text += "\n";
-            text += addShit(obj);
+            text += AddShit(obj);
             foreach (var e in obj.affectedCubesIds)
                 text += e + "\n";
             text += "\n";
@@ -476,7 +781,7 @@ public static class Saving
         return text;
     }
 }
-    #endregion
+#endregion
 
 public static class SceneJsonSaver
 {

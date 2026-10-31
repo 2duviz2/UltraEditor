@@ -78,8 +78,12 @@ public class Billboard : MonoBehaviour
             if (c == null) continue;
             var t = c.transform.position;
 
+            if (c.transform.root.name == "HIDEINHIERARCHY") continue;
+
             var o = c.gameObject;
             if (o == null) continue;
+
+            if (o.name == "HIDEINHIERARCHY") continue;
 
             var cs = o.GetComponents<Component>();
 
