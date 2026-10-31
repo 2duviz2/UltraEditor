@@ -38,7 +38,7 @@ public class EditorManager : MonoBehaviour
     public static bool logShit = false;
     public static bool canOpenEditor = false;
 
-    public static float sensitivity => PrefsManager.Instance.GetFloatLocal("mouseSensitivity", 50);
+    public static float sensitivity => OptionsManager.Instance.mouseSensitivity;
 
     static string tempScene = ExampleScenes.DefaultSceneWithCombat;
 

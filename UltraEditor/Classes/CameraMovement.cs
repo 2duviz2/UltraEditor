@@ -48,8 +48,8 @@ public class CameraMovement : MonoBehaviour
         }
         if (Input.GetMouseButton(1))
         {
-            float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity * (EditorManager.sensitivity / 50f);
-            float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity * (EditorManager.sensitivity / 50f);
+            float mouseX = Input.GetAxisRaw("Mouse X") * mouseSensitivity * (EditorManager.sensitivity / 10f / (Mathf.PI / 2f));
+            float mouseY = Input.GetAxisRaw("Mouse Y") * mouseSensitivity * (EditorManager.sensitivity / 10f / (Mathf.PI / 2f));
             transform.Rotate(Vector3.up, mouseX, Space.World);
             transform.Rotate(Vector3.right, -mouseY, Space.Self);
             MouseController.SetCursorPos(savedMousePos.x, savedMousePos.y);
