@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using UltraEditor.Classes.Canvas;
 using UltraEditor.Libraries;
 using UnityEngine;
+using UnityEngine.Rendering;
 using static UltraEditor.Classes.MaterialChoser;
 
 public class MaterialChoser : MonoBehaviour
@@ -128,7 +129,20 @@ public class MaterialChoser : MonoBehaviour
 
         if (!string.IsNullOrEmpty(customTexture))
         {
-            newMat = GetSandboxMaterial("Procedural Cube");
+            newMat = new(DefaultReferenceManager.Instance.masterShader);
+            
+            newMat.SetFloat("_BlendMode", 2);
+
+            newMat.SetOverrideTag("RenderType", "Transparent");
+            newMat.SetInt("_SrcBlend", (int)BlendMode.SrcAlpha);
+            newMat.SetInt("_DstBlend", (int)BlendMode.OneMinusSrcAlpha);
+
+            newMat.DisableKeyword("ALPHA_TEST");
+            newMat.EnableKeyword("TRANSPARENCY");
+            newMat.EnableKeyword("_FOG_ON");
+
+            newMat.renderQueue = (int)RenderQueue.Transparent;
+            
             Plugin.Instance.StartCoroutine(ImageGetter.GetTextureFromURL(customTexture, tex =>
             {
                 if (tex != null)
